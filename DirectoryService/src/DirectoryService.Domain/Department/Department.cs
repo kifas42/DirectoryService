@@ -32,11 +32,13 @@ public class Department : Shared.Entity
     public short Depth { get; private set; }
 
     public IReadOnlyList<DepartmentPosition> Positions => _positions;
-    private List<DepartmentPosition> _positions = [];
-    // так ????
-    // получается Department имеет список DepartmentPosition а элемент списка содержит Id этого же Department
+
+    private readonly List<DepartmentPosition> _positions = [];
+
     public IReadOnlyList<DepartmentLocation> Locations => _locations;
-    private List<DepartmentLocation> _locations = [];
+
+    private readonly List<DepartmentLocation> _locations = [];
+
     public static Result<Department, string> Create(string name, Identifier identifier, Department? parent, short depth,
         IEnumerable<DepartmentPosition> positions,
         IEnumerable<DepartmentLocation> locations)
