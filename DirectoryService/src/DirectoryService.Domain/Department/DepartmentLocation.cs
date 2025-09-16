@@ -13,9 +13,9 @@ public class DepartmentLocation
 
     public Guid Id { get; }
 
-    public Guid DepartmentId { get; set; }
+    public Guid DepartmentId { get; private set; }
 
-    public Guid LocationId { get; set; }
+    public Guid LocationId { get; private set; }
 
     public Result ChangeLocationId(Guid newLocationId)
     {

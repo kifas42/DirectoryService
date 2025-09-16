@@ -7,13 +7,17 @@ public class Department : Shared.Entity
     public const int MIN_LENGTH = 3;
     public const int MAX_LENGTH = 150;
 
-    private Department(string name, Identifier identifier, Department? parent, Path path, short depth)
+    private Department(string name, Identifier identifier, Department? parent, Path path, short depth,
+        IEnumerable<DepartmentPosition> positions,
+        IEnumerable<DepartmentLocation> locations)
     {
         Name = name;
         Identifier = identifier;
         Parent = parent;
         Path = path;
         Depth = depth;
+        _positions.AddRange(positions);
+        _locations.AddRange(locations);
         Update();
     }
 
@@ -27,7 +31,15 @@ public class Department : Shared.Entity
 
     public short Depth { get; private set; }
 
-    public static Result<Department, string> Create(string name, Identifier identifier, Department? parent, short depth)
+    public IReadOnlyList<DepartmentPosition> Positions => _positions;
+    private List<DepartmentPosition> _positions = [];
+    // так ????
+    // получается Department имеет список DepartmentPosition а элемент списка содержит Id этого же Department
+    public IReadOnlyList<DepartmentLocation> Locations => _locations;
+    private List<DepartmentLocation> _locations = [];
+    public static Result<Department, string> Create(string name, Identifier identifier, Department? parent, short depth,
+        IEnumerable<DepartmentPosition> positions,
+        IEnumerable<DepartmentLocation> locations)
     {
         if (string.IsNullOrWhiteSpace(name)) return "name must not be null or empty";
         if (name.Length is < MIN_LENGTH or > MAX_LENGTH)
@@ -36,7 +48,7 @@ public class Department : Shared.Entity
         var updatePathResult = UpdatePath(parent, identifier);
         if (updatePathResult.IsFailure) return updatePathResult.Error;
 
-        return new Department(name.Trim(), identifier, parent, updatePathResult.Value, depth);
+        return new Department(name.Trim(), identifier, parent, updatePathResult.Value, depth, positions, locations);
     }
 
     public Result SetParent(Department parent)
