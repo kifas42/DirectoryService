@@ -9,6 +9,8 @@ public class Location : Entity
     public const int MIN_LOW_LENGTH = 3;
     public const int MAX_LOW_LENGTH = 120;
 
+    private Location() { }
+
     private Location(string name, Address address, Timezone timezone)
     {
         Name = name;
@@ -16,11 +18,11 @@ public class Location : Entity
         Timezone = timezone;
     }
 
-    public string Name { get; private set; }
+    public string Name { get; private set; } = string.Empty;
 
-    public Address Address { get; private set; }
+    public Address Address { get; private set; } = null!;
 
-    public Timezone Timezone { get; private set; }
+    public Timezone Timezone { get; private set; } = null!;
 
     public static Result<Location, string> Create(string name, Address address, Timezone timezone)
     {

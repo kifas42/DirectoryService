@@ -1,11 +1,14 @@
 ﻿using CSharpFunctionalExtensions;
+using DirectoryService.Domain.Shared;
 
 namespace DirectoryService.Domain.Department;
 
 public class Department : Shared.Entity
 {
-    public const int MIN_LENGTH = 3;
-    public const int MAX_LENGTH = 150;
+    // ef core
+    private Department()
+    {
+    }
 
     private Department(string name, Identifier identifier, Department? parent, Path path, short depth,
         IEnumerable<DepartmentPosition> positions,
@@ -14,6 +17,7 @@ public class Department : Shared.Entity
         Name = name;
         Identifier = identifier;
         Parent = parent;
+        ParentId = parent?.Id;
         Path = path;
         Depth = depth;
         _positions.AddRange(positions);
@@ -21,13 +25,15 @@ public class Department : Shared.Entity
         Update();
     }
 
-    public string Name { get; private set; }
+    public string Name { get; private set; } = string.Empty;
 
-    public Identifier Identifier { get; private set; }
+    public Identifier Identifier { get; private set; } = null!;
 
     public Department? Parent { get; private set; }
 
-    public Path Path { get; private set; }
+    public Guid? ParentId { get; private set; }
+
+    public Path Path { get; private set; } = null!;
 
     public short Depth { get; private set; }
 
@@ -44,8 +50,11 @@ public class Department : Shared.Entity
         IEnumerable<DepartmentLocation> locations)
     {
         if (string.IsNullOrWhiteSpace(name)) return "name must not be null or empty";
-        if (name.Length is < MIN_LENGTH or > MAX_LENGTH)
-            return $"name must be between {MIN_LENGTH} and {MAX_LENGTH} characters";
+        if (name.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
+        {
+            return
+                $"name must be between {Constants.MIN_NAME_TEXT_LENGTH} and {Constants.MAX_NAME_TEXT_LENGTH} characters";
+        }
 
         var updatePathResult = UpdatePath(parent, identifier);
         if (updatePathResult.IsFailure) return updatePathResult.Error;
@@ -70,8 +79,11 @@ public class Department : Shared.Entity
     public Result Rename(string name)
     {
         if (string.IsNullOrWhiteSpace(name)) return Result.Failure("name must not be null or empty");
-        if (name.Length is < MIN_LENGTH or > MAX_LENGTH)
-            return Result.Failure($"name must be between {MIN_LENGTH} and {MAX_LENGTH} characters");
+        if (name.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
+        {
+            return Result.Failure(
+                $"name must be between {Constants.MIN_NAME_TEXT_LENGTH} and {Constants.MAX_NAME_TEXT_LENGTH} characters");
+        }
 
         Name = name.Trim();
         Update();

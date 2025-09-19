@@ -11,6 +11,8 @@ public class DepartmentLocation
         LocationId = locationId;
     }
 
+    private DepartmentLocation() { }
+
     public Guid Id { get; }
 
     public Guid DepartmentId { get; private set; }
