@@ -15,14 +15,13 @@ public partial record Identifier
 
     public string Value { get; }
 
-    public static Result Create(string identifier)
+    public static Result<Identifier, string> Create(string identifier)
     {
         if (string.IsNullOrWhiteSpace(identifier))
-            return Result.Failure("identifier cannot be null or empty");
+            return "identifier cannot be null or empty";
 
         return EnglishLetterRegex().IsMatch(identifier)
-            ? Result.Failure(
-                "identifier must be only English letters and `-`.\nidentifier must be between 3 and 150 characters")
-            : Result.Success(new Identifier(identifier.ToLower()));
+            ? "identifier must be only English letters and `-`.\nidentifier must be between 3 and 150 characters"
+            : new Identifier(identifier.ToLower());
     }
 }

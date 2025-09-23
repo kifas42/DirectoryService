@@ -11,6 +11,8 @@ public class DepartmentPosition
         PositionId = positionId;
     }
 
+    private DepartmentPosition() { }
+
     public Guid Id { get; }
 
     public Guid DepartmentId { get; private set; }
