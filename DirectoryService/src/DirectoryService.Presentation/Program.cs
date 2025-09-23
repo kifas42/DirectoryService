@@ -1,10 +1,16 @@
+using DirectoryService.Application;
 using DirectoryService.Infrastructure;
+using DirectoryService.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-builder.Services.AddScoped<ApplicationDbContext>();
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
+builder.Services.AddScoped<ILocationDbContext, ApplicationDbContext>();
+builder.Services.AddTransient<ILocationRepository, LocationEfCoreRepository>();
+builder.Services.AddTransient<CreateLocationHandler>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
