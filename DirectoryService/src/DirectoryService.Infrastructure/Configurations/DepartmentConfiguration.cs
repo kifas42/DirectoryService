@@ -39,10 +39,7 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
             .IsRequired();
         builder.HasOne(d => d.Parent)
             .WithMany()
-            .HasForeignKey(d => d.ParentId)
-            .IsRequired(false);
-        builder.Property(d => d.ParentId)
-            .HasColumnName("parent_id")
+            .HasForeignKey("parent_id")
             .IsRequired(false);
     }
 }

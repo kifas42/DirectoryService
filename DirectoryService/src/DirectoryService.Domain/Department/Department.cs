@@ -17,7 +17,6 @@ public class Department : Shared.Entity
         Name = name;
         Identifier = identifier;
         Parent = parent;
-        ParentId = parent?.Id;
         Path = path;
         Depth = depth;
         _positions.AddRange(positions);
@@ -30,8 +29,6 @@ public class Department : Shared.Entity
     public Identifier Identifier { get; private set; } = null!;
 
     public Department? Parent { get; private set; }
-
-    public Guid? ParentId { get; private set; }
 
     public Path Path { get; private set; } = null!;
 
