@@ -8,9 +8,8 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
-builder.Services.AddScoped<ILocationDbContext, ApplicationDbContext>();
-builder.Services.AddTransient<ILocationRepository, LocationEfCoreRepository>();
-builder.Services.AddTransient<CreateLocationHandler>();
+builder.Services.AddScoped<ILocationRepository, LocationRepository>();
+builder.Services.AddScoped<CreateLocationHandler>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())

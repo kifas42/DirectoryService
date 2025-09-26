@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DirectoryService.Infrastructure;
 
-public class ApplicationDbContext(IConfiguration configuration) : DbContext, ILocationDbContext
+public class ApplicationDbContext(IConfiguration configuration) : DbContext
 {
     private const string DATBASE = "DataBase";
 

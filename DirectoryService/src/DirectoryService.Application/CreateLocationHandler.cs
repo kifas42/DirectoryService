@@ -21,7 +21,7 @@ public class CreateLocationHandler
         CreateLocationRequest locationRequest,
         CancellationToken cancellationToken = default)
     {
-        var address = new Address(
+        var addressResult = Address.Create(
             locationRequest.Address.OfficeNumber,
             locationRequest.Address.BuildingNumber,
             locationRequest.Address.Street,
@@ -29,6 +29,12 @@ public class CreateLocationHandler
             locationRequest.Address.StateOrProvince,
             locationRequest.Address.Country,
             locationRequest.Address.PostalCode);
+
+        if (addressResult.IsFailure)
+        {
+            _logger.LogError("Failed to verify Address: {ErrorMessage}", addressResult.Error);
+            return addressResult.Error;
+        }
 
         var tzResult = Timezone.Create(locationRequest.Timezone);
 
@@ -40,7 +46,7 @@ public class CreateLocationHandler
 
         var locationResult = Location.Create(
             locationRequest.Name,
-            address,
+            addressResult.Value,
             tzResult.Value);
 
         if (locationResult.IsFailure)
