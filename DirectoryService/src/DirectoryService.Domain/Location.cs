@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Shared;
+using Shared;
 using Entity = DirectoryService.Domain.Shared.Entity;
 
 namespace DirectoryService.Domain;
@@ -24,13 +25,15 @@ public class Location : Entity
 
     public Timezone Timezone { get; private set; } = null!;
 
-    public static Result<Location, string> Create(string name, Address address, Timezone timezone)
+    public static Result<Location, Error> Create(string name, Address address, Timezone timezone)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return $"name cannot be null or empty";
+            return GeneralErrors.ValueIsEmpty("name");
 
         if (name.Length is < MIN_LOW_LENGTH or > MAX_LOW_LENGTH)
-            return $"name must be between {MIN_LOW_LENGTH} and {MAX_LOW_LENGTH} characters";
+        {
+            return GeneralErrors.LenghtIsInvalid("name", MIN_LOW_LENGTH, MAX_LOW_LENGTH);
+        }
 
         return new Location(name, address, timezone);
     }

@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using CSharpFunctionalExtensions;
+using Shared;
 
 namespace DirectoryService.Domain.Department;
 
@@ -15,13 +16,16 @@ public partial record Identifier
 
     public string Value { get; }
 
-    public static Result<Identifier, string> Create(string identifier)
+    public static Result<Identifier, Error> Create(string identifier)
     {
         if (string.IsNullOrWhiteSpace(identifier))
-            return "identifier cannot be null or empty";
+            return GeneralErrors.ValueIsEmpty("identifier");
 
         return EnglishLetterRegex().IsMatch(identifier)
-            ? "identifier must be only English letters and `-`.\nidentifier must be between 3 and 150 characters"
+            ? Error.Validation(
+                "validation.is.eng",
+                $"identifier must be only English letters and `-`.\nidentifier must be between 3 and 150 characters",
+                "identifier")
             : new Identifier(identifier.ToLower());
     }
 }

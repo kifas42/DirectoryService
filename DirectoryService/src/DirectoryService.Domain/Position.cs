@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Shared;
+using Shared;
 
 namespace DirectoryService.Domain;
 
@@ -8,9 +9,7 @@ public class Position : Shared.Entity
     public const int MAX_LOW_LENGTH = 100;
 
     // ef core
-    private Position()
-    {
-    }
+    private Position() { }
 
     private Position(string name, string? description)
     {
@@ -22,16 +21,20 @@ public class Position : Shared.Entity
 
     public string? Description { get; private set; }
 
-    public static Result<Position, string> Create(string name, string? description)
+    public static Result<Position, Error> Create(string name, string? description)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return $"name cannot be null or empty";
+            return GeneralErrors.ValueIsEmpty("name");
 
         if (name.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.TEXT_100)
-            return $"name must be between {Constants.MIN_NAME_TEXT_LENGTH} and {Constants.TEXT_100} characters";
+        {
+            return GeneralErrors.LenghtIsInvalid("name", Constants.MIN_NAME_TEXT_LENGTH, Constants.TEXT_100);
+        }
 
         if (description is not null && description.Length > Constants.MAX_TEXT_LENGTH)
-            return $"description cannot be longer than {Constants.MAX_NAME_TEXT_LENGTH} characters";
+        {
+            return GeneralErrors.LenghtIsInvalid("description", max: Constants.MAX_TEXT_LENGTH);
+        }
 
         return new Position(name, description);
     }

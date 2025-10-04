@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using Shared;
 
 namespace DirectoryService.Domain.Department;
 
@@ -12,7 +13,7 @@ public record Path
         Value = path;
     }
 
-    public static Result<Path, string> CreateFromStringPath(string path)
+    public static Result<Path, Error> CreateFromStringPath(string path)
     {
         string[] parts = path.Split(PATH_SEPARATOR, StringSplitOptions.RemoveEmptyEntries);
         var identifiers = new List<Identifier>(parts.Length);
@@ -23,15 +24,19 @@ public record Path
             {
                 identifiers.Add(identifier);
             }
+            else
+            {
+                return createResult.Error;
+            }
         }
 
         return Create(identifiers.ToArray());
     }
 
-    public static Result<Path, string> Create(params Identifier[] path)
+    public static Result<Path, Error> Create(params Identifier[] path)
     {
         if (path.Length == 0)
-            return "path cannot be null or empty";
+            return GeneralErrors.ValueIsEmpty("path");
         return
             new Path(
                 string.Join(PATH_SEPARATOR, path.Select(id => id.Value)));
