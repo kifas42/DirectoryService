@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Shared;
+using Shared;
 
 namespace DirectoryService.Domain.Department;
 
@@ -42,15 +43,16 @@ public class Department : Shared.Entity
 
     private readonly List<DepartmentLocation> _locations = [];
 
-    public static Result<Department, string> Create(string name, Identifier identifier, Department? parent, short depth,
+    public static Result<Department, Error> Create(string name, Identifier identifier, Department? parent, short depth,
         IEnumerable<DepartmentPosition> positions,
         IEnumerable<DepartmentLocation> locations)
     {
-        if (string.IsNullOrWhiteSpace(name)) return "name must not be null or empty";
+        if (string.IsNullOrWhiteSpace(name))
+            return GeneralErrors.ValueIsEmpty("name");
         if (name.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
         {
-            return
-                $"name must be between {Constants.MIN_NAME_TEXT_LENGTH} and {Constants.MAX_NAME_TEXT_LENGTH} characters";
+            return GeneralErrors.LenghtIsInvalid("name", Constants.MIN_NAME_TEXT_LENGTH,
+                Constants.MAX_NAME_TEXT_LENGTH);
         }
 
         var updatePathResult = UpdatePath(parent, identifier);
@@ -59,52 +61,52 @@ public class Department : Shared.Entity
         return new Department(name.Trim(), identifier, parent, updatePathResult.Value, depth, positions, locations);
     }
 
-    public Result SetParent(Department parent)
+    public Result<Department, Error> SetParent(Department parent)
     {
-        if (parent.Id == Id) return Result.Failure("parent cannot be a child himself");
+        if (parent.Id == Id) return Error.Conflict(null, "parent cannot be a child himself");
 
         var updatePathResult = UpdatePath(Parent, Identifier);
         if (updatePathResult.IsFailure)
-            return Result.Failure(updatePathResult.Error);
+            return updatePathResult.Error;
 
         Path = updatePathResult.Value;
         Parent = parent;
         Update();
-        return Result.Success();
+        return Parent;
     }
 
-    public Result Rename(string name)
+    public Result<string, Error> Rename(string name)
     {
-        if (string.IsNullOrWhiteSpace(name)) return Result.Failure("name must not be null or empty");
+        if (string.IsNullOrWhiteSpace(name)) return GeneralErrors.ValueIsEmpty("name");
         if (name.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
         {
-            return Result.Failure(
-                $"name must be between {Constants.MIN_NAME_TEXT_LENGTH} and {Constants.MAX_NAME_TEXT_LENGTH} characters");
+            return GeneralErrors.LenghtIsInvalid("name", Constants.MIN_NAME_TEXT_LENGTH,
+                Constants.MAX_NAME_TEXT_LENGTH);
         }
 
         Name = name.Trim();
         Update();
-        return Result.Success();
+        return Name;
     }
 
-    public Result SetIdentifier(Identifier identifier)
+    public Result<Identifier, Error> SetIdentifier(Identifier identifier)
     {
         var updatePathResult = UpdatePath(Parent, identifier);
         if (updatePathResult.IsFailure)
-            return Result.Failure(updatePathResult.Error);
+            return updatePathResult.Error;
 
         Path = updatePathResult.Value;
         Identifier = identifier;
         Update();
-        return Result.Success();
+        return identifier;
     }
 
-    private static Result<Path, string> UpdatePath(Department? parent, Identifier identifier)
+    private static Result<Path, Error> UpdatePath(Department? parent, Identifier identifier)
     {
         var identifiersChain = parent?.GetIdentifiersChain() ?? [];
         identifiersChain.Add(identifier);
         var createPathResult = Path.Create(identifiersChain.ToArray());
-        return createPathResult.IsFailure ? createPathResult.Error : createPathResult.Value;
+        return createPathResult;
     }
 
     private List<Identifier> GetIdentifiersChain()

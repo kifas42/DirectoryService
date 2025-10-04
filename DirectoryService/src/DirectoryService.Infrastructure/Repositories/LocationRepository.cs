@@ -2,6 +2,7 @@
 using DirectoryService.Application;
 using DirectoryService.Domain;
 using Microsoft.Extensions.Logging;
+using Shared;
 
 namespace DirectoryService.Infrastructure.Repositories;
 
@@ -16,7 +17,7 @@ public class LocationRepository : ILocationRepository
         _dbContext = dbContext;
     }
 
-    public async Task<Result<Guid, string>> AddAsync(Location location, CancellationToken cancellationToken = default)
+    public async Task<Result<Guid, Error>> AddAsync(Location location, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -26,7 +27,7 @@ public class LocationRepository : ILocationRepository
         catch (Exception ex)
         {
             _logger.LogError("AddAsync Error: {Message}", ex.Message);
-            return "Backend error";
+            return Error.Failure(null, "backend error. check logs");
         }
 
         return location.Id;
