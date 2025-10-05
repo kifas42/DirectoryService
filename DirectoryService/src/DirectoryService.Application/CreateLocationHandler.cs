@@ -3,6 +3,7 @@ using DirectoryService.Contracts.Locations;
 using DirectoryService.Domain;
 using DirectoryService.Domain.Shared;
 using Microsoft.Extensions.Logging;
+using Shared;
 
 namespace DirectoryService.Application;
 
@@ -17,7 +18,7 @@ public class CreateLocationHandler
         _locationRepository = locationRepository;
     }
 
-    public async Task<Result<Guid, string>> Handle(
+    public async Task<Result<Guid, Error>> Handle(
         CreateLocationRequest locationRequest,
         CancellationToken cancellationToken = default)
     {
@@ -52,6 +53,7 @@ public class CreateLocationHandler
         if (locationResult.IsFailure)
         {
             _logger.LogError("Failed to create location: {ErrorMessage}", locationResult.Error);
+            return locationResult.Error;
         }
 
         var createLocationResult = await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
@@ -59,6 +61,7 @@ public class CreateLocationHandler
         if (createLocationResult.IsFailure)
         {
             _logger.LogError("Failed to add location: {ErrorMessage}", createLocationResult.Error);
+            return createLocationResult.Error;
         }
 
         _logger.LogInformation("Added location: {LocationId}", createLocationResult.Value);
