@@ -4,7 +4,7 @@ using Shared;
 
 namespace DirectoryService.Domain;
 
-public class Position : Shared.Entity
+public sealed class Position : Shared.Entity
 {
     public const int MAX_LOW_LENGTH = 100;
 
@@ -13,9 +13,12 @@ public class Position : Shared.Entity
 
     private Position(string name, string? description)
     {
+        Id = new PositionId(Guid.NewGuid());
         Name = name;
         Description = description;
     }
+
+    public PositionId Id { get; private set; } = null!;
 
     public string Name { get; private set; } = string.Empty;
 

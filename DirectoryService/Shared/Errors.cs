@@ -2,7 +2,7 @@
 
 namespace Shared;
 
-public class Errors : IEnumerable<Error>
+public sealed class Errors : IEnumerable<Error>
 {
     private readonly List<Error> _errors;
 

@@ -3,9 +3,9 @@ using Shared;
 
 namespace DirectoryService.Domain.Department;
 
-public record Path
+public sealed record Path
 {
-    public const string PATH_SEPARATOR = ".";
+    private const char PATH_SEPARATOR = '.';
     public string Value { get; }
 
     private Path(string path)

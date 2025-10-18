@@ -1,6 +1,6 @@
 ﻿namespace Shared;
 
-public record Error
+public sealed record Error
 {
     public string Code { get; }
     public string Message { get; }

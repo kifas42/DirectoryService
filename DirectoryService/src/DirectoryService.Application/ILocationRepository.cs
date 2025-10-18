@@ -6,5 +6,5 @@ namespace DirectoryService.Application;
 
 public interface ILocationRepository
 {
-    public Task<Result<Guid, Error>> AddAsync(Location location, CancellationToken cancellationToken);
+    public Task<Result<LocationId, Error>> AddAsync(Location location, CancellationToken cancellationToken);
 }

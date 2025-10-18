@@ -7,7 +7,7 @@ using Shared;
 
 namespace DirectoryService.Application;
 
-public class CreateLocationHandler
+public sealed class CreateLocationHandler
 {
     private readonly ILogger<CreateLocationHandler> _logger;
     private readonly ILocationRepository _locationRepository;
@@ -18,7 +18,7 @@ public class CreateLocationHandler
         _locationRepository = locationRepository;
     }
 
-    public async Task<Result<Guid, Error>> Handle(
+    public async Task<Result<LocationId, Error>> Handle(
         CreateLocationRequest locationRequest,
         CancellationToken cancellationToken = default)
     {

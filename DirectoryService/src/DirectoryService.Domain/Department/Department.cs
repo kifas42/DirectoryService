@@ -4,17 +4,16 @@ using Shared;
 
 namespace DirectoryService.Domain.Department;
 
-public class Department : Shared.Entity
+public sealed class Department : Shared.Entity
 {
     // ef core
-    private Department()
-    {
-    }
+    private Department() { }
 
     private Department(string name, Identifier identifier, Department? parent, Path path, short depth,
         IEnumerable<DepartmentPosition> positions,
         IEnumerable<DepartmentLocation> locations)
     {
+        Id = new DepartmentId(Guid.NewGuid());
         Name = name;
         Identifier = identifier;
         Parent = parent;
@@ -24,6 +23,8 @@ public class Department : Shared.Entity
         _locations.AddRange(locations);
         Update();
     }
+
+    public DepartmentId Id { get; private set; } = null!;
 
     public string Name { get; private set; } = string.Empty;
 
@@ -37,9 +38,9 @@ public class Department : Shared.Entity
 
     public IReadOnlyList<DepartmentPosition> Positions => _positions;
 
-    private readonly List<DepartmentPosition> _positions = [];
-
     public IReadOnlyList<DepartmentLocation> Locations => _locations;
+
+    private readonly List<DepartmentPosition> _positions = [];
 
     private readonly List<DepartmentLocation> _locations = [];
 
