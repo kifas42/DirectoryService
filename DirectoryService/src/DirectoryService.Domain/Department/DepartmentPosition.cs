@@ -2,9 +2,9 @@
 
 namespace DirectoryService.Domain.Department;
 
-public class DepartmentPosition
+public sealed class DepartmentPosition
 {
-    public DepartmentPosition(Guid departmentId, Guid positionId)
+    public DepartmentPosition(DepartmentId departmentId, PositionId positionId)
     {
         Id = Guid.NewGuid();
         DepartmentId = departmentId;
@@ -15,11 +15,11 @@ public class DepartmentPosition
 
     public Guid Id { get; }
 
-    public Guid DepartmentId { get; private set; }
+    public DepartmentId DepartmentId { get; private set; } = null!;
 
-    public Guid PositionId { get; private set; }
+    public PositionId PositionId { get; private set; } = null!;
 
-    public Result ChangeLocationId(Guid newPositionId)
+    public Result ChangeLocationId(PositionId newPositionId)
     {
         PositionId = newPositionId;
         return Result.Success();
@@ -27,7 +27,7 @@ public class DepartmentPosition
         // TBD: валидация и возврат ошибок
     }
 
-    public Result ChangeDepartmentId(Guid newDepartmentId)
+    public Result ChangeDepartmentId(DepartmentId newDepartmentId)
     {
         DepartmentId = newDepartmentId;
         return Result.Success();

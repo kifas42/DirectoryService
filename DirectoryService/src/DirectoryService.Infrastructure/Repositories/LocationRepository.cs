@@ -6,7 +6,7 @@ using Shared;
 
 namespace DirectoryService.Infrastructure.Repositories;
 
-public class LocationRepository : ILocationRepository
+public sealed class LocationRepository : ILocationRepository
 {
     private readonly ILogger<LocationRepository> _logger;
     private readonly ApplicationDbContext _dbContext;
@@ -17,7 +17,7 @@ public class LocationRepository : ILocationRepository
         _dbContext = dbContext;
     }
 
-    public async Task<Result<Guid, Error>> AddAsync(Location location, CancellationToken cancellationToken = default)
+    public async Task<Result<LocationId, Error>> AddAsync(Location location, CancellationToken cancellationToken = default)
     {
         try
         {

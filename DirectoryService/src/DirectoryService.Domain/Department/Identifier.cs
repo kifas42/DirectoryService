@@ -4,15 +4,14 @@ using Shared;
 
 namespace DirectoryService.Domain.Department;
 
-public partial record Identifier
+public sealed record Identifier
 {
     private Identifier(string identifier)
     {
         Value = identifier;
     }
 
-    [GeneratedRegex(@"^[a-zA-Z\-]{3,150}$")]
-    private static partial Regex EnglishLetterRegex();
+    private static readonly Regex _englishLetterRegex = new Regex(@"^[a-zA-Z\-]{3,150}$", RegexOptions.Compiled);
 
     public string Value { get; }
 
@@ -21,7 +20,7 @@ public partial record Identifier
         if (string.IsNullOrWhiteSpace(identifier))
             return GeneralErrors.ValueIsEmpty("identifier");
 
-        return EnglishLetterRegex().IsMatch(identifier)
+        return _englishLetterRegex.IsMatch(identifier)
             ? Error.Validation(
                 "validation.is.eng",
                 $"identifier must be only English letters and `-`.\nidentifier must be between 3 and 150 characters",

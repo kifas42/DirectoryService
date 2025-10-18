@@ -6,7 +6,7 @@ using Path = DirectoryService.Domain.Department.Path;
 
 namespace DirectoryService.Infrastructure.Configurations;
 
-public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
+public sealed class DepartmentConfiguration : IEntityTypeConfiguration<Department>
 {
     public void Configure(EntityTypeBuilder<Department> builder)
     {
@@ -14,12 +14,17 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
         builder.HasKey(d => d.Id).HasName("pk_department");
 
         // Entity Base
-        builder.Property(e => e.Id).HasColumnName("id");
         builder.Property(e => e.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(e => e.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at").IsRequired();
 
         // Department
+        builder.Property(d => d.Id)
+            .HasColumnName("id")
+            .HasConversion(
+                value => value.Value,
+                value => new DepartmentId(value))
+            .IsRequired();
         builder.Property(d => d.Name)
             .HasColumnName("name")
             .HasMaxLength(Constants.MAX_NAME_TEXT_LENGTH)

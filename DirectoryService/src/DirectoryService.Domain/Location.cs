@@ -5,7 +5,7 @@ using Entity = DirectoryService.Domain.Shared.Entity;
 
 namespace DirectoryService.Domain;
 
-public class Location : Entity
+public sealed class Location : Entity
 {
     public const int MIN_LOW_LENGTH = 3;
     public const int MAX_LOW_LENGTH = 120;
@@ -14,10 +14,13 @@ public class Location : Entity
 
     private Location(string name, Address address, Timezone timezone)
     {
+        Id = new LocationId(Guid.NewGuid());
         Name = name;
         Address = address;
         Timezone = timezone;
     }
+
+    public LocationId Id { get; private set; } = null!;
 
     public string Name { get; private set; } = string.Empty;
 

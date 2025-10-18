@@ -3,7 +3,7 @@ using Shared;
 
 namespace DirectoryService.Presentation;
 
-public class Envelope
+public sealed class Envelope
 {
     public object? Result { get; }
 

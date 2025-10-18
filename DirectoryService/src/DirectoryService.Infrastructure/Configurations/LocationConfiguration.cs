@@ -13,12 +13,17 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
         builder.HasKey(l => l.Id).HasName("pk_location");
 
         // Entity Base
-        builder.Property(e => e.Id).HasColumnName("id");
         builder.Property(e => e.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(e => e.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at").IsRequired();
 
         // Location
+        builder.Property(l => l.Id)
+            .HasColumnName("id")
+            .HasConversion(
+                value => value.Value,
+                value => new LocationId(value))
+            .IsRequired();
         builder.Property(l => l.Name)
             .HasColumnName("name")
             .HasMaxLength(Constants.MAX_NAME_TEXT_LENGTH)
