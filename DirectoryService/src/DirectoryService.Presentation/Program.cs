@@ -2,6 +2,7 @@ using DirectoryService.Application;
 using DirectoryService.Infrastructure;
 using DirectoryService.Infrastructure.Repositories;
 using DirectoryService.Presentation;
+using DirectoryService.Presentation.Middlewares;
 using Microsoft.OpenApi.Models;
 using Shared;
 
@@ -32,6 +33,7 @@ builder.Services.AddScoped<ILocationRepository, LocationRepository>();
 builder.Services.AddScoped<CreateLocationHandler>();
 
 var app = builder.Build();
+app.UseExceptionMiddleware();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
