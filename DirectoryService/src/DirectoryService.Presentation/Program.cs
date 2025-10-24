@@ -2,12 +2,21 @@ using DirectoryService.Application;
 using DirectoryService.Infrastructure;
 using DirectoryService.Infrastructure.Repositories;
 using DirectoryService.Presentation;
+using DirectoryService.Presentation.Middlewares;
 using Microsoft.OpenApi.Models;
+using Serilog;
 using Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.Seq(builder.Configuration.GetConnectionString("Seq") ?? throw new ArgumentNullException("Seq"))
+    .CreateLogger();
+
+builder.Services.AddSerilog();
 builder.Services.AddControllers();
+builder.Services.AddHttpLogging();
 builder.Services.AddOpenApi(options =>
 {
     options.AddSchemaTransformer((schema, context, _) =>
@@ -32,6 +41,8 @@ builder.Services.AddScoped<ILocationRepository, LocationRepository>();
 builder.Services.AddScoped<CreateLocationHandler>();
 
 var app = builder.Build();
+app.UseExceptionMiddleware();
+app.UseHttpLogging();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
