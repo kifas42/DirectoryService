@@ -19,8 +19,10 @@ public class CreateLocationValidator : AbstractValidator<CreateLocationRequest>
                 addr.StateOrProvince,
                 addr.Country,
                 addr.PostalCode));
-        RuleFor(x => x.Name).MaximumLength(120).MinimumLength(3)
-            .WithError(Error.Validation(null, "Название должно быть от 3 до 120 символов", "Name"));
+        RuleFor(x => x.Name).MaximumLength(Constants.MAX_NAME_TEXT_LENGTH).MinimumLength(Constants.MIN_NAME_TEXT_LENGTH)
+            .WithError(Error.Validation(null,
+                $"Название должно быть от {Constants.MIN_NAME_TEXT_LENGTH} до {Constants.MAX_NAME_TEXT_LENGTH} символов",
+                "Name"));
 
         RuleFor(x => x.Timezone)
             .MustBeValueObject(Timezone.Create);

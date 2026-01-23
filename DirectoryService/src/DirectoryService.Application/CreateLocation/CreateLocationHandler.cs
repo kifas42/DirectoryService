@@ -32,33 +32,31 @@ public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLo
         CreateLocationCommand command,
         CancellationToken cancellationToken = default)
     {
-        var locationRequest = command.LocationRequest;
-
-        var validationResult = await _validator.ValidateAsync(locationRequest, cancellationToken);
+        var validationResult = await _validator.ValidateAsync(command.LocationRequest, cancellationToken);
         if (!validationResult.IsValid)
         {
             return validationResult.ToErrors();
         }
 
         var addressResult = Address.Create(
-            locationRequest.Address.OfficeNumber,
-            locationRequest.Address.BuildingNumber,
-            locationRequest.Address.Street,
-            locationRequest.Address.City,
-            locationRequest.Address.StateOrProvince,
-            locationRequest.Address.Country,
-            locationRequest.Address.PostalCode);
-        var tzResult = Timezone.Create(locationRequest.Timezone);
+            command.LocationRequest.Address.OfficeNumber,
+            command.LocationRequest.Address.BuildingNumber,
+            command.LocationRequest.Address.Street,
+            command.LocationRequest.Address.City,
+            command.LocationRequest.Address.StateOrProvince,
+            command.LocationRequest.Address.Country,
+            command.LocationRequest.Address.PostalCode);
+        var tzResult = Timezone.Create(command.LocationRequest.Timezone);
 
         var locationResult = Location.Create(
-            locationRequest.Name,
+            command.LocationRequest.Name,
             addressResult.Value,
             tzResult.Value);
 
         if (locationResult.IsFailure)
         {
             _logger.LogError("Failed to create location: {ErrorMessage}", locationResult.Error);
-            return new Errors([locationResult.Error]);
+            return (Errors)locationResult.Error;
         }
 
         var createLocationResult = await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
@@ -66,7 +64,7 @@ public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLo
         if (createLocationResult.IsFailure)
         {
             _logger.LogError("Failed to add location: {ErrorMessage}", createLocationResult.Error);
-            return new Errors([createLocationResult.Error]);
+            return (Errors)createLocationResult.Error;
         }
 
         _logger.LogInformation("Added location: {LocationId}", createLocationResult.Value);
