@@ -29,4 +29,6 @@ public sealed record Error
 
     public static Error Failure(string? code, string message) =>
         new(code ?? "failure", message, ErrorType.FAILURE);
+
+    public Errors ToErrors() => new([this]);
 }

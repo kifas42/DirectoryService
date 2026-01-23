@@ -56,7 +56,7 @@ public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLo
         if (locationResult.IsFailure)
         {
             _logger.LogError("Failed to create location: {ErrorMessage}", locationResult.Error);
-            return (Errors)locationResult.Error;
+            return locationResult.Error.ToErrors();
         }
 
         var createLocationResult = await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
@@ -64,7 +64,7 @@ public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLo
         if (createLocationResult.IsFailure)
         {
             _logger.LogError("Failed to add location: {ErrorMessage}", createLocationResult.Error);
-            return (Errors)createLocationResult.Error;
+            return createLocationResult.Error.ToErrors();
         }
 
         _logger.LogInformation("Added location: {LocationId}", createLocationResult.Value);
