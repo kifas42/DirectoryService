@@ -1,6 +1,6 @@
 ﻿namespace DirectoryService.Contracts.Locations;
 
-public record AddressRequest(
+public record AddressDto(
     string OfficeNumber,
     string BuildingNumber,
     string Street,
