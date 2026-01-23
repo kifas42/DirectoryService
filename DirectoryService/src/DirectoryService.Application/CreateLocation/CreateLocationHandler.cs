@@ -1,27 +1,45 @@
 ﻿using CSharpFunctionalExtensions;
+using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.Locations;
 using DirectoryService.Domain;
 using DirectoryService.Domain.Shared;
+using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Shared;
 
-namespace DirectoryService.Application;
+namespace DirectoryService.Application.CreateLocation;
 
-public sealed class CreateLocationHandler
+public record CreateLocationCommand(CreateLocationRequest LocationRequest) : ICommand;
+
+public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLocationCommand>
 {
     private readonly ILogger<CreateLocationHandler> _logger;
     private readonly ILocationRepository _locationRepository;
+    private readonly IValidator<CreateLocationRequest> _validator;
 
-    public CreateLocationHandler(ILogger<CreateLocationHandler> logger, ILocationRepository locationRepository)
+    public CreateLocationHandler(
+        ILogger<CreateLocationHandler> logger,
+        ILocationRepository locationRepository,
+        IValidator<CreateLocationRequest> validator)
     {
         _logger = logger;
         _locationRepository = locationRepository;
+        _validator = validator;
     }
 
-    public async Task<Result<LocationId, Error>> Handle(
-        CreateLocationRequest locationRequest,
+    public async Task<Result<LocationId, Errors>> Handle(
+        CreateLocationCommand command,
         CancellationToken cancellationToken = default)
     {
+        var locationRequest = command.LocationRequest;
+
+        var validationResult = await _validator.ValidateAsync(locationRequest, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            return validationResult.ToErrors();
+        }
+
         var addressResult = Address.Create(
             locationRequest.Address.OfficeNumber,
             locationRequest.Address.BuildingNumber,
@@ -30,20 +48,7 @@ public sealed class CreateLocationHandler
             locationRequest.Address.StateOrProvince,
             locationRequest.Address.Country,
             locationRequest.Address.PostalCode);
-
-        if (addressResult.IsFailure)
-        {
-            _logger.LogError("Failed to verify Address: {ErrorMessage}", addressResult.Error);
-            return addressResult.Error;
-        }
-
         var tzResult = Timezone.Create(locationRequest.Timezone);
-
-        if (tzResult.IsFailure)
-        {
-            _logger.LogError("Failed to create TimeZone: {ErrorMessage}", tzResult.Error);
-            return tzResult.Error;
-        }
 
         var locationResult = Location.Create(
             locationRequest.Name,
@@ -53,7 +58,7 @@ public sealed class CreateLocationHandler
         if (locationResult.IsFailure)
         {
             _logger.LogError("Failed to create location: {ErrorMessage}", locationResult.Error);
-            return locationResult.Error;
+            return new Errors([locationResult.Error]);
         }
 
         var createLocationResult = await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
@@ -61,7 +66,7 @@ public sealed class CreateLocationHandler
         if (createLocationResult.IsFailure)
         {
             _logger.LogError("Failed to add location: {ErrorMessage}", createLocationResult.Error);
-            return createLocationResult.Error;
+            return new Errors([createLocationResult.Error]);
         }
 
         _logger.LogInformation("Added location: {LocationId}", createLocationResult.Value);

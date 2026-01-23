@@ -1,4 +1,6 @@
-﻿namespace Shared;
+﻿using System.Text.Json.Serialization;
+
+namespace Shared;
 
 public sealed record Error
 {
@@ -7,6 +9,7 @@ public sealed record Error
     public ErrorType Type { get; }
     public string? InvalidField { get; }
 
+    [JsonConstructor]
     private Error(string code, string message, ErrorType type, string? invalidField = null)
     {
         Code = code;

@@ -38,7 +38,7 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 builder.Services.AddScoped<ApplicationDbContext>();
 builder.Services.AddScoped<ILocationRepository, LocationRepository>();
-builder.Services.AddScoped<CreateLocationHandler>();
+builder.Services.AddApplication();
 
 var app = builder.Build();
 app.UseExceptionMiddleware();

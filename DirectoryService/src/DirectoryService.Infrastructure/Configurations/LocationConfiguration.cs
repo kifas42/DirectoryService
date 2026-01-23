@@ -5,6 +5,12 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace DirectoryService.Infrastructure.Configurations;
 
+public static class IndexConstants
+{
+    public const string NAME = "ix_locations_name";
+    public const string ADDRESS = "ix_locations_address";
+}
+
 public class LocationConfiguration : IEntityTypeConfiguration<Location>
 {
     public void Configure(EntityTypeBuilder<Location> builder)
@@ -65,5 +71,7 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
             .HasConversion(tz => tz.Value, tz => Timezone.Create(tz).Value)
             .HasMaxLength(Constants.TEXT_100)
             .IsRequired();
+
+        builder.HasIndex(l => l.Name).IsUnique().HasDatabaseName(IndexConstants.NAME);
     }
 }

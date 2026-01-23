@@ -1,4 +1,5 @@
-﻿using DirectoryService.Application;
+﻿using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.CreateLocation;
 using DirectoryService.Contracts.Locations;
 using DirectoryService.Domain;
 using DirectoryService.Presentation.EndpointResults;
@@ -13,6 +14,9 @@ public class LocationsController : ControllerBase
     [HttpPost]
     public async Task<EndpointResult<LocationId>> Create(
         [FromBody] CreateLocationRequest location,
-        [FromServices] CreateLocationHandler handler)
-        => await handler.Handle(location);
+        [FromServices] ICommandHandler<LocationId, CreateLocationCommand> handler)
+    {
+        var command = new CreateLocationCommand(location);
+        return await handler.Handle(command);
+    }
 }
