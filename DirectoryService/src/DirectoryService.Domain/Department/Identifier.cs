@@ -21,10 +21,10 @@ public sealed record Identifier
             return GeneralErrors.ValueIsEmpty("identifier");
 
         return _englishLetterRegex.IsMatch(identifier)
-            ? Error.Validation(
+            ? new Identifier(identifier.ToLower())
+            : Error.Validation(
                 "validation.is.eng",
                 $"identifier must be only English letters and `-`.\nidentifier must be between 3 and 150 characters",
-                "identifier")
-            : new Identifier(identifier.ToLower());
+                "identifier");
     }
 }

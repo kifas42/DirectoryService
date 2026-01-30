@@ -41,4 +41,10 @@ public sealed record Path
             new Path(
                 string.Join(PATH_SEPARATOR, path.Select(id => id.Value)));
     }
+
+    public IReadOnlyList<Identifier> ToIdentifierArray()
+    {
+        string[] paths = Value.Split(PATH_SEPARATOR, StringSplitOptions.RemoveEmptyEntries);
+        return paths.Select(id => Identifier.Create(id).Value).ToList();
+    }
 }

@@ -56,7 +56,7 @@ public sealed class Department : Shared.Entity
                 Constants.MAX_NAME_TEXT_LENGTH);
         }
 
-        var updatePathResult = UpdatePath(parent, identifier);
+        var updatePathResult = SetPath(parent, identifier);
         if (updatePathResult.IsFailure) return updatePathResult.Error;
 
         return new Department(name.Trim(), identifier, parent, updatePathResult.Value, depth, positions, locations);
@@ -66,7 +66,7 @@ public sealed class Department : Shared.Entity
     {
         if (parent.Id == Id) return Error.Conflict(null, "parent cannot be a child himself");
 
-        var updatePathResult = UpdatePath(Parent, Identifier);
+        var updatePathResult = SetPath(Parent, Identifier);
         if (updatePathResult.IsFailure)
             return updatePathResult.Error;
 
@@ -92,7 +92,7 @@ public sealed class Department : Shared.Entity
 
     public Result<Identifier, Error> SetIdentifier(Identifier identifier)
     {
-        var updatePathResult = UpdatePath(Parent, identifier);
+        var updatePathResult = SetPath(Parent, identifier);
         if (updatePathResult.IsFailure)
             return updatePathResult.Error;
 
@@ -102,23 +102,11 @@ public sealed class Department : Shared.Entity
         return identifier;
     }
 
-    private static Result<Path, Error> UpdatePath(Department? parent, Identifier identifier)
+    private static Result<Path, Error> SetPath(Department? parent, Identifier identifier)
     {
-        var identifiersChain = parent?.GetIdentifiersChain() ?? [];
-        identifiersChain.Add(identifier);
-        var createPathResult = Path.Create(identifiersChain.ToArray());
-        return createPathResult;
-    }
-
-    private List<Identifier> GetIdentifiersChain()
-    {
-        if (Parent == null)
-        {
-            return [Identifier];
-        }
-
-        var list = Parent.GetIdentifiersChain();
-        list.Add(Identifier);
-        return list;
+        var parentPath = parent?.Path?.ToIdentifierArray().ToList() ?? [];
+        parentPath.Add(identifier);
+        var newPathResult = Path.Create(parentPath.ToArray());
+        return newPathResult;
     }
 }
