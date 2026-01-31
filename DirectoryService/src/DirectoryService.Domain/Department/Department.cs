@@ -9,11 +9,11 @@ public sealed class Department : Shared.Entity
     // ef core
     private Department() { }
 
-    private Department(string name, Identifier identifier, Department? parent, Path path, short depth,
+    private Department(DepartmentId id, string name, Identifier identifier, Department? parent, Path path, short depth,
         IEnumerable<DepartmentPosition> positions,
         IEnumerable<DepartmentLocation> locations)
     {
-        Id = new DepartmentId(Guid.NewGuid());
+        Id = id;
         Name = name;
         Identifier = identifier;
         Parent = parent;
@@ -44,7 +44,7 @@ public sealed class Department : Shared.Entity
 
     private readonly List<DepartmentLocation> _locations = [];
 
-    public static Result<Department, Error> Create(string name, Identifier identifier, Department? parent, short depth,
+    public static Result<Department, Error> Create(DepartmentId id, string name, Identifier identifier, Department? parent, short depth,
         IEnumerable<DepartmentPosition> positions,
         IEnumerable<DepartmentLocation> locations)
     {
@@ -59,7 +59,7 @@ public sealed class Department : Shared.Entity
         var updatePathResult = SetPath(parent, identifier);
         if (updatePathResult.IsFailure) return updatePathResult.Error;
 
-        return new Department(name.Trim(), identifier, parent, updatePathResult.Value, depth, positions, locations);
+        return new Department(id, name.Trim(), identifier, parent, updatePathResult.Value, depth, positions, locations);
     }
 
     public Result<Department, Error> SetParent(Department parent)

@@ -2,6 +2,7 @@
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.Departments;
+using DirectoryService.Domain;
 using DirectoryService.Domain.Department;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
@@ -60,20 +61,24 @@ public sealed class CreateDepartmentHandler : ICommandHandler<DepartmentId, Crea
             depth = (short)(parentResult.Value.Depth + 1);
         }
 
+        var departmentId = DepartmentId.New();
+        var departmentLocations = command.DepartmentRequest.LocationIds
+            .Select(g => new DepartmentLocation(departmentId, new LocationId(g)));
+
         var departmentResult = Department.Create(
+            departmentId,
             command.DepartmentRequest.Name,
             identifierResult.Value,
             parent,
             depth,
             [],
-            []);
+            departmentLocations);
 
         if (departmentResult.IsFailure)
         {
             _logger.LogError("Failed to create department: {ErrorMessage}", departmentResult.Error);
             return departmentResult.Error.ToErrors();
         }
-
 
         var createDepartmentResult = await _departmentRepository.AddAsync(departmentResult.Value, cancellationToken);
 

@@ -37,6 +37,9 @@ public class DepartmentRepository : IDepartmentRepository
                         IndexConstants.DEPARTMENT_IDENTIFIER,
                         StringComparison.CurrentCultureIgnoreCase) =>
                     Error.Conflict("unique.conflict", "Identifier conflict"),
+                { SqlState: PostgresErrorCodes.ForeignKeyViolation, ConstraintName: not null } when
+                    pgEx.ConstraintName == "FK_department_location_locations_location_id" =>
+                    Error.Conflict("fk.conflict", "Specified location does not exist"),
                 _ => Error.Failure(null, "database error. check logs")
             };
         }
