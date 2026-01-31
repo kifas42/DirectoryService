@@ -13,7 +13,8 @@ public class CreateDepartmentValidator : AbstractValidator<CreateDepartmentReque
         RuleFor(x => x.Name)
             .NotEmpty()
             .Length(Constants.MIN_NAME_TEXT_LENGTH, Constants.MAX_NAME_TEXT_LENGTH)
-            .WithError(Error.Validation(null,
+            .WithError(Error.Validation(
+                "create.department",
                 $"Название должно быть от {Constants.MIN_NAME_TEXT_LENGTH} до {Constants.MAX_NAME_TEXT_LENGTH} символов",
                 "Name"));
         RuleFor(x => x.Identifier)
@@ -29,10 +30,14 @@ public class CreateDepartmentValidator : AbstractValidator<CreateDepartmentReque
                 "Identifier"));
         RuleFor(x => x.LocationIds)
             .NotEmpty()
+            .WithError(Error.Validation(
+                "create.department",
+                $"Список локаций не должен быть пустым",
+                "LocationIds"))
             .Must(items => items.Distinct().Count() == items.Length)
             .WithError(Error.Validation(
                 "create.department",
-                $"Идентификатор не должен быть пустым и содержать дубликаты",
-                "Identifier"));
+                $"Список локаций не содержать дубликаты",
+                "LocationIds"));
     }
 }
