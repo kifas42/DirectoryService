@@ -1,6 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
-using DirectoryService.Application;
-using DirectoryService.Domain.Department;
+using DirectoryService.Application.Departments;
+using DirectoryService.Domain.Departments;
 using DirectoryService.Infrastructure.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -49,7 +49,7 @@ public class DepartmentRepository : IDepartmentRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError("GetById Error: {Message}", ex.Message);
+            _logger.LogError("Add Error: {Message}", ex.Message);
             return Error.Failure(null, "database error. check logs");
         }
     }
@@ -73,70 +73,10 @@ public class DepartmentRepository : IDepartmentRepository
             return Error.Failure(null, "database error. check logs");
         }
     }
+
+    public bool IsAllExistAndActive(IEnumerable<DepartmentId> departmentIds)
+    {
+        return _dbContext.Departments
+            .Count(d => departmentIds.Contains(d.Id) && d.IsActive) == departmentIds.Count();
+    }
 }
-
-/*
-    public Result<Department, Error> GetByIdWithParents(DepartmentId departmentId)
-    {
-        var rawDepartments = _dbContext.Departments
-            .FromSqlInterpolated($@"
-            WITH RECURSIVE dept_ancestors AS (
-                SELECT * FROM departments WHERE id = {departmentId.Value}
-                UNION ALL
-                SELECT d.* FROM departments d
-                INNER JOIN dept_ancestors da ON d.id = da.parent_id
-            )
-            SELECT * FROM dept_ancestors")
-            .ToList();
-
-        if (!rawDepartments.Any())
-        {
-            return Error.NotFound("get.department", "Department not found", departmentId.Value);
-        }
-
-        var dict = rawDepartments.ToDictionary(d => d.Id);
-
-        // Находим исходный отдел
-        var targetDept = dict[departmentId];
-
-        return targetDept;
-    }
-
-    public Result<Department, Error> GetHierarchyLtree(string rootPath)
-    {
-        var rawDepartments = _dbContext.Departments
-            .FromSqlInterpolated($"""
-                                  SELECT id,
-                                      parent_id,
-                                      name,
-                                      identifier,
-                                      path,
-                                      depth,
-                                      is_active,
-                                      created_at,
-                                      updated_at
-                                  FROM departments
-                                  WHERE path <@ @rootPath::ltree
-                                  ORDER BY depth
-                                  """)
-            .ToList();
-
-        if (!rawDepartments.Any())
-        {
-            return Error.NotFound("get.department", "Ltree hierarchy Department not found", null);
-        }
-
-        var dict = rawDepartments.ToDictionary(d => d.Id);
-        var roots = new List<Department>();
-        foreach (var department in rawDepartments)
-        {
-            if (department.ParentId is not null && dict.TryGetValue(department.ParentId, out var parent))
-            {
-                parent.
-                    // перевернуть логику. добавлять родителей к детям
-            }
-        }
-
-        return targetDept;
-    }
-}*/

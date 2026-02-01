@@ -2,13 +2,13 @@
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.Departments;
-using DirectoryService.Domain;
-using DirectoryService.Domain.Department;
+using DirectoryService.Domain.Departments;
+using DirectoryService.Domain.Locations;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Shared;
 
-namespace DirectoryService.Application.CreateDepartment;
+namespace DirectoryService.Application.Departments;
 
 public record CreateDepartmentCommand(CreateDepartmentRequest DepartmentRequest) : ICommand;
 
@@ -79,6 +79,8 @@ public sealed class CreateDepartmentHandler : ICommandHandler<DepartmentId, Crea
             _logger.LogError("Failed to create department: {ErrorMessage}", departmentResult.Error);
             return departmentResult.Error.ToErrors();
         }
+
+        departmentResult.Value.Activate();
 
         var createDepartmentResult = await _departmentRepository.AddAsync(departmentResult.Value, cancellationToken);
 

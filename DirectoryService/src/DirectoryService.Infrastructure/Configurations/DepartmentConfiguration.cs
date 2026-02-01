@@ -1,8 +1,8 @@
-﻿using DirectoryService.Domain.Department;
+﻿using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Path = DirectoryService.Domain.Department.Path;
+using Path = DirectoryService.Domain.Departments.Path;
 
 namespace DirectoryService.Infrastructure.Configurations;
 

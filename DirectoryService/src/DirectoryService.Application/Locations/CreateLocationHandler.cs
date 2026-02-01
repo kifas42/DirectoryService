@@ -2,13 +2,13 @@
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.Locations;
-using DirectoryService.Domain;
+using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Shared;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Shared;
 
-namespace DirectoryService.Application.CreateLocation;
+namespace DirectoryService.Application.Locations;
 
 public record CreateLocationCommand(CreateLocationRequest LocationRequest) : ICommand;
 
@@ -58,6 +58,8 @@ public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLo
             _logger.LogError("Failed to create location: {ErrorMessage}", locationResult.Error);
             return locationResult.Error.ToErrors();
         }
+        
+        locationResult.Value.Activate();
 
         var createLocationResult = await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
 

@@ -1,8 +1,8 @@
 ﻿using CSharpFunctionalExtensions;
-using DirectoryService.Domain.Department;
+using DirectoryService.Domain.Departments;
 using Shared;
 
-namespace DirectoryService.Application;
+namespace DirectoryService.Application.Departments;
 
 public interface IDepartmentRepository
 {
@@ -10,5 +10,5 @@ public interface IDepartmentRepository
 
     public Result<Department, Error> GetById(DepartmentId departmentId);
 
-    //public Result<Department, Error> GetByIdWithParents(DepartmentId departmentId);
+    public bool IsAllExistAndActive(IEnumerable<DepartmentId> departmentIds);
 }

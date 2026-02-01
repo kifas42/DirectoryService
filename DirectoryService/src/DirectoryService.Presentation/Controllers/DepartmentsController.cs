@@ -1,7 +1,7 @@
 ﻿using DirectoryService.Application.Abstractions;
-using DirectoryService.Application.CreateDepartment;
+using DirectoryService.Application.Departments;
 using DirectoryService.Contracts.Departments;
-using DirectoryService.Domain.Department;
+using DirectoryService.Domain.Departments;
 using DirectoryService.Presentation.EndpointResults;
 using Microsoft.AspNetCore.Mvc;
 
