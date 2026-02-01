@@ -1,27 +1,28 @@
 ﻿using CSharpFunctionalExtensions;
+using DirectoryService.Domain.Positions;
 
-namespace DirectoryService.Domain.Department;
+namespace DirectoryService.Domain.Departments;
 
-public sealed class DepartmentLocation
+public sealed class DepartmentPosition
 {
-    public DepartmentLocation(DepartmentId departmentId, LocationId locationId)
+    public DepartmentPosition(DepartmentId departmentId, PositionId positionId)
     {
         Id = Guid.NewGuid();
         DepartmentId = departmentId;
-        LocationId = locationId;
+        PositionId = positionId;
     }
 
-    private DepartmentLocation() { }
+    private DepartmentPosition() { }
 
     public Guid Id { get; }
 
     public DepartmentId DepartmentId { get; private set; } = null!;
 
-    public LocationId LocationId { get; private set; } = null!;
+    public PositionId PositionId { get; private set; } = null!;
 
-    public Result ChangeLocationId(LocationId newLocationId)
+    public Result ChangeLocationId(PositionId newPositionId)
     {
-        LocationId = newLocationId;
+        PositionId = newPositionId;
         return Result.Success();
 
         // TBD: валидация и возврат ошибок

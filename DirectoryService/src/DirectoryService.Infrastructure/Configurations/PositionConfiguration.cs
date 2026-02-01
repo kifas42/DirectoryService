@@ -1,4 +1,4 @@
-﻿using DirectoryService.Domain;
+﻿using DirectoryService.Domain.Positions;
 using DirectoryService.Domain.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -32,5 +32,10 @@ public class PositionConfiguration : IEntityTypeConfiguration<Position>
             .HasColumnName("description")
             .HasMaxLength(Constants.MAX_TEXT_LENGTH)
             .IsRequired(false);
+
+        builder.HasIndex(p => p.Name)
+            .HasFilter("is_active = true")
+            .HasDatabaseName(IndexConstants.POSITION_ACTIVE_NAME)
+            .IsUnique();
     }
 }

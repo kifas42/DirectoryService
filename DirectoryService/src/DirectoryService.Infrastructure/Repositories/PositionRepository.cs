@@ -1,6 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
-using DirectoryService.Application.Locations;
-using DirectoryService.Domain.Locations;
+using DirectoryService.Application.Positions;
+using DirectoryService.Domain.Positions;
 using DirectoryService.Infrastructure.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -9,37 +9,32 @@ using Shared;
 
 namespace DirectoryService.Infrastructure.Repositories;
 
-public sealed class LocationRepository : ILocationRepository
+public class PositionRepository : IPositionRepository
 {
-    private readonly ILogger<LocationRepository> _logger;
+    private readonly ILogger<PositionRepository> _logger;
     private readonly ApplicationDbContext _dbContext;
 
-    public LocationRepository(ILogger<LocationRepository> logger, ApplicationDbContext dbContext)
+    public PositionRepository(ApplicationDbContext dbContext, ILogger<PositionRepository> logger)
     {
-        _logger = logger;
         _dbContext = dbContext;
+        _logger = logger;
     }
 
-    public async Task<Result<LocationId, Error>> AddAsync(
-        Location location,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<PositionId, Error>> AddAsync(Position position, CancellationToken cancellationToken)
     {
-        _dbContext.Locations.Add(location);
         try
         {
+            _dbContext.Positions.Add(position);
             await _dbContext.SaveChangesAsync(cancellationToken);
-            return location.Id;
+            return position.Id;
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx)
         {
             return pgEx switch
             {
                 { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null } when
-                    pgEx.ConstraintName.Contains(IndexConstants.NAME, StringComparison.CurrentCultureIgnoreCase) =>
+                    pgEx.ConstraintName.Contains(IndexConstants.POSITION_ACTIVE_NAME, StringComparison.CurrentCultureIgnoreCase) =>
                     Error.Conflict("unique.conflict", "Name conflict"),
-                { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null } when
-                    pgEx.ConstraintName.Contains(IndexConstants.ADDRESS, StringComparison.CurrentCultureIgnoreCase) =>
-                    Error.Conflict("unique.conflict", "Address conflict"),
                 _ => Error.Failure(null, "database error. check logs")
             };
         }

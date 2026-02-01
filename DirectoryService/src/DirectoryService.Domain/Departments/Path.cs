@@ -1,7 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Shared;
 
-namespace DirectoryService.Domain.Department;
+namespace DirectoryService.Domain.Departments;
 
 public sealed record Path
 {

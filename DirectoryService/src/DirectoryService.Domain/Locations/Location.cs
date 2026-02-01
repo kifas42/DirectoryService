@@ -3,7 +3,7 @@ using DirectoryService.Domain.Shared;
 using Shared;
 using Entity = DirectoryService.Domain.Shared.Entity;
 
-namespace DirectoryService.Domain;
+namespace DirectoryService.Domain.Locations;
 
 public sealed class Location : Entity
 {

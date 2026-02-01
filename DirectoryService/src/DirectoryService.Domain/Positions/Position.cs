@@ -1,21 +1,23 @@
 ﻿using CSharpFunctionalExtensions;
+using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Shared;
 using Shared;
 
-namespace DirectoryService.Domain;
+namespace DirectoryService.Domain.Positions;
 
 public sealed class Position : Shared.Entity
 {
-    public const int MAX_LOW_LENGTH = 100;
-
     // ef core
     private Position() { }
 
-    private Position(string name, string? description)
+    private Position(PositionId id, string name, string? description,
+        IEnumerable<DepartmentPosition> departmentPositions)
     {
-        Id = new PositionId(Guid.NewGuid());
+        Id = id;
         Name = name;
         Description = description;
+
+        _departments = departmentPositions.ToList();
     }
 
     public PositionId Id { get; private set; } = null!;
@@ -24,7 +26,12 @@ public sealed class Position : Shared.Entity
 
     public string? Description { get; private set; }
 
-    public static Result<Position, Error> Create(string name, string? description)
+    public IReadOnlyList<DepartmentPosition> Departments => _departments;
+
+    private readonly List<DepartmentPosition> _departments = [];
+
+    public static Result<Position, Error> Create(PositionId id, string name, string? description,
+        IEnumerable<DepartmentPosition> departmentPositions)
     {
         if (string.IsNullOrWhiteSpace(name))
             return GeneralErrors.ValueIsEmpty("name");
@@ -39,6 +46,6 @@ public sealed class Position : Shared.Entity
             return GeneralErrors.LenghtIsInvalid("description", max: Constants.MAX_TEXT_LENGTH);
         }
 
-        return new Position(name, description);
+        return new Position(id, name, description, departmentPositions);
     }
 }
