@@ -1,8 +1,8 @@
 ﻿using CSharpFunctionalExtensions;
-using DirectoryService.Domain.Locations;
+using DirectoryService.Domain;
 using Shared;
 
-namespace DirectoryService.Application.Locations;
+namespace DirectoryService.Application;
 
 public interface ILocationRepository
 {

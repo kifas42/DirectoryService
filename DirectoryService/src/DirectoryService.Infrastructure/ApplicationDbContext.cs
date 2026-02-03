@@ -1,6 +1,5 @@
-﻿using DirectoryService.Domain.Departments;
-using DirectoryService.Domain.Locations;
-using DirectoryService.Domain.Positions;
+﻿using DirectoryService.Domain;
+using DirectoryService.Domain.Department;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -15,7 +14,9 @@ public class ApplicationDbContext(IConfiguration configuration) : DbContext
 
     public DbSet<Location> Locations => Set<Location>();
 
-    public DbSet<Position> Positions => Set<Position>();
+    public DbSet<DepartmentLocation> DepartmentLocationsLocations => Set<DepartmentLocation>();
+
+    public DbSet<DepartmentPosition> DepartmentPositionsPositions => Set<DepartmentPosition>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -25,7 +26,6 @@ public class ApplicationDbContext(IConfiguration configuration) : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasPostgresExtension("ltree");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 

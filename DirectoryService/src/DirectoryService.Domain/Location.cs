@@ -3,7 +3,7 @@ using DirectoryService.Domain.Shared;
 using Shared;
 using Entity = DirectoryService.Domain.Shared.Entity;
 
-namespace DirectoryService.Domain.Locations;
+namespace DirectoryService.Domain;
 
 public sealed class Location : Entity
 {
@@ -16,7 +16,6 @@ public sealed class Location : Entity
     {
         Id = new LocationId(Guid.NewGuid());
         Name = name;
-        IsActive = true;
         Address = address;
         Timezone = timezone;
     }
@@ -29,10 +28,7 @@ public sealed class Location : Entity
 
     public Timezone Timezone { get; private set; } = null!;
 
-    public static Result<Location, Error> Create(
-        string name,
-        Address address,
-        Timezone timezone)
+    public static Result<Location, Error> Create(string name, Address address, Timezone timezone)
     {
         if (string.IsNullOrWhiteSpace(name))
             return GeneralErrors.ValueIsEmpty("name");

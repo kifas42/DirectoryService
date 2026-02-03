@@ -1,7 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Shared;
 
-namespace DirectoryService.Domain.Departments;
+namespace DirectoryService.Domain.Department;
 
 public sealed record Path
 {
@@ -40,11 +40,5 @@ public sealed record Path
         return
             new Path(
                 string.Join(PATH_SEPARATOR, path.Select(id => id.Value)));
-    }
-
-    public IReadOnlyList<Identifier> ToIdentifierArray()
-    {
-        string[] paths = Value.Split(PATH_SEPARATOR, StringSplitOptions.RemoveEmptyEntries);
-        return paths.Select(id => Identifier.Create(id).Value).ToList();
     }
 }
