@@ -37,7 +37,7 @@ public class CreateDepartmentValidator : AbstractValidator<CreateDepartmentReque
             .Must(items => items.Distinct().Count() == items.Length)
             .WithError(Error.Validation(
                 "create.department",
-                $"Список локаций не содержать дубликаты",
+                $"Список локаций не должен содержать дубликаты",
                 "LocationIds"));
     }
 }

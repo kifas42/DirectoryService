@@ -115,6 +115,23 @@ public sealed class Department : Shared.Entity
         return identifier;
     }
 
+    public Result<int, Error> SetLocations(IEnumerable<DepartmentLocation> locations)
+    {
+        try
+        {
+            _locations.Clear();
+            _locations.AddRange(locations);
+        }
+        catch (Exception e)
+        {
+            return Error.Failure(null, "locations cannot be empty");
+        }
+
+        Update();
+        return _locations.Count;
+    }
+
+
     private static Result<Path, Error> SetPath(Department? parent, Identifier identifier)
     {
         var parentPath = parent?.Path?.ToIdentifierArray().ToList() ?? [];
