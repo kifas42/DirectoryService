@@ -13,7 +13,7 @@ namespace DirectoryService.Application.Positions;
 
 public record CreatePositionCommand(CreatePositionRequest PositionRequest) : ICommand;
 
-public sealed class CreatePositionHandler : ICommandHandler<PositionId, CreatePositionCommand>
+public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePositionCommand>
 {
     private readonly ILogger<CreatePositionHandler> _logger;
     private readonly IPositionRepository _positionRepository;
@@ -32,7 +32,7 @@ public sealed class CreatePositionHandler : ICommandHandler<PositionId, CreatePo
         _departmentRepository = departmentRepository;
     }
 
-    public async Task<Result<PositionId, Errors>> Handle(
+    public async Task<Result<Guid, Errors>> Handle(
         CreatePositionCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -61,16 +61,16 @@ public sealed class CreatePositionHandler : ICommandHandler<PositionId, CreatePo
         var departmentPositions = departmentIds
             .Select(g => new DepartmentPosition(g, positionId));
 
-        var positionResult =
-            Position.Create(positionId, command.PositionRequest.Name, command.PositionRequest.Description,
-                departmentPositions);
+        var positionResult = Position.Create(
+            positionId,
+            command.PositionRequest.Name,
+            command.PositionRequest.Description,
+            departmentPositions);
 
         if (positionResult.IsFailure)
         {
             return positionResult.Error.ToErrors();
         }
-
-        positionResult.Value.Activate();
 
         var createPositionResult = await _positionRepository.AddAsync(positionResult.Value, cancellationToken);
 
@@ -80,6 +80,6 @@ public sealed class CreatePositionHandler : ICommandHandler<PositionId, CreatePo
         }
 
 
-        return createPositionResult.Value;
+        return createPositionResult.Value.Value;
     }
 }

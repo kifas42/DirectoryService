@@ -12,7 +12,7 @@ namespace DirectoryService.Application.Departments;
 
 public record CreateDepartmentCommand(CreateDepartmentRequest DepartmentRequest) : ICommand;
 
-public sealed class CreateDepartmentHandler : ICommandHandler<DepartmentId, CreateDepartmentCommand>
+public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCommand>
 {
     private readonly ILogger<CreateDepartmentHandler> _logger;
     private readonly IDepartmentRepository _departmentRepository;
@@ -28,7 +28,7 @@ public sealed class CreateDepartmentHandler : ICommandHandler<DepartmentId, Crea
         _validator = validator;
     }
 
-    public async Task<Result<DepartmentId, Errors>> Handle(
+    public async Task<Result<Guid, Errors>> Handle(
         CreateDepartmentCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -80,8 +80,6 @@ public sealed class CreateDepartmentHandler : ICommandHandler<DepartmentId, Crea
             return departmentResult.Error.ToErrors();
         }
 
-        departmentResult.Value.Activate();
-
         var createDepartmentResult = await _departmentRepository.AddAsync(departmentResult.Value, cancellationToken);
 
         if (createDepartmentResult.IsFailure)
@@ -92,6 +90,6 @@ public sealed class CreateDepartmentHandler : ICommandHandler<DepartmentId, Crea
 
         _logger.LogInformation("Added Department: {DepartmentId}", createDepartmentResult.Value);
 
-        return createDepartmentResult.Value;
+        return createDepartmentResult.Value.Value;
     }
 }

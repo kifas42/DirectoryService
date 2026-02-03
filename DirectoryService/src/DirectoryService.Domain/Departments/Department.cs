@@ -9,7 +9,13 @@ public sealed class Department : Shared.Entity
     // ef core
     private Department() { }
 
-    private Department(DepartmentId id, string name, Identifier identifier, Department? parent, Path path, short depth,
+    private Department(
+        DepartmentId id,
+        string name,
+        Identifier identifier,
+        Department? parent,
+        Path path,
+        short depth,
         IEnumerable<DepartmentPosition> positions,
         IEnumerable<DepartmentLocation> locations)
     {
@@ -19,6 +25,8 @@ public sealed class Department : Shared.Entity
         Parent = parent;
         Path = path;
         Depth = depth;
+        IsActive = true;
+
         _positions.AddRange(positions);
         _locations.AddRange(locations);
         Update();
@@ -44,7 +52,12 @@ public sealed class Department : Shared.Entity
 
     private readonly List<DepartmentLocation> _locations = [];
 
-    public static Result<Department, Error> Create(DepartmentId id, string name, Identifier identifier, Department? parent, short depth,
+    public static Result<Department, Error> Create(
+        DepartmentId id,
+        string name,
+        Identifier identifier,
+        Department? parent,
+        short depth,
         IEnumerable<DepartmentPosition> positions,
         IEnumerable<DepartmentLocation> locations)
     {
