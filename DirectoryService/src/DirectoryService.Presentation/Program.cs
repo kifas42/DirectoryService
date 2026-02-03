@@ -1,8 +1,12 @@
 using DirectoryService.Application;
+using DirectoryService.Application.Departments;
+using DirectoryService.Application.Locations;
+using DirectoryService.Application.Positions;
 using DirectoryService.Infrastructure;
 using DirectoryService.Infrastructure.Repositories;
 using DirectoryService.Presentation;
 using DirectoryService.Presentation.Middlewares;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Shared;
@@ -16,6 +20,7 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Services.AddSerilog();
 builder.Services.AddControllers();
+builder.Services.Configure<ApiBehaviorOptions>(options => options.SuppressModelStateInvalidFilter = true);
 builder.Services.AddHttpLogging();
 builder.Services.AddOpenApi(options =>
 {
@@ -38,6 +43,8 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 builder.Services.AddScoped<ApplicationDbContext>();
 builder.Services.AddScoped<ILocationRepository, LocationRepository>();
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+builder.Services.AddScoped<IPositionRepository, PositionRepository>();
 builder.Services.AddApplication();
 
 var app = builder.Build();

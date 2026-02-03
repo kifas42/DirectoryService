@@ -1,8 +1,8 @@
-﻿using DirectoryService.Domain.Department;
+﻿using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Path = DirectoryService.Domain.Department.Path;
+using Path = DirectoryService.Domain.Departments.Path;
 
 namespace DirectoryService.Infrastructure.Configurations;
 
@@ -36,8 +36,10 @@ public sealed class DepartmentConfiguration : IEntityTypeConfiguration<Departmen
             .IsRequired();
         builder.Property(d => d.Path)
             .HasColumnName("path")
-            .HasConversion(p => p.Value, p => Path.CreateFromStringPath(p).Value)
-            .HasMaxLength(Constants.MAX_TEXT_LENGTH)
+            .HasColumnType("ltree")
+            .HasConversion(
+                p => new LTree(p.Value),
+                p => Path.CreateFromStringPath(p.ToString()).Value)
             .IsRequired();
         builder.Property(d => d.Depth)
             .HasColumnName("depth")
@@ -46,5 +48,11 @@ public sealed class DepartmentConfiguration : IEntityTypeConfiguration<Departmen
             .WithMany()
             .HasForeignKey("parent_id")
             .IsRequired(false);
+
+        builder.HasIndex(d => d.Identifier)
+            .IsUnique()
+            .HasDatabaseName(IndexConstants.DEPARTMENT_IDENTIFIER);
+
+        builder.HasIndex(d => d.Path).HasMethod("gist").HasDatabaseName(IndexConstants.DEPARTMENT_PATH);
     }
 }

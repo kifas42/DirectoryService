@@ -2,17 +2,17 @@
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.Locations;
-using DirectoryService.Domain;
+using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Shared;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Shared;
 
-namespace DirectoryService.Application.CreateLocation;
+namespace DirectoryService.Application.Locations;
 
 public record CreateLocationCommand(CreateLocationRequest LocationRequest) : ICommand;
 
-public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLocationCommand>
+public sealed class CreateLocationHandler : ICommandHandler<Guid, CreateLocationCommand>
 {
     private readonly ILogger<CreateLocationHandler> _logger;
     private readonly ILocationRepository _locationRepository;
@@ -28,7 +28,7 @@ public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLo
         _validator = validator;
     }
 
-    public async Task<Result<LocationId, Errors>> Handle(
+    public async Task<Result<Guid, Errors>> Handle(
         CreateLocationCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -59,6 +59,7 @@ public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLo
             return locationResult.Error.ToErrors();
         }
 
+
         var createLocationResult = await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
 
         if (createLocationResult.IsFailure)
@@ -69,6 +70,6 @@ public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLo
 
         _logger.LogInformation("Added location: {LocationId}", createLocationResult.Value);
 
-        return createLocationResult.Value;
+        return createLocationResult.Value.Value;
     }
 }

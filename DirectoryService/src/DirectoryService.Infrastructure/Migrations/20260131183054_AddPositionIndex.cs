@@ -5,24 +5,25 @@
 namespace DirectoryService.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class add_index : Migration
+    public partial class AddPositionIndex : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateIndex(
-                name: "ix_locations_name",
-                table: "locations",
+                name: "ix_position_active_name",
+                table: "positions",
                 column: "name",
-                unique: true);
+                unique: true,
+                filter: "is_active = true");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
-                name: "ix_locations_name",
-                table: "locations");
+                name: "ix_position_active_name",
+                table: "positions");
         }
     }
 }
