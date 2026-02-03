@@ -2,7 +2,7 @@
 using CSharpFunctionalExtensions;
 using Shared;
 
-namespace DirectoryService.Domain.Departments;
+namespace DirectoryService.Domain.Department;
 
 public sealed record Identifier
 {
@@ -21,10 +21,10 @@ public sealed record Identifier
             return GeneralErrors.ValueIsEmpty("identifier");
 
         return _englishLetterRegex.IsMatch(identifier)
-            ? new Identifier(identifier.ToLower())
-            : Error.Validation(
+            ? Error.Validation(
                 "validation.is.eng",
                 $"identifier must be only English letters and `-`.\nidentifier must be between 3 and 150 characters",
-                "identifier");
+                "identifier")
+            : new Identifier(identifier.ToLower());
     }
 }

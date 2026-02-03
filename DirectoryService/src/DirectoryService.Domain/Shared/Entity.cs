@@ -2,7 +2,7 @@
 
 public abstract class Entity
 {
-    public bool IsActive { get; protected set; }
+    public bool IsActive { get; private set; }
 
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
