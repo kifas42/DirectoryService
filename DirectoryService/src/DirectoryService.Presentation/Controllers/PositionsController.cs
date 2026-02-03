@@ -1,7 +1,6 @@
 ﻿using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Positions;
 using DirectoryService.Contracts.Positions;
-using DirectoryService.Domain.Positions;
 using DirectoryService.Presentation.EndpointResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,9 +11,9 @@ namespace DirectoryService.Presentation.Controllers;
 public class PositionsController : ControllerBase
 {
     [HttpPost]
-    public async Task<EndpointResult<PositionId>> Create(
+    public async Task<EndpointResult<Guid>> Create(
         [FromBody] CreatePositionRequest positionRequest,
-        [FromServices] ICommandHandler<PositionId, CreatePositionCommand> handler,
+        [FromServices] ICommandHandler<Guid, CreatePositionCommand> handler,
         CancellationToken cancellationToken)
     {
         var command = new CreatePositionCommand(positionRequest);

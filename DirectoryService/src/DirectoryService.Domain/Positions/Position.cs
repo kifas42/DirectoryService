@@ -10,13 +10,16 @@ public sealed class Position : Shared.Entity
     // ef core
     private Position() { }
 
-    private Position(PositionId id, string name, string? description,
+    private Position(
+        PositionId id,
+        string name,
+        string? description,
         IEnumerable<DepartmentPosition> departmentPositions)
     {
         Id = id;
         Name = name;
         Description = description;
-
+        IsActive = true;
         _departments = departmentPositions.ToList();
     }
 
@@ -30,7 +33,10 @@ public sealed class Position : Shared.Entity
 
     private readonly List<DepartmentPosition> _departments = [];
 
-    public static Result<Position, Error> Create(PositionId id, string name, string? description,
+    public static Result<Position, Error> Create(
+        PositionId id,
+        string name,
+        string? description,
         IEnumerable<DepartmentPosition> departmentPositions)
     {
         if (string.IsNullOrWhiteSpace(name))

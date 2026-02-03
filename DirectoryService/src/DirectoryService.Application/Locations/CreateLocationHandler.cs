@@ -12,7 +12,7 @@ namespace DirectoryService.Application.Locations;
 
 public record CreateLocationCommand(CreateLocationRequest LocationRequest) : ICommand;
 
-public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLocationCommand>
+public sealed class CreateLocationHandler : ICommandHandler<Guid, CreateLocationCommand>
 {
     private readonly ILogger<CreateLocationHandler> _logger;
     private readonly ILocationRepository _locationRepository;
@@ -28,7 +28,7 @@ public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLo
         _validator = validator;
     }
 
-    public async Task<Result<LocationId, Errors>> Handle(
+    public async Task<Result<Guid, Errors>> Handle(
         CreateLocationCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -58,8 +58,7 @@ public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLo
             _logger.LogError("Failed to create location: {ErrorMessage}", locationResult.Error);
             return locationResult.Error.ToErrors();
         }
-        
-        locationResult.Value.Activate();
+
 
         var createLocationResult = await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
 
@@ -71,6 +70,6 @@ public sealed class CreateLocationHandler : ICommandHandler<LocationId, CreateLo
 
         _logger.LogInformation("Added location: {LocationId}", createLocationResult.Value);
 
-        return createLocationResult.Value;
+        return createLocationResult.Value.Value;
     }
 }
