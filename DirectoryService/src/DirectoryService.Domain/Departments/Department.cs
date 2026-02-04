@@ -48,9 +48,9 @@ public sealed class Department : Shared.Entity
 
     public IReadOnlyList<DepartmentLocation> Locations => _locations;
 
-    private readonly List<DepartmentPosition> _positions = [];
+    private List<DepartmentPosition> _positions = [];
 
-    private readonly List<DepartmentLocation> _locations = [];
+    private List<DepartmentLocation> _locations = [];
 
     public static Result<Department, Error> Create(
         DepartmentId id,
@@ -119,8 +119,7 @@ public sealed class Department : Shared.Entity
     {
         try
         {
-            _locations.Clear();
-            _locations.AddRange(locations);
+            _locations = locations.ToList();
         }
         catch (Exception e)
         {
