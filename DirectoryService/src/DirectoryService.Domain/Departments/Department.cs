@@ -48,9 +48,9 @@ public sealed class Department : Shared.Entity
 
     public IReadOnlyList<DepartmentLocation> Locations => _locations;
 
-    private readonly List<DepartmentPosition> _positions = [];
+    private List<DepartmentPosition> _positions = [];
 
-    private readonly List<DepartmentLocation> _locations = [];
+    private List<DepartmentLocation> _locations = [];
 
     public static Result<Department, Error> Create(
         DepartmentId id,
@@ -114,6 +114,22 @@ public sealed class Department : Shared.Entity
         Update();
         return identifier;
     }
+
+    public Result<int, Error> SetLocations(IEnumerable<DepartmentLocation> locations)
+    {
+        try
+        {
+            _locations = locations.ToList();
+        }
+        catch (Exception e)
+        {
+            return Error.Failure(null, "locations cannot be empty");
+        }
+
+        Update();
+        return _locations.Count;
+    }
+
 
     private static Result<Path, Error> SetPath(Department? parent, Identifier identifier)
     {

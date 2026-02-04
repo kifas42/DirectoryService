@@ -79,4 +79,10 @@ public class DepartmentRepository : IDepartmentRepository
         return _dbContext.Departments
             .Count(d => departmentIds.Contains(d.Id) && d.IsActive) == departmentIds.Count();
     }
+
+    public async Task<UnitResult<Error>> DeleteLocationsAsync(DepartmentId departmentId, CancellationToken cancellationToken)
+    {
+        await _dbContext.DepartmentLocations.Where(d => d.DepartmentId == departmentId).ExecuteDeleteAsync(cancellationToken);
+        return UnitResult.Success<Error>();
+    }
 }

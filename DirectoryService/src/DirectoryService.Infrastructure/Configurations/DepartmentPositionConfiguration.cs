@@ -10,7 +10,7 @@ public sealed class DepartmentPositionConfiguration : IEntityTypeConfiguration<D
     public void Configure(EntityTypeBuilder<DepartmentPosition> builder)
     {
         builder.ToTable("department_position");
-        builder.HasKey(d => d.Id).HasName("pk_department_position");
+        builder.HasKey(d => new { d.DepartmentId, d.PositionId }).HasName("pk_department_position");
         builder.Property(d => d.Id).HasColumnName("id");
 
         builder.HasOne<Department>()

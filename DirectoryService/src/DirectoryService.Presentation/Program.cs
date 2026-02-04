@@ -1,4 +1,5 @@
 using DirectoryService.Application;
+using DirectoryService.Application.Database;
 using DirectoryService.Application.Departments;
 using DirectoryService.Application.Locations;
 using DirectoryService.Application.Positions;
@@ -42,6 +43,8 @@ builder.Services.AddOpenApi(options =>
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 builder.Services.AddScoped<ApplicationDbContext>();
+
+builder.Services.AddScoped<ITransactionManager, TransactionManager>();
 builder.Services.AddScoped<ILocationRepository, LocationRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IPositionRepository, PositionRepository>();

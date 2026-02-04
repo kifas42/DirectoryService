@@ -53,4 +53,10 @@ public sealed class LocationRepository : ILocationRepository
             return Error.Failure(null, "database error. check logs");
         }
     }
+
+    public bool IsAllExistAndActive(IEnumerable<LocationId> departmentIds)
+    {
+        return _dbContext.Locations
+            .Count(d => departmentIds.Contains(d.Id) && d.IsActive) == departmentIds.Count();
+    }
 }

@@ -13,9 +13,22 @@ public class DepartmentsController : ControllerBase
     [HttpPost]
     public async Task<EndpointResult<Guid>> Create(
         [FromBody] CreateDepartmentRequest departmentRequest,
-        [FromServices] ICommandHandler<Guid, CreateDepartmentCommand> handler)
+        [FromServices] ICommandHandler<Guid, CreateDepartmentCommand> handler,
+        CancellationToken cancellationToken)
     {
         var command = new CreateDepartmentCommand(departmentRequest);
-        return await handler.Handle(command);
+        return await handler.Handle(command, cancellationToken);
+    }
+
+    [HttpPut]
+    [Route("{departmentId:guid}/locations")]
+    public async Task<EndpointResult<int>> UpdateLocations(
+        [FromRoute] Guid departmentId,
+        [FromBody] UpdateLocationsRequest updateLocationsRequest,
+        [FromServices] ICommandHandler<int, UpdateLocationCommand> handler,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateLocationCommand(departmentId, updateLocationsRequest);
+        return await handler.Handle(command, cancellationToken);
     }
 }

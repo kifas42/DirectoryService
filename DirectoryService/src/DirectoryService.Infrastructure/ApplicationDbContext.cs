@@ -17,6 +17,10 @@ public class ApplicationDbContext(IConfiguration configuration) : DbContext
 
     public DbSet<Position> Positions => Set<Position>();
 
+    public DbSet<DepartmentLocation> DepartmentLocations => Set<DepartmentLocation>();
+
+    public DbSet<DepartmentPosition> DepartmentPositions => Set<DepartmentPosition>();
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseNpgsql(configuration.GetConnectionString(DATBASE));
