@@ -8,9 +8,8 @@ using DirectoryService.Infrastructure.Repositories;
 using DirectoryService.Presentation;
 using DirectoryService.Presentation.Middlewares;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Models;
+using NJsonSchema;
 using Serilog;
-using Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,22 +22,16 @@ builder.Services.AddSerilog();
 builder.Services.AddControllers();
 builder.Services.Configure<ApiBehaviorOptions>(options => options.SuppressModelStateInvalidFilter = true);
 builder.Services.AddHttpLogging();
-builder.Services.AddOpenApi(options =>
+builder.Services.AddOpenApiDocument(settings =>
 {
-    options.AddSchemaTransformer((schema, context, _) =>
-    {
-        if (context.JsonPropertyInfo?.GetType() != typeof(Envelope<Errors>))
-        {
-            return Task.CompletedTask;
-        }
+    settings.Title = "Directory Service API";
+    settings.Version = "v1";
 
-        if (schema.Properties.TryGetValue("errors", out var errors))
-        {
-            errors.Items.Reference = new OpenApiReference { Type = ReferenceType.Schema, Id = "Error" };
-        }
+    settings.SchemaSettings.SchemaType = SchemaType.OpenApi3;
 
-        return Task.CompletedTask;
-    });
+    settings.SchemaSettings.GenerateEnumMappingDescription = true;
+
+    settings.SchemaSettings.SchemaProcessors.Add(new EnvelopeSchemaProcessor());
 });
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
@@ -55,8 +48,8 @@ app.UseExceptionMiddleware();
 app.UseHttpLogging();
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "DirectoryService"));
+    app.UseOpenApi();
+    app.UseSwaggerUI();
 }
 
 app.MapControllers();
