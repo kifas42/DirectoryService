@@ -8,5 +8,5 @@ public interface ILocationRepository
 {
     public Task<Result<LocationId, Error>> AddAsync(Location location, CancellationToken cancellationToken);
 
-    public bool IsAllExistAndActive(IEnumerable<LocationId> departmentIds);
+    public Task<bool> IsAllExistAndActive(IEnumerable<LocationId> departmentIds);
 }

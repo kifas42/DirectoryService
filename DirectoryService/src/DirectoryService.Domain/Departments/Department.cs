@@ -130,7 +130,6 @@ public sealed class Department : Shared.Entity
         return _locations.Count;
     }
 
-
     private static Result<Path, Error> SetPath(Department? parent, Identifier identifier)
     {
         var parentPath = parent?.Path?.ToIdentifierArray().ToList() ?? [];

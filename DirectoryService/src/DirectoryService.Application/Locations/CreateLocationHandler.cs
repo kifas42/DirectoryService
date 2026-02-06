@@ -59,7 +59,6 @@ public sealed class CreateLocationHandler : ICommandHandler<Guid, CreateLocation
             return locationResult.Error.ToErrors();
         }
 
-
         var createLocationResult = await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
 
         if (createLocationResult.IsFailure)

@@ -1,13 +1,12 @@
-﻿using CSharpFunctionalExtensions;
-using DirectoryService.Domain.Positions;
+﻿using DirectoryService.Domain.Positions;
 
 namespace DirectoryService.Domain.Departments;
 
 public sealed class DepartmentPosition
 {
-    public DepartmentPosition(DepartmentId departmentId, PositionId positionId)
+    public DepartmentPosition(Guid id, DepartmentId departmentId, PositionId positionId)
     {
-        Id = Guid.NewGuid();
+        Id = id;
         DepartmentId = departmentId;
         PositionId = positionId;
     }
@@ -20,19 +19,13 @@ public sealed class DepartmentPosition
 
     public PositionId PositionId { get; private set; } = null!;
 
-    public Result ChangeLocationId(PositionId newPositionId)
+    public void ChangeLocationId(PositionId newPositionId)
     {
         PositionId = newPositionId;
-        return Result.Success();
-
-        // TBD: валидация и возврат ошибок
     }
 
-    public Result ChangeDepartmentId(DepartmentId newDepartmentId)
+    public void ChangeDepartmentId(DepartmentId newDepartmentId)
     {
         DepartmentId = newDepartmentId;
-        return Result.Success();
-
-        // TBD: валидация и возврат ошибок
     }
 }

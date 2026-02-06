@@ -46,7 +46,7 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
         var departmentIds = command.PositionRequest.DepartmentIds
             .Select(g => new DepartmentId(g)).ToList();
 
-        if (!_departmentRepository.IsAllExistAndActive(departmentIds))
+        if (!await _departmentRepository.IsAllExistAndActive(departmentIds))
         {
             errors.Add(Error.NotFound("find.active.departments", "Department not found", null));
         }
@@ -59,7 +59,7 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
         var positionId = PositionId.New();
 
         var departmentPositions = departmentIds
-            .Select(g => new DepartmentPosition(g, positionId));
+            .Select(g => new DepartmentPosition(Guid.NewGuid(), g, positionId));
 
         var positionResult = Position.Create(
             positionId,
@@ -78,7 +78,6 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
         {
             return createPositionResult.Error.ToErrors();
         }
-
 
         return createPositionResult.Value.Value;
     }
