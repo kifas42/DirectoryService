@@ -8,9 +8,9 @@ public interface IDepartmentRepository
 {
     public Task<Result<DepartmentId, Error>> AddAsync(Department department, CancellationToken cancellationToken);
 
-    public Result<Department, Error> GetById(DepartmentId departmentId);
+    public Task<Result<Department, Error>> GetByIdIsActive(DepartmentId departmentId);
 
-    public bool IsAllExistAndActive(IEnumerable<DepartmentId> departmentIds);
+    public Task<bool> IsAllExistAndActive(IEnumerable<DepartmentId> departmentIds);
 
     Task<UnitResult<Error>> DeleteLocationsAsync(DepartmentId departmentId, CancellationToken cancellationToken);
 }

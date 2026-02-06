@@ -54,9 +54,9 @@ public sealed class LocationRepository : ILocationRepository
         }
     }
 
-    public bool IsAllExistAndActive(IEnumerable<LocationId> departmentIds)
+    public async Task<bool> IsAllExistAndActive(IEnumerable<LocationId> departmentIds)
     {
-        return _dbContext.Locations
-            .Count(d => departmentIds.Contains(d.Id) && d.IsActive) == departmentIds.Count();
+        return await _dbContext.Locations
+            .CountAsync(d => departmentIds.Contains(d.Id) && d.IsActive) == departmentIds.Count();
     }
 }

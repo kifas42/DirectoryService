@@ -54,11 +54,11 @@ public class DepartmentRepository : IDepartmentRepository
         }
     }
 
-    public Result<Department, Error> GetById(DepartmentId departmentId)
+    public async Task<Result<Department, Error>> GetByIdIsActive(DepartmentId departmentId)
     {
         try
         {
-            Department? department = _dbContext.Departments.SingleOrDefault(d => d.Id == departmentId);
+            Department? department = await _dbContext.Departments.SingleOrDefaultAsync(d => d.Id == departmentId && d.IsActive);
 
             if (department is null)
             {
@@ -74,10 +74,10 @@ public class DepartmentRepository : IDepartmentRepository
         }
     }
 
-    public bool IsAllExistAndActive(IEnumerable<DepartmentId> departmentIds)
+    public async Task<bool> IsAllExistAndActive(IEnumerable<DepartmentId> departmentIds)
     {
-        return _dbContext.Departments
-            .Count(d => departmentIds.Contains(d.Id) && d.IsActive) == departmentIds.Count();
+        return await _dbContext.Departments
+            .CountAsync(d => departmentIds.Contains(d.Id) && d.IsActive) == departmentIds.Count();
     }
 
     public async Task<UnitResult<Error>> DeleteLocationsAsync(DepartmentId departmentId, CancellationToken cancellationToken)

@@ -46,7 +46,7 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
         var departmentIds = command.PositionRequest.DepartmentIds
             .Select(g => new DepartmentId(g)).ToList();
 
-        if (!_departmentRepository.IsAllExistAndActive(departmentIds))
+        if (!await _departmentRepository.IsAllExistAndActive(departmentIds))
         {
             errors.Add(Error.NotFound("find.active.departments", "Department not found", null));
         }

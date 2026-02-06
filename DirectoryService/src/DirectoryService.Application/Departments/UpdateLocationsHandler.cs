@@ -54,19 +54,16 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
 
         using var transactionScope = transactionScopeResult.Value;
 
-        var departmentResult = _departmentRepository.GetById(new DepartmentId(command.DepartmentId));
+        var departmentResult = await _departmentRepository.GetByIdIsActive(new DepartmentId(command.DepartmentId));
         if (departmentResult.IsFailure)
         {
             errors.Add(departmentResult.Error);
         }
 
-        if (!departmentResult.Value.IsActive)
-            errors.Add(Error.Failure("is-active", $"department {command.DepartmentId} is not active"));
-
         var locationIds = command.Request.LocationIds
             .Select(g => new LocationId(g)).ToList();
 
-        if (!_locationRepository.IsAllExistAndActive(locationIds))
+        if (!await _locationRepository.IsAllExistAndActive(locationIds))
         {
             errors.Add(Error.NotFound("find.active.locations", "Locations not found", null));
         }
