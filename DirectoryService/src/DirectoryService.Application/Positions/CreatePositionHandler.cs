@@ -79,7 +79,6 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
             return createPositionResult.Error.ToErrors();
         }
 
-
         return createPositionResult.Value.Value;
     }
 }

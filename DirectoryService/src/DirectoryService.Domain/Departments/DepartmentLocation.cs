@@ -1,5 +1,4 @@
-﻿using CSharpFunctionalExtensions;
-using DirectoryService.Domain.Locations;
+﻿using DirectoryService.Domain.Locations;
 
 namespace DirectoryService.Domain.Departments;
 
@@ -20,19 +19,13 @@ public sealed class DepartmentLocation
 
     public LocationId LocationId { get; private set; } = null!;
 
-    public Result ChangeLocationId(LocationId newLocationId)
+    public void ChangeLocationId(LocationId newLocationId)
     {
         LocationId = newLocationId;
-        return Result.Success();
-
-        // TBD: валидация и возврат ошибок
     }
 
-    public Result ChangeDepartmentId(DepartmentId newDepartmentId)
+    public void ChangeDepartmentId(DepartmentId newDepartmentId)
     {
         DepartmentId = newDepartmentId;
-        return Result.Success();
-
-        // TBD: валидация и возврат ошибок
     }
 }

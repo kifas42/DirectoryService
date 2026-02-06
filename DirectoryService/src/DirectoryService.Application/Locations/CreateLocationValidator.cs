@@ -20,7 +20,8 @@ public class CreateLocationValidator : AbstractValidator<CreateLocationRequest>
                 addr.Country,
                 addr.PostalCode));
         RuleFor(x => x.Name).Length(Constants.MIN_NAME_TEXT_LENGTH, Constants.MAX_NAME_TEXT_LENGTH)
-            .WithError(Error.Validation(null,
+            .WithError(Error.Validation(
+                null,
                 $"Название должно быть от {Constants.MIN_NAME_TEXT_LENGTH} до {Constants.MAX_NAME_TEXT_LENGTH} символов",
                 "Name"));
 

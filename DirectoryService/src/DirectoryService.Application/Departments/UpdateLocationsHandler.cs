@@ -46,7 +46,6 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
             errors.AddRange(validationResult.ToErrors());
         }
 
-
         var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
         if (transactionScopeResult.IsFailure)
         {
@@ -71,7 +70,6 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
         {
             errors.Add(Error.NotFound("find.active.locations", "Locations not found", null));
         }
-
 
         if (errors.Count != 0)
         {

@@ -7,7 +7,7 @@ public class EnvelopeSchemaProcessor : ISchemaProcessor
 {
     public void Process(SchemaProcessorContext context)
     {
-        if (context.Type != typeof(Envelope<Errors>))
+        if (context.ContextualType != typeof(Envelope<Errors>))
             return;
 
         if (!context.Schema.Properties.TryGetValue("errors", out var errorsProperty))
