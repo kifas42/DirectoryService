@@ -5,9 +5,9 @@ namespace DirectoryService.Domain.Departments;
 
 public sealed class DepartmentLocation
 {
-    public DepartmentLocation(DepartmentId departmentId, LocationId locationId)
+    public DepartmentLocation(Guid id, DepartmentId departmentId, LocationId locationId)
     {
-        Id = Guid.NewGuid();
+        Id = id;
         DepartmentId = departmentId;
         LocationId = locationId;
     }

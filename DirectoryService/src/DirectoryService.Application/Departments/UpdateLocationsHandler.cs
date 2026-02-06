@@ -80,7 +80,7 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
         }
 
         var departmentLocations = command.Request.LocationIds
-            .Select(g => new DepartmentLocation(departmentResult.Value.Id, new LocationId(g))).ToList();
+            .Select(g => new DepartmentLocation(Guid.NewGuid(), departmentResult.Value.Id, new LocationId(g))).ToList();
         var result = departmentResult.Value.SetLocations(departmentLocations);
 
         if (result.IsFailure)

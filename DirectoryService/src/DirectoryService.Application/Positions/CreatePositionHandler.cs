@@ -59,7 +59,7 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
         var positionId = PositionId.New();
 
         var departmentPositions = departmentIds
-            .Select(g => new DepartmentPosition(g, positionId));
+            .Select(g => new DepartmentPosition(Guid.NewGuid(), g, positionId));
 
         var positionResult = Position.Create(
             positionId,

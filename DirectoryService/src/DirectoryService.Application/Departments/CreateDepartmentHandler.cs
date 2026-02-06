@@ -63,7 +63,7 @@ public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepart
 
         var departmentId = DepartmentId.New();
         var departmentLocations = command.DepartmentRequest.LocationIds
-            .Select(g => new DepartmentLocation(departmentId, new LocationId(g)));
+            .Select(g => new DepartmentLocation(Guid.NewGuid(), departmentId, new LocationId(g)));
 
         var departmentResult = Department.Create(
             departmentId,
