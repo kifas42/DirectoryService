@@ -54,7 +54,9 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
 
         using var transactionScope = transactionScopeResult.Value;
 
-        var departmentResult = await _departmentRepository.GetByIdIsActive(new DepartmentId(command.DepartmentId));
+        var departmentResult = await _departmentRepository.GetByIdIsActive(
+            new DepartmentId(command.DepartmentId),
+            cancellationToken);
         if (departmentResult.IsFailure)
         {
             errors.Add(departmentResult.Error);

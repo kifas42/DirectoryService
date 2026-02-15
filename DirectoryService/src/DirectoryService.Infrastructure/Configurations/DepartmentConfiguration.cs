@@ -39,7 +39,7 @@ public sealed class DepartmentConfiguration : IEntityTypeConfiguration<Departmen
             .HasColumnType("ltree")
             .HasConversion(
                 p => new LTree(p.Value),
-                p => Path.CreateFromStringPath(p.ToString()).Value)
+                p => Path.CreateFromStringPath(p.ToString()))
             .IsRequired();
         builder.Property(d => d.Depth)
             .HasColumnName("depth")

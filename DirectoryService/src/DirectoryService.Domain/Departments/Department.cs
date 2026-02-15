@@ -75,9 +75,12 @@ public sealed class Department : Shared.Entity
         return new Department(id, name.Trim(), identifier, parent, updatePathResult.Value, depth, positions, locations);
     }
 
-    public Result<Department, Error> SetParent(Department parent)
+    public UnitResult<Error> SetParent(Department? parent)
     {
-        if (parent.Id == Id) return Error.Conflict(null, "parent cannot be a child himself");
+        if (parent != null)
+        {
+            if (parent.Id == Id) return Error.Conflict(null, "parent cannot be a child himself");
+        }
 
         var updatePathResult = SetPath(Parent, Identifier);
         if (updatePathResult.IsFailure)
@@ -85,8 +88,9 @@ public sealed class Department : Shared.Entity
 
         Path = updatePathResult.Value;
         Parent = parent;
+        Depth = (short)((parent?.Depth ?? 0) + 1);
         Update();
-        return Parent;
+        return UnitResult.Success<Error>();
     }
 
     public Result<string, Error> Rename(string name)

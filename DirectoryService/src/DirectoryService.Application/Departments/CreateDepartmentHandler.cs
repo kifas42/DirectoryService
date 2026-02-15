@@ -49,7 +49,7 @@ public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepart
         if (command.DepartmentRequest.ParentId != null)
         {
             var parentId = new DepartmentId(command.DepartmentRequest.ParentId.Value);
-            var parentResult = await _departmentRepository.GetByIdIsActive(parentId);
+            var parentResult = await _departmentRepository.GetByIdIsActive(parentId, cancellationToken);
 
             if (parentResult.IsFailure)
             {

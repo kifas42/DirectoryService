@@ -13,7 +13,7 @@ public sealed record Path
         Value = path;
     }
 
-    public static Result<Path, Error> CreateFromStringPath(string path)
+    public static Path CreateFromStringPath(string path)
     {
         string[] parts = path.Split(PATH_SEPARATOR, StringSplitOptions.RemoveEmptyEntries);
         var identifiers = new List<Identifier>(parts.Length);
@@ -24,13 +24,9 @@ public sealed record Path
             {
                 identifiers.Add(identifier);
             }
-            else
-            {
-                return createResult.Error;
-            }
         }
 
-        return Create(identifiers.ToArray());
+        return Create(identifiers.ToArray()).Value;
     }
 
     public static Result<Path, Error> Create(params Identifier[] path)
