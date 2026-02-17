@@ -30,8 +30,6 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
         UpdateParentCommand command,
         CancellationToken cancellationToken = default)
     {
-        List<Error> errors = [];
-
         var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
         if (transactionScopeResult.IsFailure)
         {
@@ -50,6 +48,7 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
         if (lockDep.IsFailure)
         {
             _logger.LogWarning("Fail to lock department {departmentId}", departmentId.Value);
+            transactionScope.Rollback();
             return lockDep.Error.ToErrors();
         }
 
@@ -57,13 +56,15 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
         var departmentResult = await _departmentRepository.GetByIdIsActive(departmentId, cancellationToken);
         if (departmentResult.IsFailure)
         {
-            errors.Add(departmentResult.Error);
+            transactionScope.Rollback();
+            return departmentResult.Error.ToErrors();
         }
 
         // новый родитель - не мы
         if (parentId == departmentId)
         {
-            errors.Add(Error.Conflict("invalid.parent", "Не может быть сам себе родителем"));
+            transactionScope.Rollback();
+            return Error.Conflict("invalid.parent", "Не может быть сам себе родителем").ToErrors();
         }
 
         Department? newParent = null;
@@ -73,18 +74,16 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
             var parentResult = await _departmentRepository.GetByIdIsActive(parentId!, cancellationToken);
             if (parentResult.IsFailure)
             {
-                errors.Add(parentResult.Error);
+                transactionScope.Rollback();
+                return parentResult.Error.ToErrors();
             }
 
             newParent = parentResult.Value;
             if (newParent.Path.Value.StartsWith(departmentResult.Value.Path.Value + "."))
-                errors.Add(Error.Failure("invalid.parent", "Нельзя переместить в своего потомка"));
-        }
-
-        if (errors.Count != 0)
-        {
-            transactionScope.Rollback();
-            return new Errors(errors);
+            {
+                transactionScope.Rollback();
+                return Error.Failure("invalid.parent", "Нельзя переместить в своего потомка").ToErrors();
+            }
         }
 
         var updateResult =
