@@ -6,11 +6,22 @@ namespace DirectoryService.Application.Departments;
 
 public interface IDepartmentRepository
 {
-    public Task<Result<DepartmentId, Error>> AddAsync(Department department, CancellationToken cancellationToken);
+    Task<Result<DepartmentId, Error>> AddAsync(Department department, CancellationToken cancellationToken);
 
-    public Task<Result<Department, Error>> GetByIdIsActive(DepartmentId departmentId);
+    Task<Result<Department, Error>> GetByIdIsActive(
+        DepartmentId departmentId,
+        CancellationToken cancellationToken);
 
-    public Task<bool> IsAllExistAndActive(IEnumerable<DepartmentId> departmentIds);
+    Task<bool> IsAllExistAndActive(IEnumerable<DepartmentId> departmentIds);
 
     Task<UnitResult<Error>> DeleteLocationsAsync(DepartmentId departmentId, CancellationToken cancellationToken);
+
+    Task<UnitResult<Error>> UpdateDepartmentDescendants(
+        Department root,
+        Department? newParent,
+        CancellationToken cancellationToken);
+
+    Task<UnitResult<Error>> LockDepartmentsById(
+        DepartmentId departmentId,
+        CancellationToken cancellationToken);
 }

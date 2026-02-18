@@ -169,6 +169,13 @@ namespace DirectoryService.Infrastructure.Migrations
                 table: "locations",
                 column: "name",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_position_active_name",
+                table: "positions",
+                column: "name",
+                unique: true,
+                filter: "is_active = true");
         }
 
         /// <inheritdoc />

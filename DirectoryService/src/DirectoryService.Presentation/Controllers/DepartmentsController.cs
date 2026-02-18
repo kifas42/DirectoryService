@@ -31,4 +31,16 @@ public class DepartmentsController : ControllerBase
         var command = new UpdateLocationCommand(departmentId, updateLocationsRequest);
         return await handler.Handle(command, cancellationToken);
     }
+
+    [HttpPut]
+    [Route("{departmentId:guid}/parent")]
+    public async Task<EndpointResult<int>> UpdateParent(
+        [FromRoute] Guid departmentId,
+        [FromBody] UpdateParentRequest updateParentRequest,
+        [FromServices] ICommandHandler<int, UpdateParentCommand> handler,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateParentCommand(departmentId, updateParentRequest);
+        return await handler.Handle(command, cancellationToken);
+    }
 }
