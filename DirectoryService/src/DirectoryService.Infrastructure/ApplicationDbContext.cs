@@ -9,7 +9,7 @@ namespace DirectoryService.Infrastructure;
 
 public class ApplicationDbContext(IConfiguration configuration) : DbContext
 {
-    private const string DATBASE = "DataBase";
+    public const string DATABASE = "DataBase";
 
     public DbSet<Department> Departments => Set<Department>();
 
@@ -23,7 +23,7 @@ public class ApplicationDbContext(IConfiguration configuration) : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseNpgsql(configuration.GetConnectionString(DATBASE));
+        optionsBuilder.UseNpgsql(configuration.GetConnectionString(DATABASE));
         optionsBuilder.UseLoggerFactory(CreateLoggerFactory());
     }
 
