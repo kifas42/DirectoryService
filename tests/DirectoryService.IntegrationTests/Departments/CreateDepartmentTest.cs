@@ -2,30 +2,27 @@
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
-using DirectoryService.Domain.Shared;
 using DirectoryService.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace DirectoryService.IntegrationTests.Departments;
 
-public class CreateDepartmentTest : DirectoryBaseTests
+public class CreateDepartmentTest(DirectoryTestWebFactory factory) : DirectoryBaseTests(factory)
 {
-    public CreateDepartmentTest(DirectoryTestWebFactory factory) : base(factory)
-    {
-    }
-
-
     [Fact]
-    public async Task CreateDepartment_with_valid_data_should_succeed()
+    public async Task CreateDepartment_WithValidData_ShouldSucceed()
     {
         // arrange
-
-        var locationId = await CreateLocation();
+        LocationId? locationId =  null;
+        await ExecuteInDb(async dbContext =>
+        {
+            locationId = await DataCreator.CreateLocation(dbContext);
+        });
         var cancellationToken = CancellationToken.None;
 
         // act
 
-        var result = await ExecuteHandler((sut) =>
+        var result = await ExecuteHandler<Guid, CreateDepartmentHandler>((sut) =>
         {
             var command = new CreateDepartmentCommand(
                 new CreateDepartmentRequest()
@@ -33,7 +30,7 @@ public class CreateDepartmentTest : DirectoryBaseTests
                     Name = "Подразделение",
                     Identifier = "dep",
                     ParentId = null,
-                    LocationIds = [locationId.Value],
+                    LocationIds = [locationId!.Value],
                 }
             );
 
@@ -55,7 +52,7 @@ public class CreateDepartmentTest : DirectoryBaseTests
     }
 
     [Fact]
-    public async Task CreateDepartment_with_invalid_location_should_failed()
+    public async Task CreateDepartment_WithInvalidLocation_ShouldFailed()
     {
         // arrange
         var locationId = Guid.NewGuid();
@@ -63,7 +60,7 @@ public class CreateDepartmentTest : DirectoryBaseTests
 
         // act
 
-        var result = await ExecuteHandler((sut) =>
+        var result = await ExecuteHandler<Guid, CreateDepartmentHandler>((sut) =>
         {
             var command = new CreateDepartmentCommand(
                 new CreateDepartmentRequest()
@@ -78,30 +75,43 @@ public class CreateDepartmentTest : DirectoryBaseTests
             return sut.Handle(command, cancellationToken);
         });
 
+        var checkDb = await ExecuteInDb(async dbContext =>
+        {
+            return await dbContext.DepartmentLocations.AnyAsync(
+                dl => dl.LocationId == new LocationId(locationId),
+                cancellationToken: cancellationToken);
+        });
+
         // assert
         Assert.True(result.IsFailure);
         Assert.NotEmpty(result.Error);
+        Assert.False(checkDb);
     }
 
-    private async Task<LocationId> CreateLocation()
+    [Fact]
+    public async Task CreateDepartment_WithEmptyData_ShouldFailed()
     {
-        return await ExecuteInDb(async dbContext =>
+        // arrange
+        var cancellationToken = CancellationToken.None;
+        // act
+
+        var result = await ExecuteHandler<Guid, CreateDepartmentHandler>((sut) =>
         {
-            var location = Location.Create(
-                "ЛОХация",
-                Address.Create(
-                    "111",
-                    "b222",
-                    "street",
-                    "NightCty",
-                    "Ohio",
-                    "country",
-                    "11223").Value,
-                Timezone.Create("Europe/London").Value
+            var command = new CreateDepartmentCommand(
+                new CreateDepartmentRequest()
+                {
+                    Name = "",
+                    Identifier = "",
+                    ParentId = null,
+                    LocationIds = [],
+                }
             );
-            dbContext.Locations.Add(location.Value);
-            await dbContext.SaveChangesAsync();
-            return location.Value.Id;
+
+            return sut.Handle(command, cancellationToken);
         });
+
+        // assert
+        Assert.True(result.IsFailure);
+        Assert.Equal(4, result.Error.Count());
     }
 }

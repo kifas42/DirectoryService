@@ -10,7 +10,7 @@ using Shared;
 
 namespace DirectoryService.Application.Departments;
 
-public record CreateDepartmentCommand(CreateDepartmentRequest DepartmentRequest) : ICommand;
+public record CreateDepartmentCommand(CreateDepartmentRequest? DepartmentRequest) : ICommand;
 
 public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCommand>
 {
@@ -32,6 +32,11 @@ public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepart
         CreateDepartmentCommand command,
         CancellationToken cancellationToken = default)
     {
+        if (command.DepartmentRequest == null)
+        {
+            return Error.Failure(null, "invalid request").ToErrors();
+        }
+
         var validationResult = await _validator.ValidateAsync(command.DepartmentRequest, cancellationToken);
         if (!validationResult.IsValid)
         {

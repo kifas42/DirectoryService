@@ -11,7 +11,6 @@ public class CreatePositionValidator : AbstractValidator<CreatePositionRequest>
     public CreatePositionValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty()
             .Length(Constants.MIN_NAME_TEXT_LENGTH, Constants.MAX_NAME_TEXT_LENGTH)
             .WithError(Error.Validation(
                 "create.position",
