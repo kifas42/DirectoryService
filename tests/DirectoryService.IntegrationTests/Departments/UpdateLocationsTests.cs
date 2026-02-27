@@ -24,7 +24,7 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         {
             locationId = await DataCreator.CreateLocation(dbContext);
             newLocationId = await DataCreator.CreateLocation(dbContext, "Business Center", "BBB");
-            departmentId = await DataCreator.CreateDepartment(dbContext, locationId);
+            departmentId = (await DataCreator.CreateDepartment(dbContext, locationId)).Id;
         });
 
         // act
@@ -73,7 +73,7 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         await ExecuteInDb(async dbContext =>
         {
             locationId = await DataCreator.CreateLocation(dbContext);
-            departmentId = await DataCreator.CreateDepartment(dbContext, locationId);
+            departmentId = (await DataCreator.CreateDepartment(dbContext, locationId)).Id;
         });
 
         // act
@@ -119,7 +119,7 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         {
             locationId = await DataCreator.CreateLocation(dbContext);
             newLocationId = await DataCreator.CreateLocation(dbContext, "Business Center", "BBB");
-            departmentId = await DataCreator.CreateDepartment(dbContext, locationId);
+            departmentId = (await DataCreator.CreateDepartment(dbContext, locationId)).Id;
         });
 
         // act
@@ -218,7 +218,7 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         await ExecuteInDb(async dbContext =>
         {
             locationId = await DataCreator.CreateLocation(dbContext);
-            departmentId = await DataCreator.CreateDepartment(dbContext, locationId);
+            departmentId = (await DataCreator.CreateDepartment(dbContext, locationId)).Id;
         });
 
         // act
