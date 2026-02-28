@@ -14,9 +14,7 @@ namespace DirectoryService.IntegrationTests.Infrastructure;
 
 public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    [Obsolete("Obsolete")] 
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithImage("postgres")
+    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:18-alpine")
         .WithDatabase("directory_service_db")
         .WithUsername("postgres")
         .WithPassword("postgres")
