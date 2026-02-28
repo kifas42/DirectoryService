@@ -1,4 +1,5 @@
 ﻿using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Locations;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,6 +15,7 @@ public static class DependencyInjectionExtensions
             .AddClasses(classes => classes
                 .AssignableToAny(typeof(ICommandHandler<,>), typeof(ICommandHandler<>)))
             .AsSelfWithInterfaces().WithScopedLifetime());
+        services.AddScoped<GetLocationsHandler>();
         return services;
     }
 }
