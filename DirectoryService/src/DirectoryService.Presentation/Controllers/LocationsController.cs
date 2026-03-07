@@ -22,10 +22,10 @@ public class LocationsController : ControllerBase
 
     [HttpGet]
     public async Task<EndpointResult<PaginationLocationResponse>> Get(
-        [FromQuery] GetLocationQuery locationQuery,
-        [FromServices] GetLocationsHandler handler,
+        [FromQuery] GetLocationRequest locationRequest,
+        [FromServices] IQueryHandler<PaginationLocationResponse, GetLocationQuery> handler,
         CancellationToken cancellationToken)
     {
-        return await handler.Handle(locationQuery, cancellationToken);
+        return await handler.Handle(new GetLocationQuery(locationRequest), cancellationToken);
     }
 }

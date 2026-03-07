@@ -14,6 +14,9 @@ public static class DependencyInjectionExtensions
         services.Scan(scan => scan.FromAssemblies(assembly)
             .AddClasses(classes => classes
                 .AssignableToAny(typeof(ICommandHandler<,>), typeof(ICommandHandler<>)))
+            .AsSelfWithInterfaces().WithScopedLifetime()
+            .AddClasses(classes => classes
+                .AssignableToAny(typeof(IQueryHandler<,>), typeof(IQueryHandler<>)))
             .AsSelfWithInterfaces().WithScopedLifetime());
         services.AddScoped<GetLocationsHandler>();
         return services;

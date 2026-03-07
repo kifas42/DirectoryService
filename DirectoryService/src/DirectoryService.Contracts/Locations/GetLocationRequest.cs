@@ -1,6 +1,6 @@
 ﻿namespace DirectoryService.Contracts.Locations;
 
-public record GetLocationQuery
+public record GetLocationRequest
 {
     public Guid[]? DepartmentIds { get; init; } = null;
 

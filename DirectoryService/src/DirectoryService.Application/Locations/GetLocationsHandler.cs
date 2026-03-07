@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using CSharpFunctionalExtensions;
+using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Database;
 using DirectoryService.Contracts.Locations;
 using DirectoryService.Domain.Departments;
@@ -9,7 +10,9 @@ using Shared;
 
 namespace DirectoryService.Application.Locations;
 
-public class GetLocationsHandler
+public record GetLocationQuery(GetLocationRequest Request) : IQuery;
+
+public class GetLocationsHandler : IQueryHandler<PaginationLocationResponse, GetLocationQuery>
 {
     private readonly IReadDbContext _readDbContext;
 
@@ -18,20 +21,20 @@ public class GetLocationsHandler
         _readDbContext = readDbContext;
     }
 
-    public async Task<Result<PaginationLocationResponse, Error>> Handle(
+    public async Task<Result<PaginationLocationResponse, Errors>> Handle(
         GetLocationQuery locationQuery,
         CancellationToken cancellationToken)
     {
         var query = _readDbContext.LocationsRead;
 
-        if (!string.IsNullOrWhiteSpace(locationQuery.Search))
+        if (!string.IsNullOrWhiteSpace(locationQuery.Request.Search))
         {
-            query = query.Where(l => EF.Functions.Like(l.Name, $"%{locationQuery.Search}%"));
+            query = query.Where(l => EF.Functions.Like(l.Name, $"%{locationQuery.Request.Search}%"));
         }
 
-        if (locationQuery.DepartmentIds is not null && locationQuery.DepartmentIds.Length != 0)
+        if (locationQuery.Request.DepartmentIds is not null && locationQuery.Request.DepartmentIds.Length != 0)
         {
-            var departmentIds = locationQuery.DepartmentIds
+            var departmentIds = locationQuery.Request.DepartmentIds
                 .Select(id => new DepartmentId(id))
                 .ToList();
 
@@ -41,19 +44,19 @@ public class GetLocationsHandler
                 select l).Distinct();
         }
 
-        if (locationQuery.IsActive is not null)
+        if (locationQuery.Request.IsActive is not null)
         {
-            query = query.Where(l => l.IsActive == locationQuery.IsActive);
+            query = query.Where(l => l.IsActive == locationQuery.Request.IsActive);
         }
 
-        Expression<Func<Location, object>> keySelector = locationQuery.SortBy.ToLower() switch
+        Expression<Func<Location, object>> keySelector = locationQuery.Request.SortBy.ToLower() switch
         {
             "name" => l => l.Name,
             "date" => l => l.CreatedAt,
             _ => l => l.Name
         };
 
-        query = locationQuery.SortOrder == "asc"
+        query = locationQuery.Request.SortOrder == "asc"
             ? query.OrderBy(keySelector)
             : query.OrderByDescending(keySelector);
 
@@ -74,8 +77,8 @@ public class GetLocationsHandler
                 IsActive = l.IsActive,
                 CreatedAt = l.CreatedAt,
             })
-            .Skip((locationQuery.Page - 1) * locationQuery.PageSize ?? 0)
-            .Take(locationQuery.PageSize ?? 10)
+            .Skip((locationQuery.Request.Page - 1) * locationQuery.Request.PageSize ?? 0)
+            .Take(locationQuery.Request.PageSize ?? 10)
             .ToListAsync(cancellationToken);
 
 
