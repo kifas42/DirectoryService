@@ -1,6 +1,6 @@
 ﻿namespace DirectoryService.Contracts.Locations;
 
-public class CreateLocationRequest
+public record CreateLocationRequest
 {
     public string Name { get; init; } = string.Empty;
 
