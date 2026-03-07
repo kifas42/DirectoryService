@@ -21,7 +21,7 @@ public class LocationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<EndpointResult<GetLocationsDto?>> Get(
+    public async Task<EndpointResult<PaginationLocationResponse>> Get(
         [FromQuery] GetLocationQuery locationQuery,
         [FromServices] GetLocationsHandler handler,
         CancellationToken cancellationToken)

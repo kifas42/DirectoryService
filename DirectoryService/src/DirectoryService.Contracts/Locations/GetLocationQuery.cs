@@ -11,4 +11,8 @@ public record GetLocationQuery
     public int? Page { get; init; } = null;
 
     public int? PageSize { get; init; } = null;
+
+    public string SortBy { get; init; } = "name";
+
+    public string SortOrder { get; init; } = "asc";
 }

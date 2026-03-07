@@ -22,7 +22,10 @@ public class ApplicationDbContext(IConfiguration configuration) : DbContext, IRe
 
     public DbSet<DepartmentPosition> DepartmentPositions => Set<DepartmentPosition>();
 
-    public IQueryable<Location> LocationsRead => Set<Location>().AsNoTracking();
+    public IQueryable<Location> LocationsRead => Set<Location>().AsNoTracking().AsQueryable();
+
+    public IQueryable<DepartmentLocation> DepartmentLocationsRead =>
+        Set<DepartmentLocation>().AsNoTracking().AsQueryable();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

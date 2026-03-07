@@ -1,6 +1,6 @@
 ﻿namespace DirectoryService.Contracts.Locations;
 
-public record GetLocationsDto()
+public record GetLocationDto()
 {
     public string Name { get; init; } = string.Empty;
 
@@ -19,4 +19,10 @@ public record GetLocationsDto()
     public string? PostalCode { get; init; } = null;
 
     public string Timezone { get; init; } = null!;
+
+    public bool IsActive { get; init; }
+
+    public DateTime CreatedAt { get; init; }
 }
+
+public record PaginationLocationResponse(IReadOnlyList<GetLocationDto> Locations, int TotalCount);
