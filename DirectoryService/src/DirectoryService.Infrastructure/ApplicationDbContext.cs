@@ -1,4 +1,5 @@
-﻿using DirectoryService.Application.Database;
+﻿using System.Data.Common;
+using DirectoryService.Application.Database;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Positions;
@@ -26,6 +27,8 @@ public class ApplicationDbContext(IConfiguration configuration) : DbContext, IRe
 
     public IQueryable<DepartmentLocation> DepartmentLocationsRead =>
         Set<DepartmentLocation>().AsNoTracking().AsQueryable();
+
+    public DbConnection Connection => Database.GetDbConnection();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
