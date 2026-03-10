@@ -36,6 +36,7 @@ builder.Services.AddOpenApiDocument(settings =>
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 builder.Services.AddScoped<ApplicationDbContext>();
+builder.Services.AddScoped<IReadDbContext, ApplicationDbContext>();
 
 builder.Services.AddScoped<ITransactionManager, TransactionManager>();
 builder.Services.AddScoped<ILocationRepository, LocationRepository>();

@@ -19,4 +19,13 @@ public class LocationsController : ControllerBase
         var command = new CreateLocationCommand(locationRequest);
         return await handler.Handle(command, cancellationToken);
     }
+
+    [HttpGet]
+    public async Task<EndpointResult<PaginationLocationResponse>> Get(
+        [FromQuery] GetLocationRequest locationRequest,
+        [FromServices] IQueryHandler<PaginationLocationResponse, GetLocationQuery> handler,
+        CancellationToken cancellationToken)
+    {
+        return await handler.Handle(new GetLocationQuery(locationRequest), cancellationToken);
+    }
 }

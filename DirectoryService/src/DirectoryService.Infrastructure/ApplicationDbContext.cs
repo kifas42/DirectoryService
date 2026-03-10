@@ -1,4 +1,5 @@
-﻿using DirectoryService.Domain.Departments;
+﻿using DirectoryService.Application.Database;
+using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Positions;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DirectoryService.Infrastructure;
 
-public class ApplicationDbContext(IConfiguration configuration) : DbContext
+public class ApplicationDbContext(IConfiguration configuration) : DbContext, IReadDbContext
 {
     public const string DATABASE = "DataBase";
 
@@ -20,6 +21,11 @@ public class ApplicationDbContext(IConfiguration configuration) : DbContext
     public DbSet<DepartmentLocation> DepartmentLocations => Set<DepartmentLocation>();
 
     public DbSet<DepartmentPosition> DepartmentPositions => Set<DepartmentPosition>();
+
+    public IQueryable<Location> LocationsRead => Set<Location>().AsNoTracking().AsQueryable();
+
+    public IQueryable<DepartmentLocation> DepartmentLocationsRead =>
+        Set<DepartmentLocation>().AsNoTracking().AsQueryable();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
