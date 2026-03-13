@@ -43,4 +43,14 @@ public class DepartmentsController : ControllerBase
         var command = new UpdateParentCommand(departmentId, updateParentRequest);
         return await handler.Handle(command, cancellationToken);
     }
+
+    [HttpGet]
+    [Route("top-positions")]
+    public async Task<EndpointResult<TopDepartmentsResponse>> GetTopPositions(
+        [FromQuery] int? count,
+        [FromServices] IQueryHandler<TopDepartmentsResponse, GetTopDepartmentsQuery> handler,
+        CancellationToken cancellationToken)
+    {
+        return await handler.Handle(new GetTopDepartmentsQuery(count ?? 5), cancellationToken);
+    }
 }
