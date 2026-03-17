@@ -35,14 +35,8 @@ builder.Services.AddOpenApiDocument(settings =>
 });
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
-builder.Services.AddScoped<ApplicationDbContext>();
-builder.Services.AddScoped<IReadDbContext, ApplicationDbContext>();
-
-builder.Services.AddScoped<ITransactionManager, TransactionManager>();
-builder.Services.AddScoped<ILocationRepository, LocationRepository>();
-builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
-builder.Services.AddScoped<IPositionRepository, PositionRepository>();
 builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 app.UseExceptionMiddleware();
