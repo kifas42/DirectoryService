@@ -32,15 +32,14 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
         _departmentRepository = departmentRepository;
     }
 
-    public async Task<Result<Guid, Errors>> Handle(
+    public async Task<Result<Guid, Error>> Handle(
         CreatePositionCommand command,
         CancellationToken cancellationToken = default)
     {
-        List<Error> errors = [];
         var validationResult = await _validator.ValidateAsync(command.PositionRequest, cancellationToken);
         if (!validationResult.IsValid)
         {
-            errors.AddRange(validationResult.ToErrors());
+            return validationResult.ToError();
         }
 
         var departmentIds = command.PositionRequest.DepartmentIds
@@ -48,12 +47,7 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
 
         if (!await _departmentRepository.IsAllExistAndActive(departmentIds))
         {
-            errors.Add(Error.NotFound("find.active.departments", "Department not found", null));
-        }
-
-        if (errors.Count != 0)
-        {
-            return new Errors(errors);
+            return Error.NotFound("find.active.departments", "Department not found", null);
         }
 
         var positionId = PositionId.New();
@@ -69,14 +63,14 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
 
         if (positionResult.IsFailure)
         {
-            return positionResult.Error.ToErrors();
+            return positionResult.Error;
         }
 
         var createPositionResult = await _positionRepository.AddAsync(positionResult.Value, cancellationToken);
 
         if (createPositionResult.IsFailure)
         {
-            return createPositionResult.Error.ToErrors();
+            return createPositionResult.Error;
         }
 
         return createPositionResult.Value.Value;

@@ -10,11 +10,11 @@ public interface ICommandHandler;
 public interface ICommandHandler<TResponse, in TCommand> : ICommandHandler
     where TCommand : ICommand
 {
-    Task<Result<TResponse, Errors>> Handle(TCommand command, CancellationToken cancellationToken = default);
+    Task<Result<TResponse, Error>> Handle(TCommand command, CancellationToken cancellationToken = default);
 }
 
 public interface ICommandHandler<in TCommand> : ICommandHandler
     where TCommand : ICommand
 {
-    Task<UnitResult<Errors>> Handle(TCommand command, CancellationToken cancellationToken = default);
+    Task<UnitResult<Error>> Handle(TCommand command, CancellationToken cancellationToken = default);
 }

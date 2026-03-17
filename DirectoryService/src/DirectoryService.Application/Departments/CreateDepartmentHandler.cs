@@ -28,25 +28,24 @@ public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepart
         _validator = validator;
     }
 
-    public async Task<Result<Guid, Errors>> Handle(
-        CreateDepartmentCommand command,
+    public async Task<Result<Guid, Error>> Handle(CreateDepartmentCommand command,
         CancellationToken cancellationToken = default)
     {
         if (command.DepartmentRequest == null)
         {
-            return Error.Failure(null, "invalid request").ToErrors();
+            return Error.Failure("fail", "invalid request");
         }
 
         var validationResult = await _validator.ValidateAsync(command.DepartmentRequest, cancellationToken);
         if (!validationResult.IsValid)
         {
-            return validationResult.ToErrors();
+            return validationResult.ToError();
         }
 
         var identifierResult = Identifier.Create(command.DepartmentRequest.Identifier);
         if (identifierResult.IsFailure)
         {
-            return identifierResult.Error.ToErrors();
+            return identifierResult.Error;
         }
 
         short depth = 0;
@@ -82,7 +81,7 @@ public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepart
         if (departmentResult.IsFailure)
         {
             _logger.LogError("Failed to create department: {ErrorMessage}", departmentResult.Error);
-            return departmentResult.Error.ToErrors();
+            return departmentResult.Error;
         }
 
         var createDepartmentResult = await _departmentRepository.AddAsync(departmentResult.Value, cancellationToken);
@@ -90,7 +89,7 @@ public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepart
         if (createDepartmentResult.IsFailure)
         {
             _logger.LogError("Failed to add location: {ErrorMessage}", createDepartmentResult.Error);
-            return createDepartmentResult.Error.ToErrors();
+            return createDepartmentResult.Error;
         }
 
         _logger.LogInformation("Added Department: {DepartmentId}", createDepartmentResult.Value);

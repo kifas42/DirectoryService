@@ -7,44 +7,44 @@ public sealed class Envelope
 {
     public object? Result { get; }
 
-    public Errors? ErrorList { get; }
+    public Error? Error { get; }
 
-    public bool IsError => ErrorList != null || (ErrorList != null && ErrorList.Any());
+    public bool IsError => Error != null;
 
     public DateTime TimeGenerated { get; }
 
     [JsonConstructor]
-    private Envelope(object? result, Errors? errorList)
+    private Envelope(object? result, Error? error)
     {
         Result = result;
-        ErrorList = errorList;
+        Error = error;
         TimeGenerated = DateTime.UtcNow;
     }
 
     public static Envelope Ok(object? result = null) => new(result, null);
 
-    public static Envelope Error(Errors? error) => new(null, error);
+    public static Envelope Fail(Error? error) => new(null, error);
 }
 
 public class Envelope<T>
 {
     public T? Result { get; }
 
-    public Errors? ErrorList { get; }
+    public Error? Error { get; }
 
-    public bool IsError => ErrorList != null || (ErrorList != null && ErrorList.Any());
+    public bool IsError => Error != null;
 
     public DateTime TimeGenerated { get; }
 
     [JsonConstructor]
-    private Envelope(T? result, Errors? errorList)
+    private Envelope(T? result, Error? error)
     {
         Result = result;
-        ErrorList = errorList;
+        Error = error;
         TimeGenerated = DateTime.UtcNow;
     }
 
     public static Envelope<T> Ok(T? result = default) => new(result, null);
 
-    public static Envelope<T> Error(Errors? error) => new(default, error);
+    public static Envelope<T> Fail(Error? error) => new(default, error);
 }

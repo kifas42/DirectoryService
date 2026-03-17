@@ -41,17 +41,17 @@ public class DepartmentRepository : IDepartmentRepository
                 { SqlState: PostgresErrorCodes.ForeignKeyViolation, ConstraintName: not null } when
                     pgEx.ConstraintName == "FK_department_location_locations_location_id" =>
                     Error.Conflict("fk.conflict", "Specified location does not exist"),
-                _ => Error.Failure(null, "database error. check logs")
+                _ => Error.Failure("db.fail", "database error. check logs")
             };
         }
-        catch (OperationCanceledException ex)
+        catch (OperationCanceledException)
         {
-            return Error.Failure(null, "OperationCanceled");
+            return Error.Failure("db.fail", "OperationCanceled");
         }
         catch (Exception ex)
         {
             _logger.LogError("Add Error: {Message}", ex.Message);
-            return Error.Failure(null, "database error. check logs");
+            return Error.Failure("db.fail", "database error. check logs");
         }
     }
 
@@ -68,7 +68,7 @@ public class DepartmentRepository : IDepartmentRepository
 
             if (department is null)
             {
-                return Error.NotFound("get.department", "Department not found or not single", departmentId.Value);
+                return Error.NotFound("get.department", "Department not found or not single");
             }
 
             return department;
@@ -76,7 +76,7 @@ public class DepartmentRepository : IDepartmentRepository
         catch (Exception ex)
         {
             _logger.LogError("GetById Error: {Message}", ex.Message);
-            return Error.Failure(null, "database error. check logs");
+            return Error.Failure("db.fail", "database error. check logs");
         }
     }
 
@@ -87,9 +87,11 @@ public class DepartmentRepository : IDepartmentRepository
         try
         {
             await _dbContext.Database.ExecuteSqlAsync(
-                $@"SELECT * FROM departments 
-                   WHERE path <@ (SELECT path FROM departments WHERE id = {departmentId.Value} AND is_active = true) 
-                   FOR UPDATE",
+                $"""
+                 SELECT * FROM departments 
+                                    WHERE path <@ (SELECT path FROM departments WHERE id = {departmentId.Value} AND is_active = true) 
+                                    FOR UPDATE
+                 """,
                 cancellationToken);
 
             return UnitResult.Success<Error>();
@@ -115,7 +117,6 @@ public class DepartmentRepository : IDepartmentRepository
             .ExecuteDeleteAsync(cancellationToken);
         return UnitResult.Success<Error>();
     }
-
 
     public async Task<UnitResult<Error>> UpdateDepartmentDescendants(
         Department root,

@@ -21,8 +21,7 @@ public class GetLocationsHandler : IQueryHandler<PaginationLocationResponse, Get
         _readDbContext = readDbContext;
     }
 
-    public async Task<Result<PaginationLocationResponse, Errors>> Handle(
-        GetLocationQuery locationQuery,
+    public async Task<Result<PaginationLocationResponse, Error>> Handle(GetLocationQuery locationQuery,
         CancellationToken cancellationToken)
     {
         var query = _readDbContext.LocationsRead;
