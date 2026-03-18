@@ -35,21 +35,20 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
         _locationRepository = locationRepository;
     }
 
-    public async Task<Result<int, Errors>> Handle(
+    public async Task<Result<int, Error>> Handle(
         UpdateLocationCommand command,
         CancellationToken cancellationToken = default)
     {
-        List<Error> errors = [];
         var validationResult = await _validator.ValidateAsync(command.Request, cancellationToken);
         if (!validationResult.IsValid)
         {
-            errors.AddRange(validationResult.ToErrors());
+            return validationResult.ToError();
         }
 
         var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
         if (transactionScopeResult.IsFailure)
         {
-            return transactionScopeResult.Error.ToErrors();
+            return transactionScopeResult.Error;
         }
 
         using var transactionScope = transactionScopeResult.Value;
@@ -59,7 +58,8 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
             cancellationToken);
         if (departmentResult.IsFailure)
         {
-            errors.Add(departmentResult.Error);
+            transactionScope.Rollback();
+            return departmentResult.Error;
         }
 
         var locationIds = command.Request.LocationIds
@@ -67,13 +67,8 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
 
         if (!await _locationRepository.IsAllExistAndActive(locationIds))
         {
-            errors.Add(Error.NotFound("find.active.locations", "Locations not found", null));
-        }
-
-        if (errors.Count != 0)
-        {
             transactionScope.Rollback();
-            return new Errors(errors);
+            return Error.NotFound("find.active.locations", "Locations not found", null);
         }
 
         var departmentLocations = command.Request.LocationIds
@@ -83,7 +78,7 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
         if (result.IsFailure)
         {
             transactionScope.Rollback();
-            return result.Error.ToErrors();
+            return result.Error;
         }
 
         var deleteLocationsResult =
@@ -91,20 +86,20 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
         if (deleteLocationsResult.IsFailure)
         {
             transactionScope.Rollback();
-            return deleteLocationsResult.Error.ToErrors();
+            return deleteLocationsResult.Error;
         }
 
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)
         {
             transactionScope.Rollback();
-            return saveResult.Error.ToErrors();
+            return saveResult.Error;
         }
 
         var commitedResult = transactionScope.Commit();
         if (commitedResult.IsFailure)
         {
-            return commitedResult.Error.ToErrors();
+            return commitedResult.Error;
         }
 
         return departmentLocations.Count;

@@ -2,33 +2,25 @@
 
 namespace DirectoryService.Presentation.EndpointResults;
 
-public sealed class ErrorsResult : IResult
+public sealed class ErrorResult : IResult
 {
-    private readonly Errors _errors;
+    private readonly Error _error;
 
-    public ErrorsResult(Error error) => _errors = error;
-
-    public ErrorsResult(Errors errors) => _errors = errors;
+    public ErrorResult(Error error) => _error = error;
 
     public Task ExecuteAsync(HttpContext httpContext)
     {
-        if (!_errors.Any())
+        if (!_error.Messages.Any())
         {
             httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            return httpContext.Response.WriteAsJsonAsync(Envelope.Error(_errors));
+            return httpContext.Response.WriteAsJsonAsync(Envelope.Fail(_error));
         }
 
-        var distinctErrorsTypes = _errors
-            .Select(x => x.Type)
-            .Distinct()
-            .ToList();
+        int statusCode = GetStatusCodeFromErrorType(_error.Type);
+        var envelope = Envelope.Fail(_error);
 
-        int statusCode = distinctErrorsTypes.Count > 1
-            ? StatusCodes.Status500InternalServerError
-            : GetStatusCodeFromErrorType(distinctErrorsTypes.First());
-
-        var envelope = Envelope.Error(_errors);
         httpContext.Response.StatusCode = statusCode;
+
         return httpContext.Response.WriteAsJsonAsync(envelope);
     }
 
@@ -38,6 +30,9 @@ public sealed class ErrorsResult : IResult
             ErrorType.VALIDATION => StatusCodes.Status400BadRequest,
             ErrorType.NOT_FOUND => StatusCodes.Status404NotFound,
             ErrorType.CONFLICT => StatusCodes.Status409Conflict,
+            ErrorType.FAILURE => StatusCodes.Status500InternalServerError,
+            ErrorType.AUTHENTIFICATION => StatusCodes.Status401Unauthorized,
+            ErrorType.AUTHORIZATION => StatusCodes.Status403Forbidden,
             _ => StatusCodes.Status500InternalServerError
         };
 }

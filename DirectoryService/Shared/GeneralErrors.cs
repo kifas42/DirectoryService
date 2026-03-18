@@ -5,19 +5,19 @@ public static class GeneralErrors
     public static Error ValueIsInvalid(string? name = null)
     {
         string label = name ?? "value";
-        return Error.Validation("value.is.invalid", $"{label} is invalid", name);
+        return Error.Validation(new ErrorMessage("value.is.invalid", $"{label} is invalid", name));
     }
 
     public static Error ValueIsEmpty(string? name)
     {
         string label = name ?? "value";
-        return Error.Validation("value.is.empty", $"{label} cannot be empty", name);
+        return Error.Validation(new ErrorMessage("value.is.empty", $"{label} cannot be empty", name));
     }
 
     public static Error NotFound(Guid? id, string? name = null)
     {
         string forId = id == null ? string.Empty : $"по Id '{id}'";
-        return Error.NotFound("record.not.found", $"{name ?? "запись"} не найдена {forId}", id);
+        return Error.NotFound(new ErrorMessage("record.not.found", $"{name ?? "запись"} не найдена {forId}", null));
     }
 
     public static Error LenghtIsInvalid(string? name = null, int? min = null, int? max = null)
@@ -36,6 +36,6 @@ public static class GeneralErrors
             label = $"{name ?? "value"} must be between {min.Value} and {max.Value} characters";
         }
 
-        return Error.Validation("lenght.is.invalid", label, name);
+        return Error.Validation(new ErrorMessage("lenght.is.invalid", label, name));
     }
 }

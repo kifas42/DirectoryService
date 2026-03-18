@@ -22,14 +22,14 @@ public class ExceptionMiddleware
         }
         catch (Exception e)
         {
+            _logger.LogError("{Message}", e.Message);
+            _logger.LogDebug("{Trace}", e.StackTrace);
             httpContext.Response.ContentType = "application/json";
             httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-            var err = Error.Failure("server.internal", e.Message);
+            var err = Error.Failure("exception.middleware", e.Message);
 
-            var envelope = Envelope.Error(err);
-            _logger.LogError("{}", e.Message);
-            _logger.LogDebug("{}", e.StackTrace);
+            var envelope = Envelope.Fail(err);
             await httpContext.Response.WriteAsJsonAsync(envelope);
         }
     }

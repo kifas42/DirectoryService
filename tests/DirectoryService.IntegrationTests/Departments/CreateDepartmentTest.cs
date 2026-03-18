@@ -84,7 +84,7 @@ public class CreateDepartmentTest(DirectoryTestWebFactory factory) : DirectoryBa
 
         // assert
         Assert.True(result.IsFailure);
-        Assert.NotEmpty(result.Error);
+        Assert.NotEmpty(result.Error.Messages);
         Assert.False(checkDb);
     }
 
@@ -112,6 +112,6 @@ public class CreateDepartmentTest(DirectoryTestWebFactory factory) : DirectoryBa
 
         // assert
         Assert.True(result.IsFailure);
-        Assert.Equal(4, result.Error.Count());
+        Assert.Equal(4, result.Error.Messages.Count);
     }
 }

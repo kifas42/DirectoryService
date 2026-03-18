@@ -14,21 +14,12 @@ public sealed class EndpointResult<TValue> : IResult, IEndpointMetadataProvider
     {
         _result = result.IsSuccess
             ? new SuccessResult<TValue>(result.Value)
-            : new ErrorsResult(result.Error);
-    }
-
-    public EndpointResult(Result<TValue, Errors> result)
-    {
-        _result = result.IsSuccess
-            ? new SuccessResult<TValue>(result.Value)
-            : new ErrorsResult(result.Error);
+            : new ErrorResult(result.Error);
     }
 
     public Task ExecuteAsync(HttpContext httpContext) => _result.ExecuteAsync(httpContext);
 
     public static implicit operator EndpointResult<TValue>(Result<TValue, Error> result) => new(result);
-
-    public static implicit operator EndpointResult<TValue>(Result<TValue, Errors> result) => new(result);
 
     public static void PopulateMetadata(MethodInfo method, EndpointBuilder builder)
     {

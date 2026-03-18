@@ -24,7 +24,7 @@ public class DirectoryBaseTests : IClassFixture<DirectoryTestWebFactory>, IAsync
         await _resetDatabase();
     }
 
-    protected async Task<Result<T, Errors>> ExecuteHandler<T, THandler>(Func<THandler, Task<Result<T, Errors>>> action)
+    protected async Task<Result<T, Error>> ExecuteHandler<T, THandler>(Func<THandler, Task<Result<T, Error>>> action)
         where THandler : ICommandHandler
     {
         await using var scope = Services.CreateAsyncScope();

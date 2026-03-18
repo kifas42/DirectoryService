@@ -4,13 +4,16 @@ using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Positions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace DirectoryService.Infrastructure;
 
-public class ApplicationDbContext(IConfiguration configuration) : DbContext, IReadDbContext
+public class ApplicationDbContext : DbContext, IReadDbContext
 {
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        : base(options)
+    {
+    }
+
     public const string DATABASE = "DataBase";
 
     public DbSet<Department> Departments => Set<Department>();
@@ -30,18 +33,9 @@ public class ApplicationDbContext(IConfiguration configuration) : DbContext, IRe
 
     public DbConnection Connection => Database.GetDbConnection();
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.UseNpgsql(configuration.GetConnectionString(DATABASE));
-        optionsBuilder.UseLoggerFactory(CreateLoggerFactory());
-    }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("ltree");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
-
-    private ILoggerFactory CreateLoggerFactory() =>
-        LoggerFactory.Create(builder => builder.AddConsole());
 }

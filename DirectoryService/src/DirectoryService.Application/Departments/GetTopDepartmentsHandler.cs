@@ -18,8 +18,7 @@ public class GetTopDepartmentsHandler : IQueryHandler<TopDepartmentsResponse, Ge
         _readDbContext = readDbContext;
     }
 
-    public async Task<Result<TopDepartmentsResponse, Errors>> Handle(
-        GetTopDepartmentsQuery query,
+    public async Task<Result<TopDepartmentsResponse, Error>> Handle(GetTopDepartmentsQuery query,
         CancellationToken cancellationToken)
     {
         var connection = _readDbContext.Connection;

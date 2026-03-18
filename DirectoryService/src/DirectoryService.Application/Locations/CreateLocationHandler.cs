@@ -28,14 +28,14 @@ public sealed class CreateLocationHandler : ICommandHandler<Guid, CreateLocation
         _validator = validator;
     }
 
-    public async Task<Result<Guid, Errors>> Handle(
+    public async Task<Result<Guid, Error>> Handle(
         CreateLocationCommand command,
         CancellationToken cancellationToken = default)
     {
         var validationResult = await _validator.ValidateAsync(command.LocationRequest, cancellationToken);
         if (!validationResult.IsValid)
         {
-            return validationResult.ToErrors();
+            return validationResult.ToError();
         }
 
         var addressResult = Address.Create(
@@ -56,7 +56,7 @@ public sealed class CreateLocationHandler : ICommandHandler<Guid, CreateLocation
         if (locationResult.IsFailure)
         {
             _logger.LogError("Failed to create location: {ErrorMessage}", locationResult.Error);
-            return locationResult.Error.ToErrors();
+            return locationResult.Error;
         }
 
         var createLocationResult = await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
@@ -64,7 +64,7 @@ public sealed class CreateLocationHandler : ICommandHandler<Guid, CreateLocation
         if (createLocationResult.IsFailure)
         {
             _logger.LogError("Failed to add location: {ErrorMessage}", createLocationResult.Error);
-            return createLocationResult.Error.ToErrors();
+            return createLocationResult.Error;
         }
 
         _logger.LogInformation("Added location: {LocationId}", createLocationResult.Value);

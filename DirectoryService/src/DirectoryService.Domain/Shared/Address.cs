@@ -58,7 +58,7 @@ public record Address
 
         if (street.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
         {
-            return GeneralErrors.LenghtIsInvalid(street);
+            return GeneralErrors.LenghtIsInvalid(street, min: Constants.MIN_NAME_TEXT_LENGTH, max: Constants.MAX_NAME_TEXT_LENGTH);
         }
 
         if (string.IsNullOrWhiteSpace(city))
@@ -73,12 +73,12 @@ public record Address
 
         if (city.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
         {
-            return GeneralErrors.LenghtIsInvalid(city);
+            return GeneralErrors.LenghtIsInvalid(city, min: Constants.MIN_NAME_TEXT_LENGTH, max: Constants.MAX_NAME_TEXT_LENGTH);
         }
 
         if (country.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
         {
-            return GeneralErrors.LenghtIsInvalid(country);
+            return GeneralErrors.LenghtIsInvalid(country, min: Constants.MIN_NAME_TEXT_LENGTH, max: Constants.MAX_NAME_TEXT_LENGTH);
         }
 
         if (postalCode is null)

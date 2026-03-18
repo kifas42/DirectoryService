@@ -7,6 +7,8 @@ public enum ErrorType
 {
     VALIDATION,
     NOT_FOUND,
+    AUTHENTIFICATION,
+    AUTHORIZATION,
     CONFLICT,
     FAILURE,
 }

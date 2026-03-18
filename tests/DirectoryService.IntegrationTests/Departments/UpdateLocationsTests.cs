@@ -100,8 +100,8 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
 
             Assert.NotNull(oldDepartmentLocations);
             Assert.True(result.IsFailure);
-            Assert.Single(result.Error);
-            Assert.Equal(ErrorType.VALIDATION, result.Error.First().Type);
+            Assert.Single(result.Error.Messages);
+            Assert.Equal(ErrorType.VALIDATION, result.Error.Type);
         });
     }
 
@@ -151,7 +151,6 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
             Assert.NotNull(oldDepartmentLocations);
             Assert.Null(departmentLocations);
             Assert.True(result.IsFailure);
-            Assert.Equal(2, result.Error.Count());
         });
     }
 
@@ -163,7 +162,7 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         var cancellationToken = CancellationToken.None;
         LocationId? locationId = null;
         LocationId? newLocationId = null;
-        DepartmentId? departmentId = DepartmentId.New();
+        DepartmentId departmentId = DepartmentId.New();
 
         await ExecuteInDb(async dbContext =>
         {
@@ -176,7 +175,7 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         var result = await ExecuteHandler<int, UpdateLocationsHandler>((sut) =>
         {
             var command = new UpdateLocationCommand(
-                departmentId!.Value,
+                departmentId.Value,
                 new UpdateLocationsRequest()
                 {
                     LocationIds = [newLocationId!.Value]
@@ -200,8 +199,8 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
             Assert.Null(oldDepartmentLocations);
             Assert.Null(departmentLocations);
             Assert.True(result.IsFailure);
-            Assert.Single(result.Error);
-            Assert.Equal(ErrorType.NOT_FOUND, result.Error.First().Type);
+            Assert.Single(result.Error.Messages);
+            Assert.Equal(ErrorType.NOT_FOUND, result.Error.Type);
         });
     }
 
@@ -213,7 +212,7 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
 
         var cancellationToken = CancellationToken.None;
         LocationId? locationId = null;
-        LocationId? newLocationId = LocationId.New();
+        LocationId newLocationId = LocationId.New();
         DepartmentId? departmentId = null;
         await ExecuteInDb(async dbContext =>
         {
@@ -229,7 +228,7 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
                 departmentId!.Value,
                 new UpdateLocationsRequest()
                 {
-                    LocationIds = [newLocationId!.Value]
+                    LocationIds = [newLocationId.Value]
                 }
             );
 
@@ -249,8 +248,8 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
             Assert.NotNull(oldDepartmentLocations);
             Assert.Null(departmentLocations);
             Assert.True(result.IsFailure);
-            Assert.Single(result.Error);
-            Assert.Equal(ErrorType.NOT_FOUND, result.Error.First().Type);
+            Assert.Single(result.Error.Messages);
+            Assert.Equal(ErrorType.NOT_FOUND, result.Error.Type);
         });
     }
 }

@@ -2,33 +2,47 @@
 
 namespace Shared;
 
+public record ErrorMessage(string Code, string Message, string? InvalidField);
+
 public sealed record Error
 {
-    public string Code { get; }
-    public string Message { get; }
+    public IReadOnlyList<ErrorMessage> Messages { get; } = [];
     public ErrorType Type { get; }
-    public string? InvalidField { get; }
 
-    [JsonConstructor]
-    private Error(string code, string message, ErrorType type, string? invalidField = null)
+    private Error(IEnumerable<ErrorMessage> messages, ErrorType type)
     {
-        Code = code;
-        Message = message;
+        Messages = messages.ToArray();
         Type = type;
-        InvalidField = invalidField;
     }
 
-    public static Error Validation(string? code, string message, string? invalidField) =>
-        new(code ?? "validation.is.invalid", message, ErrorType.VALIDATION, invalidField);
+    [JsonConstructor]
+    private Error(IReadOnlyList<ErrorMessage> messages, ErrorType type)
+    {
+        Messages = messages.ToArray();
+        Type = type;
+    }
 
-    public static Error NotFound(string? code, string message, Guid? id) =>
-        new(code ?? "record.not.found", message, ErrorType.NOT_FOUND);
+    public static Error Validation(params IEnumerable<ErrorMessage> messages) =>
+        new(messages, ErrorType.VALIDATION);
 
-    public static Error Conflict(string? code, string message) =>
-        new(code ?? "validation.is.conflict", message, ErrorType.CONFLICT);
+    public static Error NotFound(params IEnumerable<ErrorMessage> messages) =>
+        new(messages, ErrorType.NOT_FOUND);
 
-    public static Error Failure(string? code, string message) =>
-        new(code ?? "failure", message, ErrorType.FAILURE);
+    public static Error Conflict(params IEnumerable<ErrorMessage> messages) =>
+        new(messages, ErrorType.CONFLICT);
 
-    public Errors ToErrors() => new([this]);
+    public static Error Failure(params IEnumerable<ErrorMessage> messages) =>
+        new(messages, ErrorType.FAILURE);
+
+    public static Error Validation(string code, string message, string? invalidField = null) =>
+        new([new ErrorMessage(code, message, invalidField)], ErrorType.VALIDATION);
+
+    public static Error NotFound(string code, string message, string? invalidField = null) =>
+        new([new ErrorMessage(code, message, invalidField)], ErrorType.NOT_FOUND);
+
+    public static Error Conflict(string code, string message, string? invalidField = null) =>
+        new([new ErrorMessage(code, message, invalidField)], ErrorType.CONFLICT);
+
+    public static Error Failure(string code, string message, string? invalidField = null) =>
+        new([new ErrorMessage(code, message, invalidField)], ErrorType.FAILURE);
 }

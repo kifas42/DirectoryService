@@ -6,7 +6,7 @@ namespace DirectoryService.Application.Validation;
 
 public static class ValidationExtensions
 {
-    public static Errors ToErrors(this ValidationResult validationResult)
+    public static Error ToError(this ValidationResult validationResult)
     {
         List<ValidationFailure> validationErrors = validationResult.Errors;
 
@@ -14,8 +14,8 @@ public static class ValidationExtensions
             from validationError in validationErrors
             let errorMessage = validationError.ErrorMessage
             let error = JsonSerializer.Deserialize<Error>(errorMessage)
-            select error;
+            select error.Messages;
 
-        return new Errors(errors);
+        return Error.Validation(errors.SelectMany(error => error));
     }
 }

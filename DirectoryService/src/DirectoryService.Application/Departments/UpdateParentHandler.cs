@@ -26,14 +26,14 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
         _transactionManager = transactionManager;
     }
 
-    public async Task<Result<int, Errors>> Handle(
+    public async Task<Result<int, Error>> Handle(
         UpdateParentCommand command,
         CancellationToken cancellationToken = default)
     {
         var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
         if (transactionScopeResult.IsFailure)
         {
-            return transactionScopeResult.Error.ToErrors();
+            return transactionScopeResult.Error;
         }
 
         using var transactionScope = transactionScopeResult.Value;
@@ -49,7 +49,7 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
         {
             _logger.LogWarning("Fail to lock department {departmentId}", departmentId.Value);
             transactionScope.Rollback();
-            return lockDep.Error.ToErrors();
+            return lockDep.Error;
         }
 
         // редактируемый департамент активен
@@ -57,14 +57,14 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
         if (departmentResult.IsFailure)
         {
             transactionScope.Rollback();
-            return departmentResult.Error.ToErrors();
+            return departmentResult.Error;
         }
 
         // новый родитель - не мы
         if (parentId == departmentId)
         {
             transactionScope.Rollback();
-            return Error.Conflict("invalid.parent", "Не может быть сам себе родителем").ToErrors();
+            return Error.Conflict("invalid.parent", "Не может быть сам себе родителем");
         }
 
         Department? newParent = null;
@@ -75,14 +75,14 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
             if (parentResult.IsFailure)
             {
                 transactionScope.Rollback();
-                return parentResult.Error.ToErrors();
+                return parentResult.Error;
             }
 
             newParent = parentResult.Value;
             if (newParent.Path.Value.StartsWith(departmentResult.Value.Path.Value + "."))
             {
                 transactionScope.Rollback();
-                return Error.Failure("invalid.parent", "Нельзя переместить в своего потомка").ToErrors();
+                return Error.Failure("invalid.parent", "Нельзя переместить в своего потомка");
             }
         }
 
@@ -93,20 +93,20 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
         if (updateResult.IsFailure)
         {
             transactionScope.Rollback();
-            return updateResult.Error.ToErrors();
+            return updateResult.Error;
         }
 
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)
         {
             transactionScope.Rollback();
-            return saveResult.Error.ToErrors();
+            return saveResult.Error;
         }
 
         var commitedResult = transactionScope.Commit();
         if (commitedResult.IsFailure)
         {
-            return commitedResult.Error.ToErrors();
+            return commitedResult.Error;
         }
 
         return 0;
