@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
@@ -68,18 +67,6 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
     public async Task ResetDatabaseAsync()
     {
         await _respawner.ResetAsync(_dbConnection);
-    }
-
-    private IConfiguration CreateTestConfiguration(string connectionString)
-    {
-        var inMemorySettings = new Dictionary<string, string>
-        {
-            { $"ConnectionStrings:{ApplicationDbContext.DATABASE}", connectionString }
-        };
-
-        return new ConfigurationBuilder()
-            .AddInMemoryCollection(inMemorySettings!)
-            .Build();
     }
 
     private async Task InitializeRespawner()

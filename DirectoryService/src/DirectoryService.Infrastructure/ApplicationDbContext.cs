@@ -31,8 +31,6 @@ public class ApplicationDbContext : DbContext, IReadDbContext
     public IQueryable<DepartmentLocation> DepartmentLocationsRead =>
         Set<DepartmentLocation>().AsNoTracking().AsQueryable();
 
-    public DbConnection Connection => Database.GetDbConnection();
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("ltree");
