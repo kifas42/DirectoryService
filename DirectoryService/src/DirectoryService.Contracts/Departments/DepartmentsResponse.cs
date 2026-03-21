@@ -1,6 +1,6 @@
 ﻿namespace DirectoryService.Contracts.Departments;
 
-public record RootDepartmentsResponse(IReadOnlyList<DepartmentDto> Departments);
+public record DepartmentsResponse(IReadOnlyList<DepartmentDto> Departments);
 
 public class DepartmentDto
 {

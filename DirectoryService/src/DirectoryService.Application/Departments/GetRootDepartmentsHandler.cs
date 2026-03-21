@@ -9,7 +9,7 @@ namespace DirectoryService.Application.Departments;
 
 public record GetRootDepartmentsQuery(RootDepartmentsRequest Request) : IQuery;
 
-public class GetRootDepartmentsHandler : IQueryHandler<RootDepartmentsResponse, GetRootDepartmentsQuery>
+public class GetRootDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetRootDepartmentsQuery>
 {
     private readonly IDbConnectionFactory _connectionFactory;
 
@@ -18,7 +18,7 @@ public class GetRootDepartmentsHandler : IQueryHandler<RootDepartmentsResponse, 
         _connectionFactory = connectionFactory;
     }
 
-    public async Task<Result<RootDepartmentsResponse, Error>> Handle(
+    public async Task<Result<DepartmentsResponse, Error>> Handle(
         GetRootDepartmentsQuery query,
         CancellationToken cancellationToken = default)
     {
@@ -88,6 +88,6 @@ public class GetRootDepartmentsHandler : IQueryHandler<RootDepartmentsResponse, 
             }
         }
 
-        return new RootDepartmentsResponse(roots);
+        return new DepartmentsResponse(roots);
     }
 }
