@@ -1,5 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
-using DirectoryService.Application.Abstractions;
+
 using DirectoryService.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Shared;
@@ -25,7 +25,7 @@ public class DirectoryBaseTests : IClassFixture<DirectoryTestWebFactory>, IAsync
     }
 
     protected async Task<Result<T, Error>> ExecuteHandler<T, THandler>(Func<THandler, Task<Result<T, Error>>> action)
-        where THandler : ICommandHandler
+        where THandler : class
     {
         await using var scope = Services.CreateAsyncScope();
         var sut = scope.ServiceProvider.GetRequiredService<THandler>();

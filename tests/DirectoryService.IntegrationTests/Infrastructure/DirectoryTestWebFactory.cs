@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
+
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
@@ -27,17 +28,30 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.ConfigureAppConfiguration(config =>
+        {
+            var testConnectionString = _dbContainer.GetConnectionString();
+
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [$"ConnectionStrings:{ApplicationDbContext.DATABASE}"] = testConnectionString
+            });
+        });
+
+
         builder.ConfigureTestServices(services =>
         {
+            services.RemoveAll<IDbConnectionFactory>();
             services.RemoveAll<ApplicationDbContext>();
             services.AddDbContextPool<ApplicationDbContext>((sp, options) =>
             {
                 var connectionString = _dbContainer.GetConnectionString();
-                
+
                 options.UseNpgsql(connectionString);
-                options.EnableSensitiveDataLogging(); 
+                options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();
             });
+            services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
         });
     }
 
@@ -49,9 +63,10 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await dbContext.Database.EnsureDeletedAsync();
         await dbContext.Database.EnsureCreatedAsync();
+
         _dbConnection = new NpgsqlConnection(_dbContainer.GetConnectionString());
         await _dbConnection.OpenAsync();
-        
+
         await InitializeRespawner();
     }
 
@@ -59,7 +74,7 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
     {
         await _dbContainer.StopAsync();
         await _dbContainer.DisposeAsync();
-        
+
         await _dbConnection.CloseAsync();
         await _dbConnection.DisposeAsync();
     }

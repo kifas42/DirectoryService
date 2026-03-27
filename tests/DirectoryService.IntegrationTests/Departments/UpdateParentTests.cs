@@ -55,6 +55,7 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
                 locationId,
                 "departmentA",
                 "dep-a",
+                null,
                 null);
 
             rootDepartmentB = await DataCreator.CreateDepartment(
@@ -62,6 +63,7 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
                 locationId,
                 "departmentB",
                 "dep-b",
+                null,
                 null);
 
             departmentA1 = await DataCreator.CreateDepartment(
