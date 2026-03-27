@@ -1,5 +1,6 @@
 ﻿using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
+using DirectoryService.Domain.Positions;
 using DirectoryService.Domain.Shared;
 using DirectoryService.Infrastructure;
 
@@ -58,7 +59,8 @@ public static class DataCreator
 
     public static Task<Department> CreateDepartmentNoSave(
         ApplicationDbContext dbContext,
-        LocationId locationId,
+        IEnumerable<LocationId> locationIds,
+        IEnumerable<PositionId> positionIds,
         string name,
         string identifier,
         DepartmentId? departmentId,
@@ -74,7 +76,16 @@ public static class DataCreator
                 depth = (short)(parent.Depth + 1);
             }
 
-            var departmentLocation = new DepartmentLocation(Guid.NewGuid(), departmentId, locationId);
+            var departmentPositions =
+                positionIds.Select(x =>
+                        new DepartmentPosition(Guid.NewGuid(), departmentId, new PositionId(x.Value)))
+                    .ToList();
+
+
+            var departmentLocations =
+                locationIds.Select(x =>
+                        new DepartmentLocation(Guid.NewGuid(), departmentId, new LocationId(x.Value)))
+                    .ToList();
 
             var department = Department.Create(
                 departmentId,
@@ -82,8 +93,8 @@ public static class DataCreator
                 Identifier.Create(identifier).Value,
                 parent,
                 depth,
-                [],
-                [departmentLocation]);
+                departmentPositions,
+                departmentLocations);
 
             dbContext.Departments.Add(department.Value);
 
@@ -97,13 +108,14 @@ public static class DataCreator
 
     public static async Task<Department> CreateDepartment(
         ApplicationDbContext dbContext,
-        LocationId locationId,
+        IEnumerable<LocationId> locationIds,
+        IEnumerable<PositionId> positionIds,
         string name,
         string identifier,
         Department? parent,
         DepartmentId? departmentId = null)
     {
-        var res = await CreateDepartmentNoSave(dbContext, locationId, name, identifier, departmentId, parent);
+        var res = await CreateDepartmentNoSave(dbContext, locationIds, positionIds, name, identifier, departmentId, parent);
 
         await dbContext.SaveChangesAsync();
         return res;
@@ -113,14 +125,15 @@ public static class DataCreator
     public static async Task GenerateDepartmentStruct(
         ApplicationDbContext dbContext,
         TestDepartmentDto[] dtos,
-        LocationId locationId)
+        IReadOnlyList<LocationId> locationIds,
+        IReadOnlyList<PositionId> positionIds)
     {
         await using var transaction = await dbContext.Database.BeginTransactionAsync();
         try
         {
             foreach (var dto in dtos)
             {
-                await ProcessDepartmentNodeAsync(dbContext, locationId, dto, null);
+                await ProcessDepartmentNodeAsync(dbContext, locationIds, positionIds, dto, null);
             }
 
             await dbContext.SaveChangesAsync();
@@ -136,7 +149,8 @@ public static class DataCreator
 
     private static async Task<Department> ProcessDepartmentNodeAsync(
         ApplicationDbContext dbContext,
-        LocationId locationId,
+        IReadOnlyList<LocationId> locationIds,
+        IReadOnlyList<PositionId> positionIds,
         TestDepartmentDto dto,
         Department? parent)
     {
@@ -144,7 +158,8 @@ public static class DataCreator
 
         var department = await CreateDepartmentNoSave(
             dbContext: dbContext,
-            locationId: locationId,
+            locationIds: locationIds,
+            positionIds: positionIds,
             name: dto.Name,
             identifier: dto.Identifier,
             departmentId: departmentId,
@@ -155,7 +170,7 @@ public static class DataCreator
 
         foreach (var childDto in dto.Children)
         {
-            await ProcessDepartmentNodeAsync(dbContext, locationId, childDto, department);
+            await ProcessDepartmentNodeAsync(dbContext, locationIds, positionIds, childDto, department);
         }
 
         return department;
@@ -363,6 +378,25 @@ public static class DataCreator
                 ])
         ];
     }
+
+    public static async Task<IReadOnlyList<PositionId>> CreatePositions(
+        ApplicationDbContext dbContext,
+        IReadOnlyList<TestPositionDto> testPositions,
+        CancellationToken cancellationToken = default)
+    {
+        var positions = testPositions.Select(x => Position.Create(new PositionId(x.Id),
+                x.Name,
+                null,
+                []))
+            .Select(y => y.Value).ToList();
+
+        await dbContext.Positions.AddRangeAsync(positions, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return positions.Select(x => x.Id).ToList();
+    }
 }
 
 public record TestDepartmentDto(Guid Id, string Name, string Identifier, TestDepartmentDto[] Children);
+
+public record TestPositionDto(Guid Id, string Name);

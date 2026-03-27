@@ -26,7 +26,8 @@ public class GetRootDepartmentsTest(DirectoryTestWebFactory factory) : Directory
             await DataCreator.GenerateDepartmentStruct(
                 dbContext,
                 DataCreator.GetDepartmentStruct(_engId, _salesId, _hrId, _itId),
-                locationId);
+                [locationId],
+                []);
         });
 
 
