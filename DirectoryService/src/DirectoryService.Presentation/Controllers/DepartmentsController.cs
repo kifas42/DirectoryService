@@ -53,4 +53,25 @@ public class DepartmentsController : ControllerBase
     {
         return await handler.Handle(new GetTopDepartmentsQuery(count ?? 5), cancellationToken);
     }
+
+    [HttpGet]
+    [Route("roots")]
+    public async Task<EndpointResult<DepartmentsResponse>> GetRoots(
+        [FromQuery] RootDepartmentsRequest departmentsRequest,
+        [FromServices] IQueryHandler<DepartmentsResponse, GetRootDepartmentsQuery> handler,
+        CancellationToken cancellationToken)
+    {
+        return await handler.Handle(new GetRootDepartmentsQuery(departmentsRequest), cancellationToken);
+    }
+
+    [HttpGet]
+    [Route("{departmentId:guid}/children")]
+    public async Task<EndpointResult<DepartmentsResponse>> GetChildren(
+        [FromQuery] ChildDepartmentsRequest departmentsRequest,
+        [FromRoute] Guid departmentId,
+        [FromServices] IQueryHandler<DepartmentsResponse, GetChildDepartmentsQuery> handler,
+        CancellationToken cancellationToken)
+    {
+        return await handler.Handle(new GetChildDepartmentsQuery(departmentId, departmentsRequest), cancellationToken);
+    }
 }

@@ -11,17 +11,18 @@ public record GetTopDepartmentsQuery(int Count) : IQuery;
 
 public class GetTopDepartmentsHandler : IQueryHandler<TopDepartmentsResponse, GetTopDepartmentsQuery>
 {
-    private readonly IReadDbContext _readDbContext;
+    private readonly IDbConnectionFactory _connectionFactory;
 
-    public GetTopDepartmentsHandler(IReadDbContext readDbContext)
+    public GetTopDepartmentsHandler(IDbConnectionFactory connectionFactory)
     {
-        _readDbContext = readDbContext;
+        _connectionFactory = connectionFactory;
     }
 
-    public async Task<Result<TopDepartmentsResponse, Error>> Handle(GetTopDepartmentsQuery query,
+    public async Task<Result<TopDepartmentsResponse, Error>> Handle(
+        GetTopDepartmentsQuery query,
         CancellationToken cancellationToken)
     {
-        var connection = _readDbContext.Connection;
+        using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
 
         string sql =
             """

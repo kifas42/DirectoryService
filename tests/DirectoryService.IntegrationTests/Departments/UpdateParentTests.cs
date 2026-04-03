@@ -52,42 +52,50 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
 
             rootDepartmentA = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentA",
                 "dep-a",
+                null,
                 null);
 
             rootDepartmentB = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentB",
                 "dep-b",
+                null,
                 null);
 
             departmentA1 = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentA1",
                 "dep-aa",
                 rootDepartmentA);
 
             departmentA2 = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentA2",
                 "dep-aaa",
                 departmentA1);
 
             departmentB1 = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentB1",
                 "dep-bb",
                 rootDepartmentB);
 
             departmentB2 = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentB2",
                 "dep-bbb",
                 departmentB1);
@@ -177,21 +185,24 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
 
             rootDepartmentA = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentA",
                 "dep-a",
                 null);
 
             departmentA1 = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentA1",
                 "dep-aa",
                 rootDepartmentA);
 
             departmentA2 = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentA2",
                 "dep-aaa",
                 departmentA1);
@@ -265,21 +276,24 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
 
             rootDepartmentB = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentB",
                 "dep-b",
                 null);
 
             departmentB1 = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentB1",
                 "dep-bb",
                 rootDepartmentB);
 
             departmentB2 = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentB2",
                 "dep-bbb",
                 departmentB1);
@@ -367,21 +381,24 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
 
             rootDepartmentB = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentB",
                 "dep-b",
                 null);
 
             departmentB1 = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentB1",
                 "dep-bb",
                 rootDepartmentB);
 
             departmentB2 = await DataCreator.CreateDepartment(
                 dbContext,
-                locationId,
+                [locationId],
+                [],
                 "departmentB2",
                 "dep-bbb",
                 departmentB1);

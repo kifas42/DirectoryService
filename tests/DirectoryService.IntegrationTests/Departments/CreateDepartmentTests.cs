@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DirectoryService.IntegrationTests.Departments;
 
-public class CreateDepartmentTest(DirectoryTestWebFactory factory) : DirectoryBaseTests(factory)
+public class CreateDepartmentTests(DirectoryTestWebFactory factory) : DirectoryBaseTests(factory)
 {
     [Fact]
     public async Task CreateDepartment_WithValidData_ShouldSucceed()

@@ -1,4 +1,5 @@
-﻿using DirectoryService.Application.Database;
+﻿using Dapper;
+using DirectoryService.Application.Database;
 using DirectoryService.Application.Departments;
 using DirectoryService.Application.Locations;
 using DirectoryService.Application.Positions;
@@ -15,10 +16,12 @@ public static class DependencyInjectionExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        DefaultTypeMap.MatchNamesWithUnderscores = true;
         services.AddScoped<ITransactionManager, TransactionManager>();
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
+        services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
 
         services.AddDbContextPool<IReadDbContext, ApplicationDbContext>((sp, options) =>
         {
