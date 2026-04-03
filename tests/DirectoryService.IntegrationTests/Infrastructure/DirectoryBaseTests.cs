@@ -32,6 +32,15 @@ public class DirectoryBaseTests : IClassFixture<DirectoryTestWebFactory>, IAsync
 
         return await action(sut);
     }
+    
+    protected async Task<UnitResult<Error>> ExecuteHandler<THandler>(Func<THandler, Task<UnitResult<Error>>> action)
+        where THandler : class
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var sut = scope.ServiceProvider.GetRequiredService<THandler>();
+
+        return await action(sut);
+    }
 
     protected async Task<T> ExecuteInDb<T>(Func<ApplicationDbContext, Task<T>> action)
     {

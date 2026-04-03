@@ -127,7 +127,7 @@ public sealed class Department : Shared.Entity
         }
         catch (Exception e)
         {
-            return Error.Failure(null, "locations cannot be empty");
+            return Error.Failure(string.Empty, "locations cannot be empty");
         }
 
         Update();

@@ -74,4 +74,14 @@ public class DepartmentsController : ControllerBase
     {
         return await handler.Handle(new GetChildDepartmentsQuery(departmentId, departmentsRequest), cancellationToken);
     }
+
+    [HttpDelete]
+    [Route("{departmentId:guid}")]
+    public async Task<EndpointResult> Delete(
+        [FromRoute] Guid departmentId,
+        [FromServices] ICommandHandler<DeleteDepartmentCommand> handler,
+        CancellationToken cancellationToken)
+    {
+        return await handler.Handle(new DeleteDepartmentCommand(departmentId), cancellationToken);
+    }
 }

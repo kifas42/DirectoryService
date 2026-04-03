@@ -1,5 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
+using Dapper;
 using DirectoryService.Application.Locations;
+using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Infrastructure.Configurations;
 using Microsoft.EntityFrameworkCore;
@@ -58,5 +60,44 @@ public sealed class LocationRepository : ILocationRepository
     {
         return await _dbContext.Locations
             .CountAsync(d => departmentIds.Contains(d.Id) && d.IsActive) == departmentIds.Count();
+    }
+
+    public async Task<UnitResult<Error>> SoftDeleteOrphans(
+        DepartmentId departmentId,
+        CancellationToken cancellationToken)
+    {
+        string sql = """
+                     UPDATE locations
+                     SET is_active = FALSE,
+                         updated_at = NOW(),
+                         deleted_at = NOW()
+                     WHERE id IN (
+                         SELECT location_id FROM department_location WHERE department_id = @departmentId
+                     )
+                       AND NOT EXISTS (
+                         SELECT 1
+                         FROM department_location dl2
+                                  JOIN departments d2 ON d2.id = dl2.department_id
+                         WHERE dl2.location_id = locations.id
+                           AND d2.is_active = TRUE
+                     );
+                     """;
+
+        try
+        {
+            var dbConn = _dbContext.Database.GetDbConnection();
+
+            int updated = await dbConn.ExecuteAsync(
+                sql,
+                new { departmentId = departmentId.Value });
+
+            _logger.LogInformation("Deleted(soft) {Count} locations", updated);
+            return UnitResult.Success<Error>();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("Failed to soft delete orphans locations: {Message}", e.Message);
+            return Error.Failure("delete.locations", "Failed to soft delete orphans locations");
+        }
     }
 }

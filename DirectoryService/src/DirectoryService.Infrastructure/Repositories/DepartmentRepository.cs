@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Linq.Expressions;
+using CSharpFunctionalExtensions;
 using Dapper;
 using DirectoryService.Application.Departments;
 using DirectoryService.Domain.Departments;
@@ -80,6 +81,57 @@ public class DepartmentRepository : IDepartmentRepository
         }
     }
 
+    public async Task<UnitResult<Error>> SoftDeleteWithUpdatePath(
+        Department department,
+        string newIdentifier,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           UPDATE departments
+                           SET path =
+                                   subpath(path, 0, nlevel(@oldPath::ltree) - 1)
+                                       ||
+                                   @newIdentifier::ltree
+                                       ||
+                                   CASE
+                                       WHEN path != @oldPath::ltree
+                                           THEN subpath(path, nlevel(@oldPath::ltree))
+                                       ELSE ''::ltree
+                                       END,
+                               identifier = CASE
+                                                WHEN path = @oldPath::ltree
+                                                    THEN @newIdentifier
+                                                ELSE identifier END,
+                               is_active = CASE 
+                                               WHEN path = @oldPath::ltree
+                                                   THEN FALSE
+                                               ELSE is_active END,
+                               deleted_at = CASE
+                                                WHEN path = @oldPath::ltree
+                                                    THEN NOW()
+                                                ELSE deleted_at END,
+                               updated_at = NOW()
+                           WHERE path <@ @oldPath::ltree;
+                           """;
+
+        try
+        {
+            var dbConn = _dbContext.Database.GetDbConnection();
+
+            int updated = await dbConn.ExecuteAsync(
+                sql,
+                new { oldPath = department.Path.Value, newIdentifier = newIdentifier, });
+
+            _logger.LogInformation("Updated {Count} departments", updated);
+            return UnitResult.Success<Error>();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("Failed to soft delete departments: {Message}", e.Message);
+            return Error.Failure("delete.departments", "Failed to soft delete departments");
+        }
+    }
+
     public async Task<UnitResult<Error>> LockDepartmentsById(
         DepartmentId departmentId,
         CancellationToken cancellationToken)
@@ -101,6 +153,18 @@ public class DepartmentRepository : IDepartmentRepository
             _logger.LogError("Lock Error: {Message}", ex.Message);
             return Error.Failure("data.is.locked", "Lock departments error");
         }
+    }
+
+    public async Task<Result<Department, Error>> GetBy(
+        Expression<Func<Department, bool>> predicate,
+        CancellationToken cancellationToken)
+    {
+        Department? department =
+            await _dbContext.Departments.FirstOrDefaultAsync(predicate, cancellationToken);
+
+        if (department is null) return GeneralErrors.NotFound(null, "department");
+
+        return department;
     }
 
     public async Task<bool> IsAllExistAndActive(IEnumerable<DepartmentId> departmentIds)
