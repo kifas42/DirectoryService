@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Linq.Expressions;
+using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Departments;
 using Shared;
 
@@ -21,7 +22,16 @@ public interface IDepartmentRepository
         Department? newParent,
         CancellationToken cancellationToken);
 
+    Task<UnitResult<Error>> SoftDeleteWithUpdatePath(
+        Department department,
+        string newIdentifier,
+        CancellationToken cancellationToken);
+
     Task<UnitResult<Error>> LockDepartmentsById(
         DepartmentId departmentId,
+        CancellationToken cancellationToken);
+
+    Task<Result<Department, Error>> GetBy(
+        Expression<Func<Department, bool>> predicate,
         CancellationToken cancellationToken);
 }

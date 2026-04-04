@@ -1,5 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
+using Dapper;
 using DirectoryService.Application.Positions;
+using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Positions;
 using DirectoryService.Infrastructure.Configurations;
 using Microsoft.EntityFrameworkCore;
@@ -33,7 +35,9 @@ public class PositionRepository : IPositionRepository
             return pgEx switch
             {
                 { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null } when
-                    pgEx.ConstraintName.Contains(IndexConstants.POSITION_ACTIVE_NAME, StringComparison.CurrentCultureIgnoreCase) =>
+                    pgEx.ConstraintName.Contains(
+                        IndexConstants.POSITION_ACTIVE_NAME,
+                        StringComparison.CurrentCultureIgnoreCase) =>
                     Error.Conflict("unique.conflict", "Name conflict"),
                 _ => Error.Failure(null, "database error. check logs")
             };
@@ -46,6 +50,45 @@ public class PositionRepository : IPositionRepository
         {
             _logger.LogError("AddAsync Error: {Message}", ex.Message);
             return Error.Failure(null, "database error. check logs");
+        }
+    }
+
+    public async Task<UnitResult<Error>> SoftDeleteOrphans(
+        DepartmentId departmentId,
+        CancellationToken cancellationToken)
+    {
+        string sql = """
+                     UPDATE positions
+                     SET is_active = FALSE,
+                         updated_at = NOW(),
+                         deleted_at = NOW()
+                     WHERE id IN (
+                         SELECT position_id FROM department_position WHERE department_id = @departmentId
+                     )
+                       AND NOT EXISTS (
+                         SELECT 1
+                         FROM department_position dl2
+                                  JOIN departments d2 ON d2.id = dl2.department_id
+                         WHERE dl2.position_id = positions.id
+                           AND d2.is_active = TRUE
+                     );
+                     """;
+
+        try
+        {
+            var dbConn = _dbContext.Database.GetDbConnection();
+
+            int updated = await dbConn.ExecuteAsync(
+                sql,
+                new { departmentId = departmentId.Value });
+
+            _logger.LogInformation("Deleted(soft) {Count} positions", updated);
+            return UnitResult.Success<Error>();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("Failed to soft delete orphans positions: {Message}", e.Message);
+            return Error.Failure("delete.positions", "Failed to soft delete orphans positions");
         }
     }
 }

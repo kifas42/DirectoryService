@@ -8,17 +8,7 @@ public abstract class Entity
 
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
 
-    public void Activate()
-    {
-        Update();
-        IsActive = true;
-    }
-
-    public void Deactivate()
-    {
-        Update();
-        IsActive = false;
-    }
+    public DateTime? DeletedAt { get; protected set; }
 
     protected void Update()
     {

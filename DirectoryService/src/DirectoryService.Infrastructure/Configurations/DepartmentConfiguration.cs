@@ -17,6 +17,7 @@ public sealed class DepartmentConfiguration : IEntityTypeConfiguration<Departmen
         builder.Property(e => e.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(e => e.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at").IsRequired();
+        builder.Property(e => e.DeletedAt).HasColumnName("deleted_at").IsRequired(false);
 
         // Department
         builder.Property(d => d.Id)

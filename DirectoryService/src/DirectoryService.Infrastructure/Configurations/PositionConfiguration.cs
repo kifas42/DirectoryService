@@ -16,6 +16,7 @@ public class PositionConfiguration : IEntityTypeConfiguration<Position>
         builder.Property(e => e.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(e => e.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at").IsRequired();
+        builder.Property(e => e.DeletedAt).HasColumnName("deleted_at").IsRequired(false);
 
         // Position
         builder.Property(p => p.Id)
