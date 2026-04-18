@@ -22,13 +22,14 @@ public static class DependencyInjectionExtensions
             .Bind(configuration.GetSection("CleanupInactive"))
             .ValidateOnStart();
 
+        services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
         services.AddScoped<ITransactionManager, TransactionManager>();
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
-        services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
+        services.AddScoped<CleanupInactiveRecordsService>();
 
-        services.AddHostedService<CleanupInactiveRecordsService>();
+        services.AddHostedService<CleanupInactiveRecordsBackgroundService>();
 
         services.AddDbContextPool<IReadDbContext, ApplicationDbContext>((sp, options) =>
         {

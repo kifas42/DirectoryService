@@ -1,14 +1,16 @@
 ﻿using System.Data.Common;
 using DirectoryService.Application.Database;
 using DirectoryService.Infrastructure;
+using DirectoryService.Infrastructure.BackgroundServices;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using Respawn;
 using Testcontainers.PostgreSql;
@@ -41,8 +43,16 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
 
         builder.ConfigureTestServices(services =>
         {
+            var descriptor = services
+                .Where(d => d.ServiceType == typeof(IHostedService))
+                .SingleOrDefault(d => d.ImplementationType == typeof(CleanupInactiveRecordsBackgroundService));
+
+            if (descriptor != null)
+                services.Remove(descriptor);
+
             services.RemoveAll<IDbConnectionFactory>();
             services.RemoveAll<ApplicationDbContext>();
+            services.RemoveAll<IOptions<CleanupInactiveRecordsOptions>>();
             services.AddDbContextPool<ApplicationDbContext>((sp, options) =>
             {
                 var connectionString = _dbContainer.GetConnectionString();
@@ -51,6 +61,8 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
                 options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();
             });
+            services.AddOptions<CleanupInactiveRecordsOptions>()
+                .Configure(opts => { opts.RetentionDays = 0; });
             services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
         });
     }
