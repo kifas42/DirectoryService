@@ -1,10 +1,5 @@
 using DirectoryService.Application;
-using DirectoryService.Application.Database;
-using DirectoryService.Application.Departments;
-using DirectoryService.Application.Locations;
-using DirectoryService.Application.Positions;
 using DirectoryService.Infrastructure;
-using DirectoryService.Infrastructure.Repositories;
 using DirectoryService.Presentation;
 using DirectoryService.Presentation.Middlewares;
 using Microsoft.AspNetCore.Mvc;
