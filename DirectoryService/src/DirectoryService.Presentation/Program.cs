@@ -13,6 +13,9 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Seq(builder.Configuration.GetConnectionString("Seq") ?? throw new ArgumentNullException("Seq"))
     .CreateLogger();
 
+string environment = builder.Environment.EnvironmentName;
+builder.Configuration.AddJsonFile($"appsettings.{environment}.json", true, true);
+builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddSerilog();
 builder.Services.AddControllers();
 builder.Services.Configure<ApiBehaviorOptions>(options => options.SuppressModelStateInvalidFilter = true);
@@ -36,7 +39,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 var app = builder.Build();
 app.UseExceptionMiddleware();
 app.UseHttpLogging();
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))
 {
     app.UseOpenApi();
     app.UseSwaggerUI();
