@@ -33,7 +33,7 @@ builder.Services.AddOpenApiDocument(settings =>
 });
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
-builder.Services.AddApplication();
+builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();

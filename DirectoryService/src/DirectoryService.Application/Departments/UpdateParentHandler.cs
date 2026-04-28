@@ -3,6 +3,7 @@ using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Database;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Domain.Departments;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Shared;
 
@@ -15,15 +16,18 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
     private readonly ILogger<UpdateParentHandler> _logger;
     private readonly IDepartmentRepository _departmentRepository;
     private readonly ITransactionManager _transactionManager;
+    private readonly HybridCache _cache;
 
     public UpdateParentHandler(
         ILogger<UpdateParentHandler> logger,
         IDepartmentRepository departmentRepository,
-        ITransactionManager transactionManager)
+        ITransactionManager transactionManager,
+        HybridCache cache)
     {
         _logger = logger;
         _departmentRepository = departmentRepository;
         _transactionManager = transactionManager;
+        _cache = cache;
     }
 
     public async Task<Result<int, Error>> Handle(
@@ -108,6 +112,8 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
         {
             return commitedResult.Error;
         }
+
+        await _cache.RemoveByTagAsync("departments", cancellationToken);
 
         return 0;
     }

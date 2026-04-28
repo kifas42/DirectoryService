@@ -3,24 +3,52 @@ using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Database;
 using DirectoryService.Contracts.Departments;
+using Microsoft.Extensions.Caching.Hybrid;
 using Shared;
 
 namespace DirectoryService.Application.Departments;
+
+public record RootDepartmentsCacheKey
+{
+    public RootDepartmentsCacheKey(RootDepartmentsRequest request)
+    {
+        Value =
+            $"root_departments_pg:{request.Page?.ToString() ?? "null"}_sz:{request.Size?.ToString() ?? "null"}_pf:{request.Prefetch?.ToString() ?? "null"}";
+    }
+
+    public string Value { get; }
+}
 
 public record GetRootDepartmentsQuery(RootDepartmentsRequest Request) : IQuery;
 
 public class GetRootDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetRootDepartmentsQuery>
 {
     private readonly IDbConnectionFactory _connectionFactory;
+    private readonly HybridCache _cache;
 
-    public GetRootDepartmentsHandler(IDbConnectionFactory connectionFactory)
+    public GetRootDepartmentsHandler(IDbConnectionFactory connectionFactory, HybridCache cache)
     {
         _connectionFactory = connectionFactory;
+        _cache = cache;
     }
 
     public async Task<Result<DepartmentsResponse, Error>> Handle(
         GetRootDepartmentsQuery query,
         CancellationToken cancellationToken = default)
+    {
+        var key = new RootDepartmentsCacheKey(query.Request);
+        var departmentsResponse = await _cache.GetOrCreateAsync<DepartmentsResponse>(
+            key: key.Value,
+            factory: ct => GetDepartmentsFromDataBase(query, ct),
+            tags:["departments"],
+            cancellationToken: cancellationToken);
+
+        return departmentsResponse;
+    }
+
+    private async ValueTask<DepartmentsResponse> GetDepartmentsFromDataBase(
+        GetRootDepartmentsQuery query,
+        CancellationToken cancellationToken)
     {
         using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
 

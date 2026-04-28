@@ -4,6 +4,7 @@ using DirectoryService.Application.Database;
 using DirectoryService.Application.Locations;
 using DirectoryService.Application.Positions;
 using DirectoryService.Domain.Departments;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Shared;
 
@@ -18,19 +19,22 @@ public class SoftDeleteDepartmentHandler : ICommandHandler<DeleteDepartmentComma
     private readonly IDepartmentRepository _departmentRepository;
     private readonly ILocationRepository _locationRepository;
     private readonly IPositionRepository _positionRepository;
+    private readonly HybridCache _cache;
 
     public SoftDeleteDepartmentHandler(
         ILogger<SoftDeleteDepartmentHandler> logger,
         IDepartmentRepository departmentRepository,
         ITransactionManager transactionManager,
         ILocationRepository locationRepository,
-        IPositionRepository positionRepository)
+        IPositionRepository positionRepository,
+        HybridCache cache)
     {
         _logger = logger;
         _departmentRepository = departmentRepository;
         _transactionManager = transactionManager;
         _locationRepository = locationRepository;
         _positionRepository = positionRepository;
+        _cache = cache;
     }
 
     public async Task<UnitResult<Error>> Handle(
@@ -111,6 +115,8 @@ public class SoftDeleteDepartmentHandler : ICommandHandler<DeleteDepartmentComma
         var commitedResult = transactionScope.Commit();
         if (commitedResult.IsFailure)
             return commitedResult.Error;
+
+        await _cache.RemoveByTagAsync("departments", cancellationToken);
 
         return UnitResult.Success<Error>();
     }

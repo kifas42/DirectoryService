@@ -6,6 +6,7 @@ using DirectoryService.Contracts.Positions;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Positions;
 using FluentValidation;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Shared;
 
@@ -19,17 +20,20 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
     private readonly IPositionRepository _positionRepository;
     private readonly IDepartmentRepository _departmentRepository;
     private readonly IValidator<CreatePositionRequest> _validator;
+    private readonly HybridCache _cache;
 
     public CreatePositionHandler(
         ILogger<CreatePositionHandler> logger,
         IPositionRepository positionRepository,
         IValidator<CreatePositionRequest> validator,
-        IDepartmentRepository departmentRepository)
+        IDepartmentRepository departmentRepository,
+        HybridCache cache)
     {
         _logger = logger;
         _positionRepository = positionRepository;
         _validator = validator;
         _departmentRepository = departmentRepository;
+        _cache = cache;
     }
 
     public async Task<Result<Guid, Error>> Handle(
@@ -72,6 +76,8 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
         {
             return createPositionResult.Error;
         }
+
+        await _cache.RemoveByTagAsync("top_departments", cancellationToken);
 
         return createPositionResult.Value.Value;
     }

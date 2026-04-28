@@ -3,6 +3,7 @@ using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Database;
 using DirectoryService.Contracts.Departments;
+using Microsoft.Extensions.Caching.Hybrid;
 using Shared;
 
 namespace DirectoryService.Application.Departments;
@@ -12,18 +13,30 @@ public record GetTopDepartmentsQuery(int Count) : IQuery;
 public class GetTopDepartmentsHandler : IQueryHandler<TopDepartmentsResponse, GetTopDepartmentsQuery>
 {
     private readonly IDbConnectionFactory _connectionFactory;
+    private readonly HybridCache _cache;
 
-    public GetTopDepartmentsHandler(IDbConnectionFactory connectionFactory)
+    public GetTopDepartmentsHandler(IDbConnectionFactory connectionFactory, HybridCache cache)
     {
         _connectionFactory = connectionFactory;
+        _cache = cache;
     }
 
     public async Task<Result<TopDepartmentsResponse, Error>> Handle(
         GetTopDepartmentsQuery query,
         CancellationToken cancellationToken)
     {
-        using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+        var topDepartmentsResponse = await _cache.GetOrCreateAsync<TopDepartmentsResponse>(
+            key: $"top_departments:{query.Count}",
+            factory: ct => GetTopDepartmentsFromDataBase(query, ct),
+            tags: ["top_departments", "departments"],
+            cancellationToken: cancellationToken);
 
+        return topDepartmentsResponse;
+    }
+
+    private async ValueTask<TopDepartmentsResponse> GetTopDepartmentsFromDataBase(GetTopDepartmentsQuery query,
+        CancellationToken cancellationToken)
+    {
         string sql =
             """
             SELECT
@@ -36,7 +49,7 @@ public class GetTopDepartmentsHandler : IQueryHandler<TopDepartmentsResponse, Ge
             ORDER BY pos_count DESC, d.name
             LIMIT @count
             """;
-
+        using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
         var topDepartments = (await connection.QueryAsync<TopDepartmentDto, int, TopDepartmentDto>(
                 sql,
                 param: new { count = query.Count },
