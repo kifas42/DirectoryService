@@ -116,7 +116,7 @@ public class SoftDeleteDepartmentHandler : ICommandHandler<DeleteDepartmentComma
         if (commitedResult.IsFailure)
             return commitedResult.Error;
 
-        await _cache.RemoveByTagAsync("departments", cancellationToken);
+        await _cache.RemoveByTagAsync(CacheConstants.DEPARTMENTS_TAG, cancellationToken);
 
         return UnitResult.Success<Error>();
     }

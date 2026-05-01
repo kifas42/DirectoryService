@@ -10,17 +10,20 @@ public class DirectoryBaseTests : IClassFixture<DirectoryTestWebFactory>, IAsync
 {
     protected IServiceProvider Services { get; }
     private readonly Func<Task> _resetDatabase;
+    private readonly Func<Task> _resetRedis;
 
     protected DirectoryBaseTests(DirectoryTestWebFactory factory)
     {
         Services = factory.Services;
         _resetDatabase = factory.ResetDatabaseAsync;
+        _resetRedis = factory.FlushRedisAsync;
     }
 
     public Task InitializeAsync() => Task.CompletedTask;
 
     public async Task DisposeAsync()
     {
+        await _resetRedis();
         await _resetDatabase();
     }
 

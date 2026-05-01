@@ -77,7 +77,7 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
             return createPositionResult.Error;
         }
 
-        await _cache.RemoveByTagAsync("top_departments", cancellationToken);
+        await _cache.RemoveByTagAsync(CacheConstants.TOP_DEPARTMENTS_TAG, cancellationToken);
 
         return createPositionResult.Value.Value;
     }

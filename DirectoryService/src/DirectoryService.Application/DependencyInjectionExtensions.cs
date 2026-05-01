@@ -13,24 +13,28 @@ public static class DependencyInjectionExtensions
     {
         var assembly = typeof(DependencyInjectionExtensions).Assembly;
 
-        string redisConnectionString = configuration.GetConnectionString("Redis")
+        string redisConnectionString = configuration.GetConnectionString(CacheConstants.REDIS_SECTION)
                                        ?? throw new InvalidOperationException("Connection string 'Redis' not found.");
-        services.AddOptions<HybridCacheOptions>()
-            .Bind(configuration.GetSection("HybridCache"));
+        services.AddOptions<CacheOptions>()
+            .Bind(configuration.GetSection(CacheConstants.SECTION_NAME));
 
         services.AddValidatorsFromAssembly(assembly);
+
         services.Scan(scan => scan.FromAssemblies(assembly)
             .AddClasses(classes => classes
                 .AssignableToAny(typeof(ICommandHandler<,>), typeof(ICommandHandler<>)))
-            .AsSelfWithInterfaces().WithScopedLifetime()
+            .AsSelfWithInterfaces()
+            .WithScopedLifetime()
             .AddClasses(classes => classes
                 .AssignableToAny(typeof(IQueryHandler<,>), typeof(IQueryHandler<>)))
-            .AsSelfWithInterfaces().WithScopedLifetime());
+            .AsSelfWithInterfaces()
+            .WithScopedLifetime());
+
         services.AddScoped<GetLocationsHandler>();
 
         var hybridCacheOptions = configuration
-            .GetSection("HybridCache")
-            .Get<HybridCacheOptions>() ?? new HybridCacheOptions();
+            .GetSection(CacheConstants.SECTION_NAME)
+            .Get<CacheOptions>() ?? new CacheOptions();
 
         services.AddHybridCache(options =>
         {

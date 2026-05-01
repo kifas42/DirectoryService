@@ -28,13 +28,14 @@ public class GetTopDepartmentsHandler : IQueryHandler<TopDepartmentsResponse, Ge
         var topDepartmentsResponse = await _cache.GetOrCreateAsync<TopDepartmentsResponse>(
             key: $"top_departments:{query.Count}",
             factory: ct => GetTopDepartmentsFromDataBase(query, ct),
-            tags: ["top_departments", "departments"],
+            tags: [CacheConstants.DEPARTMENTS_TAG, CacheConstants.TOP_DEPARTMENTS_TAG],
             cancellationToken: cancellationToken);
 
         return topDepartmentsResponse;
     }
 
-    private async ValueTask<TopDepartmentsResponse> GetTopDepartmentsFromDataBase(GetTopDepartmentsQuery query,
+    private async ValueTask<TopDepartmentsResponse> GetTopDepartmentsFromDataBase(
+        GetTopDepartmentsQuery query,
         CancellationToken cancellationToken)
     {
         string sql =

@@ -4,6 +4,7 @@ using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Database;
 using DirectoryService.Contracts.Departments;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using Shared;
 
 namespace DirectoryService.Application.Departments;
@@ -25,11 +26,13 @@ public class GetRootDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetR
 {
     private readonly IDbConnectionFactory _connectionFactory;
     private readonly HybridCache _cache;
+    private readonly ILogger<GetRootDepartmentsHandler> _logger;
 
-    public GetRootDepartmentsHandler(IDbConnectionFactory connectionFactory, HybridCache cache)
+    public GetRootDepartmentsHandler(IDbConnectionFactory connectionFactory, HybridCache cache, ILogger<GetRootDepartmentsHandler> logger)
     {
         _connectionFactory = connectionFactory;
         _cache = cache;
+        _logger = logger;
     }
 
     public async Task<Result<DepartmentsResponse, Error>> Handle(
@@ -40,7 +43,7 @@ public class GetRootDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetR
         var departmentsResponse = await _cache.GetOrCreateAsync<DepartmentsResponse>(
             key: key.Value,
             factory: ct => GetDepartmentsFromDataBase(query, ct),
-            tags:["departments"],
+            tags:[CacheConstants.DEPARTMENTS_TAG],
             cancellationToken: cancellationToken);
 
         return departmentsResponse;
@@ -51,7 +54,7 @@ public class GetRootDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetR
         CancellationToken cancellationToken)
     {
         using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
-
+        _logger.LogDebug("Cache miss - go to database");
         string sql =
             """
             WITH roots AS (

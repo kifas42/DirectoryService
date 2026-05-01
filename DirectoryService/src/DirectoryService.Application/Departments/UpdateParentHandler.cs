@@ -113,7 +113,7 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
             return commitedResult.Error;
         }
 
-        await _cache.RemoveByTagAsync("departments", cancellationToken);
+        await _cache.RemoveByTagAsync(CacheConstants.DEPARTMENTS_TAG, cancellationToken);
 
         return 0;
     }
