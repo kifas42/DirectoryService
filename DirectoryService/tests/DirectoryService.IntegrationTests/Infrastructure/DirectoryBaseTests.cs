@@ -1,5 +1,4 @@
 ﻿using CSharpFunctionalExtensions;
-
 using DirectoryService.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Shared;
@@ -9,6 +8,7 @@ namespace DirectoryService.IntegrationTests.Infrastructure;
 public class DirectoryBaseTests : IClassFixture<DirectoryTestWebFactory>, IAsyncLifetime
 {
     protected IServiceProvider Services { get; }
+
     private readonly Func<Task> _resetDatabase;
     private readonly Func<Task> _resetRedis;
 
@@ -35,7 +35,7 @@ public class DirectoryBaseTests : IClassFixture<DirectoryTestWebFactory>, IAsync
 
         return await action(sut);
     }
-    
+
     protected async Task<UnitResult<Error>> ExecuteHandler<THandler>(Func<THandler, Task<UnitResult<Error>>> action)
         where THandler : class
     {
