@@ -23,20 +23,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql
   
-        
-  pgadmin4:
-    container_name: pgadmin4
-    image: dpage/pgadmin4
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: root
-    ports:
-      - "5050:80"
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
-        
-  seq: 
+  seq:
     image: datalust/seq:latest
     container_name: seq
     restart: always
@@ -46,6 +33,13 @@ services:
     ports:
       - "5341:5341"
       - "8081:80"
+  
+  redis:
+    container_name: redis
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: always
 
 volumes:
   postgres-data:

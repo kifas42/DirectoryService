@@ -2,11 +2,14 @@
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Shared;
 using Shared;
+using Entity = DirectoryService.Domain.Shared.Entity;
 
 namespace DirectoryService.Domain.Positions;
 
-public sealed class Position : Shared.Entity
+public sealed class Position : Entity
 {
+    private readonly List<DepartmentPosition> _departments = [];
+
     // ef core
     private Position() { }
 
@@ -31,8 +34,6 @@ public sealed class Position : Shared.Entity
 
     public IReadOnlyList<DepartmentPosition> Departments => _departments;
 
-    private readonly List<DepartmentPosition> _departments = [];
-
     public static Result<Position, Error> Create(
         PositionId id,
         string name,
@@ -40,7 +41,9 @@ public sealed class Position : Shared.Entity
         IEnumerable<DepartmentPosition> departmentPositions)
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             return GeneralErrors.ValueIsEmpty("name");
+        }
 
         if (name.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.TEXT_100)
         {

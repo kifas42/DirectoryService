@@ -1,5 +1,4 @@
-﻿using System.Data.Common;
-using DirectoryService.Application.Database;
+﻿using DirectoryService.Application.Database;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Positions;
@@ -9,12 +8,12 @@ namespace DirectoryService.Infrastructure;
 
 public class ApplicationDbContext : DbContext, IReadDbContext
 {
+    public const string DATABASE = "DataBase";
+
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
     }
-
-    public const string DATABASE = "DataBase";
 
     public DbSet<Department> Departments => Set<Department>();
 

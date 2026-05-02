@@ -35,7 +35,9 @@ public sealed class Location : Entity
         Timezone timezone)
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             return GeneralErrors.ValueIsEmpty("name");
+        }
 
         if (name.Length is < MIN_LOW_LENGTH or > MAX_LOW_LENGTH)
         {

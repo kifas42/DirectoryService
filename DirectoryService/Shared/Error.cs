@@ -6,9 +6,6 @@ public record ErrorMessage(string Code, string Message, string? InvalidField);
 
 public sealed record Error
 {
-    public IReadOnlyList<ErrorMessage> Messages { get; } = [];
-    public ErrorType Type { get; }
-
     private Error(IEnumerable<ErrorMessage> messages, ErrorType type)
     {
         Messages = messages.ToArray();
@@ -21,6 +18,9 @@ public sealed record Error
         Messages = messages.ToArray();
         Type = type;
     }
+
+    public IReadOnlyList<ErrorMessage> Messages { get; } = [];
+    public ErrorType Type { get; }
 
     public static Error Validation(params IEnumerable<ErrorMessage> messages) =>
         new(messages, ErrorType.VALIDATION);

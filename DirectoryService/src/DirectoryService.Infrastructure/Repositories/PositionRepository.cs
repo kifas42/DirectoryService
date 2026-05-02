@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Data.Common;
+using CSharpFunctionalExtensions;
 using Dapper;
 using DirectoryService.Application.Positions;
 using DirectoryService.Domain.Departments;
@@ -13,8 +14,8 @@ namespace DirectoryService.Infrastructure.Repositories;
 
 public class PositionRepository : IPositionRepository
 {
-    private readonly ILogger<PositionRepository> _logger;
     private readonly ApplicationDbContext _dbContext;
+    private readonly ILogger<PositionRepository> _logger;
 
     public PositionRepository(ApplicationDbContext dbContext, ILogger<PositionRepository> logger)
     {
@@ -39,17 +40,17 @@ public class PositionRepository : IPositionRepository
                         IndexConstants.POSITION_ACTIVE_NAME,
                         StringComparison.CurrentCultureIgnoreCase) =>
                     Error.Conflict("unique.conflict", "Name conflict"),
-                _ => Error.Failure(null, "database error. check logs")
+                _ => Error.Failure("database.failure", "database error. check logs")
             };
         }
-        catch (OperationCanceledException ex)
+        catch (OperationCanceledException)
         {
-            return Error.Failure(null, "OperationCanceled");
+            return Error.Failure("database.failure", "OperationCanceled");
         }
         catch (Exception ex)
         {
             _logger.LogError("AddAsync Error: {Message}", ex.Message);
-            return Error.Failure(null, "database error. check logs");
+            return Error.Failure("database.failure", "database error. check logs");
         }
     }
 
@@ -76,7 +77,7 @@ public class PositionRepository : IPositionRepository
 
         try
         {
-            var dbConn = _dbContext.Database.GetDbConnection();
+            DbConnection dbConn = _dbContext.Database.GetDbConnection();
 
             int updated = await dbConn.ExecuteAsync(
                 sql,

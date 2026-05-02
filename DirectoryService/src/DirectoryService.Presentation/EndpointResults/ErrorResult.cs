@@ -17,7 +17,7 @@ public sealed class ErrorResult : IResult
         }
 
         int statusCode = GetStatusCodeFromErrorType(_error.Type);
-        var envelope = Envelope.Fail(_error);
+        Envelope envelope = Envelope.Fail(_error);
 
         httpContext.Response.StatusCode = statusCode;
 

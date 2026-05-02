@@ -19,13 +19,7 @@ public sealed class DepartmentPosition
 
     public PositionId PositionId { get; private set; } = null!;
 
-    public void ChangeLocationId(PositionId newPositionId)
-    {
-        PositionId = newPositionId;
-    }
+    public void ChangeLocationId(PositionId newPositionId) => PositionId = newPositionId;
 
-    public void ChangeDepartmentId(DepartmentId newDepartmentId)
-    {
-        DepartmentId = newDepartmentId;
-    }
+    public void ChangeDepartmentId(DepartmentId newDepartmentId) => DepartmentId = newDepartmentId;
 }

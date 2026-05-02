@@ -1,13 +1,11 @@
-﻿using System.Net;
-
-namespace DirectoryService.Presentation.EndpointResults;
+﻿namespace DirectoryService.Presentation.EndpointResults;
 
 public sealed class SuccessResult : IResult
 {
     public Task ExecuteAsync(HttpContext httpContext)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
-        var envelope = Envelope.Ok();
+        Envelope envelope = Envelope.Ok();
 
         httpContext.Response.StatusCode = StatusCodes.Status200OK;
         return httpContext.Response.WriteAsJsonAsync(envelope);
@@ -18,15 +16,12 @@ public sealed class SuccessResult<TValue> : IResult
 {
     private readonly TValue _value;
 
-    public SuccessResult(TValue value)
-    {
-        _value = value;
-    }
+    public SuccessResult(TValue value) => _value = value;
 
     public Task ExecuteAsync(HttpContext httpContext)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
-        var envelope = Envelope.Ok(_value);
+        Envelope envelope = Envelope.Ok(_value);
 
         httpContext.Response.StatusCode = StatusCodes.Status200OK;
         return httpContext.Response.WriteAsJsonAsync(envelope);

@@ -1,23 +1,24 @@
-﻿using DirectoryService.Application.Departments;
+﻿using CSharpFunctionalExtensions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.IntegrationTests.Infrastructure;
+using Shared;
 
 namespace DirectoryService.IntegrationTests.Departments;
 
 public class GetRootDepartmentsTest(DirectoryTestWebFactory factory) : DirectoryBaseTests(factory)
 {
     private readonly Guid _engId = Guid.NewGuid();
-    private readonly Guid _salesId = Guid.NewGuid();
     private readonly Guid _hrId = Guid.NewGuid();
     private readonly Guid _itId = Guid.NewGuid();
-
+    private readonly Guid _salesId = Guid.NewGuid();
 
     [Fact]
     public async Task GetRoots_WithValidData_ShouldReturnChildren()
     {
         LocationId? locationId;
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
 
         await ExecuteInDb(async dbContext =>
         {
@@ -30,43 +31,43 @@ public class GetRootDepartmentsTest(DirectoryTestWebFactory factory) : Directory
                 []);
         });
 
+        Result<DepartmentsResponse, Error> result =
+            await ExecuteHandler<DepartmentsResponse, GetRootDepartmentsHandler>(sut =>
+            {
+                GetRootDepartmentsQuery command = new(
+                    new RootDepartmentsRequest(
+                        2,
+                        1)
+                );
 
-        var result = await ExecuteHandler<DepartmentsResponse, GetRootDepartmentsHandler>((sut) =>
-        {
-            var command = new GetRootDepartmentsQuery(
-                new RootDepartmentsRequest(
-                    Page: 2,
-                    Size: 1,
-                    Prefetch: 3)
-            );
+                return sut.Handle(command, cancellationToken);
+            });
 
-            return sut.Handle(command, cancellationToken);
-        });
+        Result<DepartmentsResponse, Error> result2 =
+            await ExecuteHandler<DepartmentsResponse, GetRootDepartmentsHandler>(sut =>
+            {
+                GetRootDepartmentsQuery command = new(
+                    new RootDepartmentsRequest(
+                        2,
+                        1,
+                        30)
+                );
 
-        var result2 = await ExecuteHandler<DepartmentsResponse, GetRootDepartmentsHandler>((sut) =>
-        {
-            var command = new GetRootDepartmentsQuery(
-                new RootDepartmentsRequest(
-                    Page: 2,
-                    Size: 1,
-                    Prefetch: 30)
-            );
+                return sut.Handle(command, cancellationToken);
+            });
 
-            return sut.Handle(command, cancellationToken);
-        });
+        Result<DepartmentsResponse, Error> result3 =
+            await ExecuteHandler<DepartmentsResponse, GetRootDepartmentsHandler>(sut =>
+            {
+                GetRootDepartmentsQuery command = new(
+                    new RootDepartmentsRequest(
+                        1,
+                        20,
+                        4)
+                );
 
-        var result3 = await ExecuteHandler<DepartmentsResponse, GetRootDepartmentsHandler>((sut) =>
-        {
-            var command = new GetRootDepartmentsQuery(
-                new RootDepartmentsRequest(
-                    Page: 1,
-                    Size: 20,
-                    Prefetch: 4)
-            );
-
-            return sut.Handle(command, cancellationToken);
-        });
-
+                return sut.Handle(command, cancellationToken);
+            });
 
         Assert.NotNull(result.Value);
         Assert.Single(result.Value.Departments);

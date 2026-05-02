@@ -1,4 +1,5 @@
-﻿using DirectoryService.Application.Departments;
+﻿using CSharpFunctionalExtensions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
@@ -14,8 +15,7 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
     public async Task UpdateLocations_WithValidData_ShouldSucceed()
     {
         // arrange
-
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         LocationId? locationId = null;
         LocationId? newLocationId = null;
         DepartmentId? departmentId = null;
@@ -28,15 +28,11 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         });
 
         // act
-
-        var result = await ExecuteHandler<int, UpdateLocationsHandler>((sut) =>
+        Result<int, Error> result = await ExecuteHandler<int, UpdateLocationsHandler>(sut =>
         {
-            var command = new UpdateLocationCommand(
+            UpdateLocationCommand command = new(
                 departmentId!.Value,
-                new UpdateLocationsRequest()
-                {
-                    LocationIds = [newLocationId!.Value]
-                }
+                new UpdateLocationsRequest { LocationIds = [newLocationId!.Value] }
             );
 
             return sut.Handle(command, cancellationToken);
@@ -45,12 +41,14 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         // assert
         await ExecuteInDb(async dbContext =>
         {
-            var departmentLocations = await dbContext.DepartmentLocations
-                .FirstOrDefaultAsync(dl => dl.DepartmentId == departmentId && dl.LocationId == newLocationId,
+            DepartmentLocation? departmentLocations = await dbContext.DepartmentLocations
+                .FirstOrDefaultAsync(
+                    dl => dl.DepartmentId == departmentId && dl.LocationId == newLocationId,
                     cancellationToken);
 
-            var oldDepartmentLocations = await dbContext.DepartmentLocations
-                .FirstOrDefaultAsync(dl => dl.DepartmentId == departmentId && dl.LocationId == locationId,
+            DepartmentLocation? oldDepartmentLocations = await dbContext.DepartmentLocations
+                .FirstOrDefaultAsync(
+                    dl => dl.DepartmentId == departmentId && dl.LocationId == locationId,
                     cancellationToken);
 
             Assert.NotNull(departmentLocations);
@@ -65,8 +63,7 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
     public async Task UpdateLocations_WithEmptyLocations_ShouldFailed()
     {
         // arrange
-
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         LocationId? locationId = null;
         DepartmentId? departmentId = null;
 
@@ -77,15 +74,11 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         });
 
         // act
-
-        var result = await ExecuteHandler<int, UpdateLocationsHandler>((sut) =>
+        Result<int, Error> result = await ExecuteHandler<int, UpdateLocationsHandler>(sut =>
         {
-            var command = new UpdateLocationCommand(
+            UpdateLocationCommand command = new(
                 departmentId!.Value,
-                new UpdateLocationsRequest()
-                {
-                    LocationIds = []
-                }
+                new UpdateLocationsRequest { LocationIds = [] }
             );
 
             return sut.Handle(command, cancellationToken);
@@ -94,8 +87,9 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         // assert
         await ExecuteInDb(async dbContext =>
         {
-            var oldDepartmentLocations = await dbContext.DepartmentLocations
-                .FirstOrDefaultAsync(dl => dl.DepartmentId == departmentId && dl.LocationId == locationId,
+            DepartmentLocation? oldDepartmentLocations = await dbContext.DepartmentLocations
+                .FirstOrDefaultAsync(
+                    dl => dl.DepartmentId == departmentId && dl.LocationId == locationId,
                     cancellationToken);
 
             Assert.NotNull(oldDepartmentLocations);
@@ -109,8 +103,7 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
     public async Task UpdateLocations_WithDuplicateLocations_ShouldFailed()
     {
         // arrange
-
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         LocationId? locationId = null;
         LocationId? newLocationId = null;
         DepartmentId? departmentId = null;
@@ -123,15 +116,11 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         });
 
         // act
-
-        var result = await ExecuteHandler<int, UpdateLocationsHandler>((sut) =>
+        Result<int, Error> result = await ExecuteHandler<int, UpdateLocationsHandler>(sut =>
         {
-            var command = new UpdateLocationCommand(
+            UpdateLocationCommand command = new(
                 departmentId!.Value,
-                new UpdateLocationsRequest()
-                {
-                    LocationIds = [newLocationId!.Value, newLocationId.Value]
-                }
+                new UpdateLocationsRequest { LocationIds = [newLocationId!.Value, newLocationId.Value] }
             );
 
             return sut.Handle(command, cancellationToken);
@@ -140,12 +129,14 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         // assert
         await ExecuteInDb(async dbContext =>
         {
-            var oldDepartmentLocations = await dbContext.DepartmentLocations
-                .FirstOrDefaultAsync(dl => dl.DepartmentId == departmentId && dl.LocationId == locationId,
+            DepartmentLocation? oldDepartmentLocations = await dbContext.DepartmentLocations
+                .FirstOrDefaultAsync(
+                    dl => dl.DepartmentId == departmentId && dl.LocationId == locationId,
                     cancellationToken);
 
-            var departmentLocations = await dbContext.DepartmentLocations
-                .FirstOrDefaultAsync(dl => dl.DepartmentId == departmentId && dl.LocationId == newLocationId,
+            DepartmentLocation? departmentLocations = await dbContext.DepartmentLocations
+                .FirstOrDefaultAsync(
+                    dl => dl.DepartmentId == departmentId && dl.LocationId == newLocationId,
                     cancellationToken);
 
             Assert.NotNull(oldDepartmentLocations);
@@ -158,8 +149,7 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
     public async Task UpdateLocations_OnNonExistDepartment_ShouldFailed()
     {
         // arrange
-
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         LocationId? locationId = null;
         LocationId? newLocationId = null;
         DepartmentId departmentId = DepartmentId.New();
@@ -171,15 +161,11 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         });
 
         // act
-
-        var result = await ExecuteHandler<int, UpdateLocationsHandler>((sut) =>
+        Result<int, Error> result = await ExecuteHandler<int, UpdateLocationsHandler>(sut =>
         {
-            var command = new UpdateLocationCommand(
+            UpdateLocationCommand command = new(
                 departmentId.Value,
-                new UpdateLocationsRequest()
-                {
-                    LocationIds = [newLocationId!.Value]
-                }
+                new UpdateLocationsRequest { LocationIds = [newLocationId!.Value] }
             );
 
             return sut.Handle(command, cancellationToken);
@@ -188,12 +174,14 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         // assert
         await ExecuteInDb(async dbContext =>
         {
-            var oldDepartmentLocations = await dbContext.DepartmentLocations
-                .FirstOrDefaultAsync(dl => dl.DepartmentId == departmentId && dl.LocationId == locationId,
+            DepartmentLocation? oldDepartmentLocations = await dbContext.DepartmentLocations
+                .FirstOrDefaultAsync(
+                    dl => dl.DepartmentId == departmentId && dl.LocationId == locationId,
                     cancellationToken);
 
-            var departmentLocations = await dbContext.DepartmentLocations
-                .FirstOrDefaultAsync(dl => dl.DepartmentId == departmentId && dl.LocationId == newLocationId,
+            DepartmentLocation? departmentLocations = await dbContext.DepartmentLocations
+                .FirstOrDefaultAsync(
+                    dl => dl.DepartmentId == departmentId && dl.LocationId == newLocationId,
                     cancellationToken);
 
             Assert.Null(oldDepartmentLocations);
@@ -204,13 +192,11 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         });
     }
 
-
     [Fact]
     public async Task UpdateLocations_WithNonExistLocation_ShouldFailed()
     {
         // arrange
-
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         LocationId? locationId = null;
         LocationId newLocationId = LocationId.New();
         DepartmentId? departmentId = null;
@@ -221,15 +207,11 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         });
 
         // act
-
-        var result = await ExecuteHandler<int, UpdateLocationsHandler>((sut) =>
+        Result<int, Error> result = await ExecuteHandler<int, UpdateLocationsHandler>(sut =>
         {
-            var command = new UpdateLocationCommand(
+            UpdateLocationCommand command = new(
                 departmentId!.Value,
-                new UpdateLocationsRequest()
-                {
-                    LocationIds = [newLocationId.Value]
-                }
+                new UpdateLocationsRequest { LocationIds = [newLocationId.Value] }
             );
 
             return sut.Handle(command, cancellationToken);
@@ -238,11 +220,13 @@ public class UpdateLocationsTests(DirectoryTestWebFactory factory) : DirectoryBa
         // assert
         await ExecuteInDb(async dbContext =>
         {
-            var oldDepartmentLocations = await dbContext.DepartmentLocations
-                .FirstOrDefaultAsync(dl => dl.DepartmentId == departmentId && dl.LocationId == locationId,
+            DepartmentLocation? oldDepartmentLocations = await dbContext.DepartmentLocations
+                .FirstOrDefaultAsync(
+                    dl => dl.DepartmentId == departmentId && dl.LocationId == locationId,
                     cancellationToken);
-            var departmentLocations = await dbContext.DepartmentLocations
-                .FirstOrDefaultAsync(dl => dl.DepartmentId == departmentId && dl.LocationId == newLocationId,
+            DepartmentLocation? departmentLocations = await dbContext.DepartmentLocations
+                .FirstOrDefaultAsync(
+                    dl => dl.DepartmentId == departmentId && dl.LocationId == newLocationId,
                     cancellationToken);
 
             Assert.NotNull(oldDepartmentLocations);

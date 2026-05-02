@@ -24,18 +24,18 @@ public class CreateDepartmentValidator : AbstractValidator<CreateDepartmentReque
                 "Identifier"))
             .Matches("^[a-zA-Z\\-]+$").WithError(Error.Validation(
                 "create.department",
-                $"Только латиница и знак `-`",
+                "Только латиница и знак `-`",
                 "Identifier"));
         RuleFor(x => x.LocationIds)
             .NotEmpty()
             .WithError(Error.Validation(
                 "create.department",
-                $"Список локаций не должен быть пустым",
+                "Список локаций не должен быть пустым",
                 "LocationIds"))
             .Must(items => items != null && items.Distinct().Count() == items.Length)
             .WithError(Error.Validation(
                 "create.department",
-                $"Список локаций не должен содержать дубликаты",
+                "Список локаций не должен содержать дубликаты",
                 "LocationIds"));
     }
 }

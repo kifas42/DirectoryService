@@ -1,8 +1,10 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Data;
+using CSharpFunctionalExtensions;
 using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Database;
 using DirectoryService.Contracts.Departments;
+using Microsoft.Extensions.Caching.Hybrid;
 using Shared;
 
 namespace DirectoryService.Application.Departments;
@@ -11,19 +13,32 @@ public record GetTopDepartmentsQuery(int Count) : IQuery;
 
 public class GetTopDepartmentsHandler : IQueryHandler<TopDepartmentsResponse, GetTopDepartmentsQuery>
 {
+    private readonly HybridCache _cache;
     private readonly IDbConnectionFactory _connectionFactory;
 
-    public GetTopDepartmentsHandler(IDbConnectionFactory connectionFactory)
+    public GetTopDepartmentsHandler(IDbConnectionFactory connectionFactory, HybridCache cache)
     {
         _connectionFactory = connectionFactory;
+        _cache = cache;
     }
 
     public async Task<Result<TopDepartmentsResponse, Error>> Handle(
         GetTopDepartmentsQuery query,
         CancellationToken cancellationToken)
     {
-        using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+        TopDepartmentsResponse topDepartmentsResponse = await _cache.GetOrCreateAsync<TopDepartmentsResponse>(
+            $"top_departments:{query.Count}",
+            ct => GetTopDepartmentsFromDataBase(query, ct),
+            tags: [CacheConstants.DEPARTMENTS_TAG, CacheConstants.TOP_DEPARTMENTS_TAG],
+            cancellationToken: cancellationToken);
 
+        return topDepartmentsResponse;
+    }
+
+    private async ValueTask<TopDepartmentsResponse> GetTopDepartmentsFromDataBase(
+        GetTopDepartmentsQuery query,
+        CancellationToken cancellationToken)
+    {
         string sql =
             """
             SELECT
@@ -36,8 +51,8 @@ public class GetTopDepartmentsHandler : IQueryHandler<TopDepartmentsResponse, Ge
             ORDER BY pos_count DESC, d.name
             LIMIT @count
             """;
-
-        var topDepartments = (await connection.QueryAsync<TopDepartmentDto, int, TopDepartmentDto>(
+        using IDbConnection connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+        List<TopDepartmentDto> topDepartments = (await connection.QueryAsync<TopDepartmentDto, int, TopDepartmentDto>(
                 sql,
                 param: new { count = query.Count },
                 splitOn: "pos_count",

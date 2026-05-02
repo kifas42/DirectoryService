@@ -5,14 +5,6 @@ namespace DirectoryService.Presentation;
 
 public sealed class Envelope
 {
-    public object? Result { get; }
-
-    public Error? Error { get; }
-
-    public bool IsError => Error != null;
-
-    public DateTime TimeGenerated { get; }
-
     [JsonConstructor]
     private Envelope(object? result, Error? error)
     {
@@ -21,14 +13,7 @@ public sealed class Envelope
         TimeGenerated = DateTime.UtcNow;
     }
 
-    public static Envelope Ok(object? result = null) => new(result, null);
-
-    public static Envelope Fail(Error? error) => new(null, error);
-}
-
-public class Envelope<T>
-{
-    public T? Result { get; }
+    public object? Result { get; }
 
     public Error? Error { get; }
 
@@ -36,6 +21,13 @@ public class Envelope<T>
 
     public DateTime TimeGenerated { get; }
 
+    public static Envelope Ok(object? result = null) => new(result, null);
+
+    public static Envelope Fail(Error? error) => new(null, error);
+}
+
+public class Envelope<T>
+{
     [JsonConstructor]
     private Envelope(T? result, Error? error)
     {
@@ -43,6 +35,14 @@ public class Envelope<T>
         Error = error;
         TimeGenerated = DateTime.UtcNow;
     }
+
+    public T? Result { get; }
+
+    public Error? Error { get; }
+
+    public bool IsError => Error != null;
+
+    public DateTime TimeGenerated { get; }
 
     public static Envelope<T> Ok(T? result = default) => new(result, null);
 

@@ -16,15 +16,13 @@ public class GetLocationsHandler : IQueryHandler<PaginationLocationResponse, Get
 {
     private readonly IReadDbContext _readDbContext;
 
-    public GetLocationsHandler(IReadDbContext readDbContext)
-    {
-        _readDbContext = readDbContext;
-    }
+    public GetLocationsHandler(IReadDbContext readDbContext) => _readDbContext = readDbContext;
 
-    public async Task<Result<PaginationLocationResponse, Error>> Handle(GetLocationQuery locationQuery,
+    public async Task<Result<PaginationLocationResponse, Error>> Handle(
+        GetLocationQuery locationQuery,
         CancellationToken cancellationToken)
     {
-        var query = _readDbContext.LocationsRead;
+        IQueryable<Location> query = _readDbContext.LocationsRead;
 
         if (!string.IsNullOrWhiteSpace(locationQuery.Request.Search))
         {
@@ -33,7 +31,7 @@ public class GetLocationsHandler : IQueryHandler<PaginationLocationResponse, Get
 
         if (locationQuery.Request.DepartmentIds is not null && locationQuery.Request.DepartmentIds.Length != 0)
         {
-            var departmentIds = locationQuery.Request.DepartmentIds
+            List<DepartmentId> departmentIds = locationQuery.Request.DepartmentIds
                 .Select(id => new DepartmentId(id))
                 .ToList();
 
@@ -61,8 +59,8 @@ public class GetLocationsHandler : IQueryHandler<PaginationLocationResponse, Get
 
         int locationsCount = await query.CountAsync(cancellationToken);
 
-        var locations = await query
-            .Select(l => new GetLocationDto()
+        List<GetLocationDto> locations = await query
+            .Select(l => new GetLocationDto
             {
                 Name = l.Name,
                 OfficeNumber = l.Address.OfficeNumber,
@@ -79,7 +77,6 @@ public class GetLocationsHandler : IQueryHandler<PaginationLocationResponse, Get
             .Skip((locationQuery.Request.Page - 1) * locationQuery.Request.PageSize ?? 0)
             .Take(locationQuery.Request.PageSize ?? 10)
             .ToListAsync(cancellationToken);
-
 
         return new PaginationLocationResponse(locations, locationsCount);
     }

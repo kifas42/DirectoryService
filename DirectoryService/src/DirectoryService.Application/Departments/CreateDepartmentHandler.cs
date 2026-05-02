@@ -5,6 +5,7 @@ using DirectoryService.Contracts.Departments;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using Shared;
 
@@ -14,8 +15,8 @@ public record CreateDepartmentCommand(CreateDepartmentRequest? DepartmentRequest
 
 public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCommand>
 {
-    private readonly ILogger<CreateDepartmentHandler> _logger;
     private readonly IDepartmentRepository _departmentRepository;
+    private readonly ILogger<CreateDepartmentHandler> _logger;
     private readonly IValidator<CreateDepartmentRequest> _validator;
 
     public CreateDepartmentHandler(
@@ -28,7 +29,8 @@ public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepart
         _validator = validator;
     }
 
-    public async Task<Result<Guid, Error>> Handle(CreateDepartmentCommand command,
+    public async Task<Result<Guid, Error>> Handle(
+        CreateDepartmentCommand command,
         CancellationToken cancellationToken = default)
     {
         if (command.DepartmentRequest == null)
@@ -36,13 +38,14 @@ public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepart
             return Error.Failure("fail", "invalid request");
         }
 
-        var validationResult = await _validator.ValidateAsync(command.DepartmentRequest, cancellationToken);
+        ValidationResult? validationResult =
+            await _validator.ValidateAsync(command.DepartmentRequest, cancellationToken);
         if (!validationResult.IsValid)
         {
             return validationResult.ToError();
         }
 
-        var identifierResult = Identifier.Create(command.DepartmentRequest.Identifier);
+        Result<Identifier, Error> identifierResult = Identifier.Create(command.DepartmentRequest.Identifier);
         if (identifierResult.IsFailure)
         {
             return identifierResult.Error;
@@ -52,8 +55,9 @@ public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepart
         Department? parent = null;
         if (command.DepartmentRequest.ParentId != null)
         {
-            var parentId = new DepartmentId(command.DepartmentRequest.ParentId.Value);
-            var parentResult = await _departmentRepository.GetByIdIsActive(parentId, cancellationToken);
+            DepartmentId parentId = new(command.DepartmentRequest.ParentId.Value);
+            Result<Department, Error> parentResult =
+                await _departmentRepository.GetByIdIsActive(parentId, cancellationToken);
 
             if (parentResult.IsFailure)
             {
@@ -65,11 +69,11 @@ public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepart
             depth = (short)(parentResult.Value.Depth + 1);
         }
 
-        var departmentId = DepartmentId.New();
-        var departmentLocations = command.DepartmentRequest.LocationIds
+        DepartmentId departmentId = DepartmentId.New();
+        IEnumerable<DepartmentLocation> departmentLocations = command.DepartmentRequest.LocationIds
             .Select(g => new DepartmentLocation(Guid.NewGuid(), departmentId, new LocationId(g)));
 
-        var departmentResult = Department.Create(
+        Result<Department, Error> departmentResult = Department.Create(
             departmentId,
             command.DepartmentRequest.Name,
             identifierResult.Value,
@@ -84,7 +88,8 @@ public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepart
             return departmentResult.Error;
         }
 
-        var createDepartmentResult = await _departmentRepository.AddAsync(departmentResult.Value, cancellationToken);
+        Result<DepartmentId, Error> createDepartmentResult =
+            await _departmentRepository.AddAsync(departmentResult.Value, cancellationToken);
 
         if (createDepartmentResult.IsFailure)
         {

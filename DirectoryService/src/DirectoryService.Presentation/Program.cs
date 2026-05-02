@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using NJsonSchema;
 using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -33,10 +33,10 @@ builder.Services.AddOpenApiDocument(settings =>
 });
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
-builder.Services.AddApplication();
+builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 app.UseExceptionMiddleware();
 app.UseHttpLogging();
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))

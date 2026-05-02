@@ -5,8 +5,8 @@ namespace DirectoryService.Presentation.Middlewares;
 
 public class ExceptionMiddleware
 {
-    private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionMiddleware> _logger;
+    private readonly RequestDelegate _next;
 
     public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
     {
@@ -27,9 +27,9 @@ public class ExceptionMiddleware
             httpContext.Response.ContentType = "application/json";
             httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-            var err = Error.Failure("exception.middleware", e.Message);
+            Error err = Error.Failure("exception.middleware", e.Message);
 
-            var envelope = Envelope.Fail(err);
+            Envelope envelope = Envelope.Fail(err);
             await httpContext.Response.WriteAsJsonAsync(envelope);
         }
     }
@@ -37,8 +37,6 @@ public class ExceptionMiddleware
 
 public static class ExceptionHandlerExtension
 {
-    public static IApplicationBuilder UseExceptionMiddleware(this IApplicationBuilder app)
-    {
-        return app.UseMiddleware<ExceptionMiddleware>();
-    }
+    public static IApplicationBuilder UseExceptionMiddleware(this IApplicationBuilder app) =>
+        app.UseMiddleware<ExceptionMiddleware>();
 }

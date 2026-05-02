@@ -27,12 +27,12 @@ public class CreatePositionValidator : AbstractValidator<CreatePositionRequest>
             .NotEmpty()
             .WithError(Error.Validation(
                 "create.position",
-                $"Список позиций не должен быть пустым",
+                "Список позиций не должен быть пустым",
                 "PositionIds"))
             .Must(items => items.Distinct().Count() == items.Length)
             .WithError(Error.Validation(
                 "create.position",
-                $"Список позиций не содержать дубликаты",
+                "Список позиций не содержать дубликаты",
                 "PositionIds"));
     }
 }

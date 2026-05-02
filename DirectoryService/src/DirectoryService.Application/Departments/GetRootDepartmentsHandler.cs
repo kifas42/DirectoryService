@@ -1,29 +1,60 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Data;
+using CSharpFunctionalExtensions;
 using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Database;
 using DirectoryService.Contracts.Departments;
+using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using Shared;
 
 namespace DirectoryService.Application.Departments;
+
+public record RootDepartmentsCacheKey
+{
+    public RootDepartmentsCacheKey(RootDepartmentsRequest request) =>
+        Value =
+            $"root_departments_pg:{request.Page?.ToString() ?? "null"}_sz:{request.Size?.ToString() ?? "null"}_pf:{request.Prefetch?.ToString() ?? "null"}";
+
+    public string Value { get; }
+}
 
 public record GetRootDepartmentsQuery(RootDepartmentsRequest Request) : IQuery;
 
 public class GetRootDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetRootDepartmentsQuery>
 {
+    private readonly HybridCache _cache;
     private readonly IDbConnectionFactory _connectionFactory;
+    private readonly ILogger<GetRootDepartmentsHandler> _logger;
 
-    public GetRootDepartmentsHandler(IDbConnectionFactory connectionFactory)
+    public GetRootDepartmentsHandler(IDbConnectionFactory connectionFactory, HybridCache cache,
+        ILogger<GetRootDepartmentsHandler> logger)
     {
         _connectionFactory = connectionFactory;
+        _cache = cache;
+        _logger = logger;
     }
 
     public async Task<Result<DepartmentsResponse, Error>> Handle(
         GetRootDepartmentsQuery query,
         CancellationToken cancellationToken = default)
     {
-        using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+        RootDepartmentsCacheKey key = new(query.Request);
+        DepartmentsResponse departmentsResponse = await _cache.GetOrCreateAsync<DepartmentsResponse>(
+            key.Value,
+            ct => GetDepartmentsFromDataBase(query, ct),
+            tags: [CacheConstants.DEPARTMENTS_TAG],
+            cancellationToken: cancellationToken);
 
+        return departmentsResponse;
+    }
+
+    private async ValueTask<DepartmentsResponse> GetDepartmentsFromDataBase(
+        GetRootDepartmentsQuery query,
+        CancellationToken cancellationToken)
+    {
+        using IDbConnection connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+        _logger.LogDebug("Cache miss - go to database");
         string sql =
             """
             WITH roots AS (
@@ -63,9 +94,9 @@ public class GetRootDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetR
                 ) c;
             """;
 
-        var departmentRaws = (await connection.QueryAsync<DepartmentDto>(
+        List<DepartmentDto> departmentRaws = (await connection.QueryAsync<DepartmentDto>(
                 sql,
-                param: new
+                new
                 {
                     offset = (query.Request.Page - 1) * query.Request.Size,
                     root_limit = query.Request.Size,
@@ -73,12 +104,12 @@ public class GetRootDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetR
                 })
             ).ToList();
 
-        var departmentsDict = departmentRaws.ToDictionary(x => x.Id);
-        var roots = new List<DepartmentDto>();
+        Dictionary<Guid, DepartmentDto> departmentsDict = departmentRaws.ToDictionary(x => x.Id);
+        List<DepartmentDto> roots = new();
 
-        foreach (var row in departmentRaws)
+        foreach (DepartmentDto row in departmentRaws)
         {
-            if (row.ParentId.HasValue && departmentsDict.TryGetValue(row.ParentId.Value, out var parent))
+            if (row.ParentId.HasValue && departmentsDict.TryGetValue(row.ParentId.Value, out DepartmentDto? parent))
             {
                 parent.Children.Add(departmentsDict[row.Id]);
             }

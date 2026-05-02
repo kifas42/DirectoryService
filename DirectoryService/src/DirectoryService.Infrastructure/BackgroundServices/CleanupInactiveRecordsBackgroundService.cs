@@ -7,9 +7,9 @@ namespace DirectoryService.Infrastructure.BackgroundServices;
 
 public class CleanupInactiveRecordsBackgroundService : BackgroundService
 {
-    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<CleanupInactiveRecordsBackgroundService> _logger;
     private readonly CleanupInactiveRecordsOptions _options;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public CleanupInactiveRecordsBackgroundService(
         IServiceScopeFactory scopeFactory,
@@ -23,23 +23,27 @@ public class CleanupInactiveRecordsBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var cleanupService = scope.ServiceProvider.GetRequiredService<CleanupInactiveRecordsService>();
+        using IServiceScope scope = _scopeFactory.CreateScope();
+        CleanupInactiveRecordsService cleanupService =
+            scope.ServiceProvider.GetRequiredService<CleanupInactiveRecordsService>();
 
-        var time = CalculateNextRun();
+        TimeSpan time = CalculateNextRun();
         _logger.LogDebug("Hello. Next run is {Time}", time);
 
         await Task.Delay(time, stoppingToken);
-        if (stoppingToken.IsCancellationRequested) return;
+        if (stoppingToken.IsCancellationRequested)
+        {
+            return;
+        }
 
-        var period = TimeSpan.FromDays(_options.FrequencyDays);
+        TimeSpan period = TimeSpan.FromDays(_options.FrequencyDays);
         if (period <= TimeSpan.Zero)
         {
             period = TimeSpan.FromSeconds(1);
             _logger.LogWarning("FrequencyDays <= 0. Установлен тестовый интервал 1 сек.");
         }
 
-        using var timer = new PeriodicTimer(period);
+        using PeriodicTimer timer = new(period);
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
             await cleanupService.RunCleanupAsync(stoppingToken);
@@ -48,9 +52,13 @@ public class CleanupInactiveRecordsBackgroundService : BackgroundService
 
     private TimeSpan CalculateNextRun()
     {
-        var now = DateTime.UtcNow;
-        var next = now.Date.Add(_options.TriggerTime.ToTimeSpan());
-        if (next <= now) next = next.AddDays(1);
+        DateTime now = DateTime.UtcNow;
+        DateTime next = now.Date.Add(_options.TriggerTime.ToTimeSpan());
+        if (next <= now)
+        {
+            next = next.AddDays(1);
+        }
+
         return next - now;
     }
 }

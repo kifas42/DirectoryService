@@ -1,11 +1,16 @@
 ﻿using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Shared;
 using Shared;
+using Entity = DirectoryService.Domain.Shared.Entity;
 
 namespace DirectoryService.Domain.Departments;
 
-public sealed class Department : Shared.Entity
+public sealed class Department : Entity
 {
+    private readonly List<DepartmentPosition> _positions = [];
+
+    private List<DepartmentLocation> _locations = [];
+
     // ef core
     private Department() { }
 
@@ -32,7 +37,7 @@ public sealed class Department : Shared.Entity
         Update();
     }
 
-    public DepartmentId Id { get; private set; } = null!;
+    public DepartmentId Id { get; } = null!;
 
     public string Name { get; private set; } = string.Empty;
 
@@ -48,10 +53,6 @@ public sealed class Department : Shared.Entity
 
     public IReadOnlyList<DepartmentLocation> Locations => _locations;
 
-    private List<DepartmentPosition> _positions = [];
-
-    private List<DepartmentLocation> _locations = [];
-
     public static Result<Department, Error> Create(
         DepartmentId id,
         string name,
@@ -62,15 +63,21 @@ public sealed class Department : Shared.Entity
         IEnumerable<DepartmentLocation> locations)
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             return GeneralErrors.ValueIsEmpty("name");
+        }
+
         if (name.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
         {
             return GeneralErrors.LenghtIsInvalid("name", Constants.MIN_NAME_TEXT_LENGTH,
                 Constants.MAX_NAME_TEXT_LENGTH);
         }
 
-        var updatePathResult = SetPath(parent, identifier);
-        if (updatePathResult.IsFailure) return updatePathResult.Error;
+        Result<Path, Error> updatePathResult = SetPath(parent, identifier);
+        if (updatePathResult.IsFailure)
+        {
+            return updatePathResult.Error;
+        }
 
         return new Department(id, name.Trim(), identifier, parent, updatePathResult.Value, depth, positions, locations);
     }
@@ -79,12 +86,17 @@ public sealed class Department : Shared.Entity
     {
         if (parent != null)
         {
-            if (parent.Id == Id) return Error.Conflict(null, "parent cannot be a child himself");
+            if (parent.Id == Id)
+            {
+                return Error.Conflict("set.parent.conflict", "parent cannot be a child himself");
+            }
         }
 
-        var updatePathResult = SetPath(Parent, Identifier);
+        Result<Path, Error> updatePathResult = SetPath(Parent, Identifier);
         if (updatePathResult.IsFailure)
+        {
             return updatePathResult.Error;
+        }
 
         Path = updatePathResult.Value;
         Parent = parent;
@@ -95,7 +107,11 @@ public sealed class Department : Shared.Entity
 
     public Result<string, Error> Rename(string name)
     {
-        if (string.IsNullOrWhiteSpace(name)) return GeneralErrors.ValueIsEmpty("name");
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return GeneralErrors.ValueIsEmpty("name");
+        }
+
         if (name.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
         {
             return GeneralErrors.LenghtIsInvalid("name", Constants.MIN_NAME_TEXT_LENGTH,
@@ -109,9 +125,11 @@ public sealed class Department : Shared.Entity
 
     public Result<Identifier, Error> SetIdentifier(Identifier identifier)
     {
-        var updatePathResult = SetPath(Parent, identifier);
+        Result<Path, Error> updatePathResult = SetPath(Parent, identifier);
         if (updatePathResult.IsFailure)
+        {
             return updatePathResult.Error;
+        }
 
         Path = updatePathResult.Value;
         Identifier = identifier;
@@ -125,7 +143,7 @@ public sealed class Department : Shared.Entity
         {
             _locations = locations.ToList();
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return Error.Failure(string.Empty, "locations cannot be empty");
         }
@@ -136,9 +154,9 @@ public sealed class Department : Shared.Entity
 
     private static Result<Path, Error> SetPath(Department? parent, Identifier identifier)
     {
-        var parentPath = parent?.Path?.ToIdentifierArray().ToList() ?? [];
+        List<Identifier> parentPath = parent?.Path.ToIdentifierArray().ToList() ?? [];
         parentPath.Add(identifier);
-        var newPathResult = Path.Create(parentPath.ToArray());
+        Result<Path, Error> newPathResult = Path.Create(parentPath.ToArray());
         return newPathResult;
     }
 }
