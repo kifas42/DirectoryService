@@ -7,22 +7,16 @@ using IResult = Microsoft.AspNetCore.Http.IResult;
 namespace DirectoryService.Presentation.EndpointResults;
 
 /// <summary>
-/// None Generic EndpointResult.
+///     None Generic EndpointResult.
 /// </summary>
 public sealed class EndpointResult : IResult, IEndpointMetadataProvider
 {
     private readonly IResult _result;
 
-    public EndpointResult(UnitResult<Error> result)
-    {
+    public EndpointResult(UnitResult<Error> result) =>
         _result = result.IsSuccess
             ? new SuccessResult()
             : new ErrorResult(result.Error);
-    }
-
-    public Task ExecuteAsync(HttpContext httpContext) => _result.ExecuteAsync(httpContext);
-
-    public static implicit operator EndpointResult(UnitResult<Error> result) => new(result);
 
     public static void PopulateMetadata(MethodInfo method, EndpointBuilder builder)
     {
@@ -37,26 +31,24 @@ public sealed class EndpointResult : IResult, IEndpointMetadataProvider
         builder.Metadata.Add(new ProducesResponseTypeMetadata(403, typeof(Envelope), ["application/json"]));
         builder.Metadata.Add(new ProducesResponseTypeMetadata(409, typeof(Envelope), ["application/json"]));
     }
+
+    public Task ExecuteAsync(HttpContext httpContext) => _result.ExecuteAsync(httpContext);
+
+    public static implicit operator EndpointResult(UnitResult<Error> result) => new(result);
 }
 
 /// <summary>
-/// Generic EndpointResult.
+///     Generic EndpointResult.
 /// </summary>
 /// <typeparam name="TValue">Returns Type.</typeparam>
 public sealed class EndpointResult<TValue> : IResult, IEndpointMetadataProvider
 {
     private readonly IResult _result;
 
-    public EndpointResult(Result<TValue, Error> result)
-    {
+    public EndpointResult(Result<TValue, Error> result) =>
         _result = result.IsSuccess
             ? new SuccessResult<TValue>(result.Value)
             : new ErrorResult(result.Error);
-    }
-
-    public Task ExecuteAsync(HttpContext httpContext) => _result.ExecuteAsync(httpContext);
-
-    public static implicit operator EndpointResult<TValue>(Result<TValue, Error> result) => new(result);
 
     public static void PopulateMetadata(MethodInfo method, EndpointBuilder builder)
     {
@@ -71,4 +63,8 @@ public sealed class EndpointResult<TValue> : IResult, IEndpointMetadataProvider
         builder.Metadata.Add(new ProducesResponseTypeMetadata(403, typeof(Envelope<TValue>), ["application/json"]));
         builder.Metadata.Add(new ProducesResponseTypeMetadata(409, typeof(Envelope<TValue>), ["application/json"]));
     }
+
+    public Task ExecuteAsync(HttpContext httpContext) => _result.ExecuteAsync(httpContext);
+
+    public static implicit operator EndpointResult<TValue>(Result<TValue, Error> result) => new(result);
 }

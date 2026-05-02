@@ -8,8 +8,8 @@ namespace DirectoryService.Infrastructure;
 
 public class TransactionScope : ITransactionScope
 {
-    private readonly IDbTransaction _transaction;
     private readonly ILogger<TransactionScope> _logger;
+    private readonly IDbTransaction _transaction;
 
     public TransactionScope(IDbTransaction transaction, ILogger<TransactionScope> logger)
     {
@@ -45,8 +45,5 @@ public class TransactionScope : ITransactionScope
         }
     }
 
-    public void Dispose()
-    {
-        _transaction.Dispose();
-    }
+    public void Dispose() => _transaction.Dispose();
 }

@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Data.Common;
+using System.Linq.Expressions;
 using CSharpFunctionalExtensions;
 using Dapper;
 using DirectoryService.Application.Departments;
@@ -13,8 +14,8 @@ namespace DirectoryService.Infrastructure.Repositories;
 
 public class DepartmentRepository : IDepartmentRepository
 {
-    private readonly ILogger<DepartmentRepository> _logger;
     private readonly ApplicationDbContext _dbContext;
+    private readonly ILogger<DepartmentRepository> _logger;
 
     public DepartmentRepository(ILogger<DepartmentRepository> logger, ApplicationDbContext dbContext)
     {
@@ -116,11 +117,11 @@ public class DepartmentRepository : IDepartmentRepository
 
         try
         {
-            var dbConn = _dbContext.Database.GetDbConnection();
+            DbConnection dbConn = _dbContext.Database.GetDbConnection();
 
             int updated = await dbConn.ExecuteAsync(
                 sql,
-                new { oldPath = department.Path.Value, newIdentifier = newIdentifier, });
+                new { oldPath = department.Path.Value, newIdentifier });
 
             _logger.LogInformation("Updated {Count} departments", updated);
             return UnitResult.Success<Error>();
@@ -162,16 +163,17 @@ public class DepartmentRepository : IDepartmentRepository
         Department? department =
             await _dbContext.Departments.FirstOrDefaultAsync(predicate, cancellationToken);
 
-        if (department is null) return GeneralErrors.NotFound(null, "department");
+        if (department is null)
+        {
+            return GeneralErrors.NotFound(null, "department");
+        }
 
         return department;
     }
 
-    public async Task<bool> IsAllExistAndActive(IEnumerable<DepartmentId> departmentIds)
-    {
-        return await _dbContext.Departments
+    public async Task<bool> IsAllExistAndActive(IEnumerable<DepartmentId> departmentIds) =>
+        await _dbContext.Departments
             .CountAsync(d => departmentIds.Contains(d.Id) && d.IsActive) == departmentIds.Count();
-    }
 
     public async Task<UnitResult<Error>> DeleteLocationsAsync(
         DepartmentId departmentId,
@@ -216,7 +218,7 @@ public class DepartmentRepository : IDepartmentRepository
 
         try
         {
-            var dbConn = _dbContext.Database.GetDbConnection();
+            DbConnection dbConn = _dbContext.Database.GetDbConnection();
 
             // var departmentRaws = (await dbConn.QueryAsync<DepartmentDto>(sql, new { rootPath })).ToList();
             int updated = await dbConn.ExecuteAsync(

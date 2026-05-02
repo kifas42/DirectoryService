@@ -1,4 +1,5 @@
-﻿using DirectoryService.Application.Departments;
+﻿using CSharpFunctionalExtensions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Positions;
@@ -19,13 +20,12 @@ namespace DirectoryService.IntegrationTests.Departments;
 // dep2           X
 // dep3                  X
 // dep4                          X
-
 public class SoftDeleteDepartmentTests(DirectoryTestWebFactory factory) : DirectoryBaseTests(factory)
 {
     [Fact]
     public async Task DeleteDepartment_ShouldSucceed()
     {
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         LocationId location1Id = null!;
         LocationId location2Id = null!;
         LocationId location3Id = null!;
@@ -56,13 +56,14 @@ public class SoftDeleteDepartmentTests(DirectoryTestWebFactory factory) : Direct
             location3Id = await DataCreator.CreateLocation(dbContext, "Location-3", "B3");
             location4Id = await DataCreator.CreateLocation(dbContext, "Location-4", "B4");
 
-            var arr = await DataCreator.CreatePositions(dbContext, testPositionDto, cancellationToken);
+            IReadOnlyList<PositionId> arr =
+                await DataCreator.CreatePositions(dbContext, testPositionDto, cancellationToken);
             position1Id = arr[0];
             position2Id = arr[1];
             position3Id = arr[2];
             position4Id = arr[3];
 
-            var dep1 = await DataCreator.CreateDepartment(
+            Department dep1 = await DataCreator.CreateDepartment(
                 dbContext,
                 [location1Id, location2Id],
                 [position1Id, position2Id],
@@ -71,7 +72,7 @@ public class SoftDeleteDepartmentTests(DirectoryTestWebFactory factory) : Direct
                 null);
             department1Id = dep1.Id;
 
-            var dep2 = await DataCreator.CreateDepartment(
+            Department dep2 = await DataCreator.CreateDepartment(
                 dbContext,
                 [location2Id],
                 [position2Id],
@@ -80,7 +81,7 @@ public class SoftDeleteDepartmentTests(DirectoryTestWebFactory factory) : Direct
                 null);
             department2Id = dep2.Id;
 
-            var dep3 = await DataCreator.CreateDepartment(
+            Department dep3 = await DataCreator.CreateDepartment(
                 dbContext,
                 [location3Id],
                 [position3Id],
@@ -89,7 +90,7 @@ public class SoftDeleteDepartmentTests(DirectoryTestWebFactory factory) : Direct
                 dep1);
             department3Id = dep3.Id;
 
-            var dep4 = await DataCreator.CreateDepartment(
+            Department dep4 = await DataCreator.CreateDepartment(
                 dbContext,
                 [location4Id],
                 [position4Id],
@@ -99,56 +100,51 @@ public class SoftDeleteDepartmentTests(DirectoryTestWebFactory factory) : Direct
             department4Id = dep4.Id;
         });
 
-
-        var result = await ExecuteHandler<SoftDeleteDepartmentHandler>((sut) =>
+        UnitResult<Error> result = await ExecuteHandler<SoftDeleteDepartmentHandler>(sut =>
         {
-            var command = new DeleteDepartmentCommand(department1Id.Value);
+            DeleteDepartmentCommand command = new(department1Id.Value);
 
             return sut.Handle(command, cancellationToken);
         });
 
-        var result2 = await ExecuteHandler<SoftDeleteDepartmentHandler>((sut) =>
+        UnitResult<Error> result2 = await ExecuteHandler<SoftDeleteDepartmentHandler>(sut =>
         {
-            var command = new DeleteDepartmentCommand(department4Id.Value);
+            DeleteDepartmentCommand command = new(department4Id.Value);
 
             return sut.Handle(command, cancellationToken);
         });
 
         await ExecuteInDb(async dbContext =>
         {
-            var deletedDepartment = await dbContext.Departments.Where(d => d.Id == department1Id)
+            Department? deletedDepartment = await dbContext.Departments.Where(d => d.Id == department1Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var child3Department = await dbContext.Departments.Where(d => d.Id == department3Id)
+            Department? child3Department = await dbContext.Departments.Where(d => d.Id == department3Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var deletedChild4 = await dbContext.Departments.Where(d => d.Id == department4Id)
+            Department? deletedChild4 = await dbContext.Departments.Where(d => d.Id == department4Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-
-            var anotherDepartment = await dbContext.Departments.Where(d => d.Id == department2Id)
+            Department? anotherDepartment = await dbContext.Departments.Where(d => d.Id == department2Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-
-            var deletedLocation = await dbContext.Locations.Where(l => l.Id == location1Id)
+            Location? deletedLocation = await dbContext.Locations.Where(l => l.Id == location1Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var deletedLocation4 = await dbContext.Locations.Where(l => l.Id == location4Id)
+            Location? deletedLocation4 = await dbContext.Locations.Where(l => l.Id == location4Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var linkedLocation2 = await dbContext.Locations.Where(l => l.Id == location2Id)
+            Location? linkedLocation2 = await dbContext.Locations.Where(l => l.Id == location2Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-
-            var deletedPosition = await dbContext.Positions.Where(l => l.Id == position1Id)
+            Position? deletedPosition = await dbContext.Positions.Where(l => l.Id == position1Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var deletedPosition4 = await dbContext.Positions.Where(l => l.Id == position4Id)
+            Position? deletedPosition4 = await dbContext.Positions.Where(l => l.Id == position4Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var linkedPosition2 = await dbContext.Positions.Where(l => l.Id == position2Id)
+            Position? linkedPosition2 = await dbContext.Positions.Where(l => l.Id == position2Id)
                 .FirstOrDefaultAsync(cancellationToken);
-
 
             Assert.True(result.IsSuccess);
             Assert.True(result2.IsSuccess);
@@ -160,7 +156,6 @@ public class SoftDeleteDepartmentTests(DirectoryTestWebFactory factory) : Direct
             Assert.Equal(deletedDepartment.UpdatedAt, deletedDepartment.DeletedAt);
             Assert.Equal("deleted-aaa", deletedDepartment.Identifier.Value);
             Assert.Equal("deleted-aaa", deletedDepartment.Path.Value);
-
 
             // Dep2 BBB
             Assert.NotNull(anotherDepartment);
@@ -204,12 +199,12 @@ public class SoftDeleteDepartmentTests(DirectoryTestWebFactory factory) : Direct
     [Fact]
     public async Task DeleteDepartment_WithNotActive_ShouldReturnConflict()
     {
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         LocationId location1Id = null!;
 
         IReadOnlyList<TestPositionDto> testPositionDto =
         [
-            new(Guid.NewGuid(), "pos1"),
+            new(Guid.NewGuid(), "pos1")
         ];
 
         PositionId position1Id = null!;
@@ -220,10 +215,11 @@ public class SoftDeleteDepartmentTests(DirectoryTestWebFactory factory) : Direct
         {
             location1Id = await DataCreator.CreateLocation(dbContext, "Location-1", "B1");
 
-            var arr = await DataCreator.CreatePositions(dbContext, testPositionDto, cancellationToken);
+            IReadOnlyList<PositionId> arr =
+                await DataCreator.CreatePositions(dbContext, testPositionDto, cancellationToken);
             position1Id = arr[0];
 
-            var dep1 = await DataCreator.CreateDepartment(
+            Department dep1 = await DataCreator.CreateDepartment(
                 dbContext,
                 [location1Id],
                 [position1Id],
@@ -233,30 +229,29 @@ public class SoftDeleteDepartmentTests(DirectoryTestWebFactory factory) : Direct
             department1Id = dep1.Id;
         });
 
-
-        var result = await ExecuteHandler<SoftDeleteDepartmentHandler>((sut) =>
+        UnitResult<Error> result = await ExecuteHandler<SoftDeleteDepartmentHandler>(sut =>
         {
-            var command = new DeleteDepartmentCommand(department1Id.Value);
+            DeleteDepartmentCommand command = new(department1Id.Value);
 
             return sut.Handle(command, cancellationToken);
         });
 
-        var result2 = await ExecuteHandler<SoftDeleteDepartmentHandler>((sut) =>
+        UnitResult<Error> result2 = await ExecuteHandler<SoftDeleteDepartmentHandler>(sut =>
         {
-            var command = new DeleteDepartmentCommand(department1Id.Value);
+            DeleteDepartmentCommand command = new(department1Id.Value);
 
             return sut.Handle(command, cancellationToken);
         });
 
         await ExecuteInDb(async dbContext =>
         {
-            var deletedDepartment = await dbContext.Departments.Where(d => d.Id == department1Id)
+            Department? deletedDepartment = await dbContext.Departments.Where(d => d.Id == department1Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var deletedLocation = await dbContext.Locations.Where(l => l.Id == location1Id)
+            Location? deletedLocation = await dbContext.Locations.Where(l => l.Id == location1Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var deletedPosition = await dbContext.Positions.Where(l => l.Id == position1Id)
+            Position? deletedPosition = await dbContext.Positions.Where(l => l.Id == position1Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
             Assert.True(result.IsSuccess);
@@ -282,28 +277,29 @@ public class SoftDeleteDepartmentTests(DirectoryTestWebFactory factory) : Direct
     [Fact]
     public async Task DeleteDepartment_OnNonExistDepartment_ShouldReturnNotFound()
     {
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         LocationId location1Id = null!;
 
         IReadOnlyList<TestPositionDto> testPositionDto =
         [
-            new(Guid.NewGuid(), "pos1"),
+            new(Guid.NewGuid(), "pos1")
         ];
 
         PositionId position1Id = null!;
 
         DepartmentId department1Id = null!;
 
-        var noneExistsDepartmentId = DepartmentId.New();
+        DepartmentId noneExistsDepartmentId = DepartmentId.New();
 
         await ExecuteInDb(async dbContext =>
         {
             location1Id = await DataCreator.CreateLocation(dbContext, "Location-1", "B1");
 
-            var arr = await DataCreator.CreatePositions(dbContext, testPositionDto, cancellationToken);
+            IReadOnlyList<PositionId> arr =
+                await DataCreator.CreatePositions(dbContext, testPositionDto, cancellationToken);
             position1Id = arr[0];
 
-            var dep1 = await DataCreator.CreateDepartment(
+            Department dep1 = await DataCreator.CreateDepartment(
                 dbContext,
                 [location1Id],
                 [position1Id],
@@ -313,24 +309,22 @@ public class SoftDeleteDepartmentTests(DirectoryTestWebFactory factory) : Direct
             department1Id = dep1.Id;
         });
 
-
-        var result = await ExecuteHandler<SoftDeleteDepartmentHandler>((sut) =>
+        UnitResult<Error> result = await ExecuteHandler<SoftDeleteDepartmentHandler>(sut =>
         {
-            var command = new DeleteDepartmentCommand(noneExistsDepartmentId.Value);
+            DeleteDepartmentCommand command = new(noneExistsDepartmentId.Value);
 
             return sut.Handle(command, cancellationToken);
         });
 
-
         await ExecuteInDb(async dbContext =>
         {
-            var deletedDepartment = await dbContext.Departments.Where(d => d.Id == department1Id)
+            Department? deletedDepartment = await dbContext.Departments.Where(d => d.Id == department1Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var deletedLocation = await dbContext.Locations.Where(l => l.Id == location1Id)
+            Location? deletedLocation = await dbContext.Locations.Where(l => l.Id == location1Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var deletedPosition = await dbContext.Positions.Where(l => l.Id == position1Id)
+            Position? deletedPosition = await dbContext.Positions.Where(l => l.Id == position1Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
             Assert.True(result.IsFailure);

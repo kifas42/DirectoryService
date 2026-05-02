@@ -7,18 +7,16 @@ namespace DirectoryService.Application.Departments;
 
 public class UpdateLocationsValidator : AbstractValidator<UpdateLocationsRequest>
 {
-    public UpdateLocationsValidator()
-    {
+    public UpdateLocationsValidator() =>
         RuleFor(x => x.LocationIds)
             .NotEmpty()
             .WithError(Error.Validation(
                 "update.locations",
-                $"Список локаций не должен быть пустым",
+                "Список локаций не должен быть пустым",
                 "LocationIds"))
             .Must(items => items.Distinct().Count() == items.Length)
             .WithError(Error.Validation(
                 "update.locations",
-                $"Список локаций не должен содержать дубликаты",
+                "Список локаций не должен содержать дубликаты",
                 "LocationIds"));
-    }
 }

@@ -33,7 +33,7 @@ services:
     ports:
       - "5341:5341"
       - "8081:80"
-    
+  
   redis:
     container_name: redis
     image: redis:alpine

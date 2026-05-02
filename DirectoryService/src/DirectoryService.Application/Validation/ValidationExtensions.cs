@@ -10,7 +10,7 @@ public static class ValidationExtensions
     {
         List<ValidationFailure> validationErrors = validationResult.Errors;
 
-        var errors =
+        IEnumerable<IReadOnlyList<ErrorMessage>> errors =
             from validationError in validationErrors
             let errorMessage = validationError.ErrorMessage
             let error = JsonSerializer.Deserialize<Error>(errorMessage)

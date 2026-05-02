@@ -16,7 +16,7 @@ public class DepartmentsController : ControllerBase
         [FromServices] ICommandHandler<Guid, CreateDepartmentCommand> handler,
         CancellationToken cancellationToken)
     {
-        var command = new CreateDepartmentCommand(departmentRequest);
+        CreateDepartmentCommand command = new(departmentRequest);
         return await handler.Handle(command, cancellationToken);
     }
 
@@ -28,7 +28,7 @@ public class DepartmentsController : ControllerBase
         [FromServices] ICommandHandler<int, UpdateLocationCommand> handler,
         CancellationToken cancellationToken)
     {
-        var command = new UpdateLocationCommand(departmentId, updateLocationsRequest);
+        UpdateLocationCommand command = new(departmentId, updateLocationsRequest);
         return await handler.Handle(command, cancellationToken);
     }
 
@@ -40,7 +40,7 @@ public class DepartmentsController : ControllerBase
         [FromServices] ICommandHandler<int, UpdateParentCommand> handler,
         CancellationToken cancellationToken)
     {
-        var command = new UpdateParentCommand(departmentId, updateParentRequest);
+        UpdateParentCommand command = new(departmentId, updateParentRequest);
         return await handler.Handle(command, cancellationToken);
     }
 
@@ -49,20 +49,16 @@ public class DepartmentsController : ControllerBase
     public async Task<EndpointResult<TopDepartmentsResponse>> GetTopPositions(
         [FromQuery] int? count,
         [FromServices] IQueryHandler<TopDepartmentsResponse, GetTopDepartmentsQuery> handler,
-        CancellationToken cancellationToken)
-    {
-        return await handler.Handle(new GetTopDepartmentsQuery(count ?? 5), cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        await handler.Handle(new GetTopDepartmentsQuery(count ?? 5), cancellationToken);
 
     [HttpGet]
     [Route("roots")]
     public async Task<EndpointResult<DepartmentsResponse>> GetRoots(
         [FromQuery] RootDepartmentsRequest departmentsRequest,
         [FromServices] IQueryHandler<DepartmentsResponse, GetRootDepartmentsQuery> handler,
-        CancellationToken cancellationToken)
-    {
-        return await handler.Handle(new GetRootDepartmentsQuery(departmentsRequest), cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        await handler.Handle(new GetRootDepartmentsQuery(departmentsRequest), cancellationToken);
 
     [HttpGet]
     [Route("{departmentId:guid}/children")]
@@ -70,18 +66,14 @@ public class DepartmentsController : ControllerBase
         [FromQuery] ChildDepartmentsRequest departmentsRequest,
         [FromRoute] Guid departmentId,
         [FromServices] IQueryHandler<DepartmentsResponse, GetChildDepartmentsQuery> handler,
-        CancellationToken cancellationToken)
-    {
-        return await handler.Handle(new GetChildDepartmentsQuery(departmentId, departmentsRequest), cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        await handler.Handle(new GetChildDepartmentsQuery(departmentId, departmentsRequest), cancellationToken);
 
     [HttpDelete]
     [Route("{departmentId:guid}")]
     public async Task<EndpointResult> Delete(
         [FromRoute] Guid departmentId,
         [FromServices] ICommandHandler<DeleteDepartmentCommand> handler,
-        CancellationToken cancellationToken)
-    {
-        return await handler.Handle(new DeleteDepartmentCommand(departmentId), cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        await handler.Handle(new DeleteDepartmentCommand(departmentId), cancellationToken);
 }

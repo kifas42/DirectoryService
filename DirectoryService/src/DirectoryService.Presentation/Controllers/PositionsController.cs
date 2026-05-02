@@ -16,7 +16,7 @@ public class PositionsController : ControllerBase
         [FromServices] ICommandHandler<Guid, CreatePositionCommand> handler,
         CancellationToken cancellationToken)
     {
-        var command = new CreatePositionCommand(positionRequest);
+        CreatePositionCommand command = new(positionRequest);
         return await handler.Handle(command, cancellationToken);
     }
 }

@@ -1,8 +1,10 @@
-﻿using DirectoryService.Application.Departments;
+﻿using CSharpFunctionalExtensions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Positions;
 using DirectoryService.IntegrationTests.Infrastructure;
+using Shared;
 
 namespace DirectoryService.IntegrationTests.Departments;
 
@@ -12,7 +14,7 @@ public class GetTopPositionTests(DirectoryTestWebFactory factory) : DirectoryBas
     public async Task GetTopDepartments_WithValidData_ShouldReturnTopDepartments()
     {
         LocationId? locationId;
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         List<TestPositionDto> positions =
         [
             new(Guid.NewGuid(), "AAA"),
@@ -24,7 +26,7 @@ public class GetTopPositionTests(DirectoryTestWebFactory factory) : DirectoryBas
             new(Guid.NewGuid(), "GGG"),
             new(Guid.NewGuid(), "HHH"),
             new(Guid.NewGuid(), "III"),
-            new(Guid.NewGuid(), "JJJ"),
+            new(Guid.NewGuid(), "JJJ")
         ];
 
         List<PositionId> positionIds;
@@ -34,7 +36,7 @@ public class GetTopPositionTests(DirectoryTestWebFactory factory) : DirectoryBas
             locationId = await DataCreator.CreateLocation(dbContext);
             positionIds = (await DataCreator.CreatePositions(dbContext, positions, cancellationToken)).ToList();
 
-            for (var i = 0; i < 10; i++)
+            for (int i = 0; i < 10; i++)
             {
                 await DataCreator.CreateDepartmentNoSave(
                     dbContext,
@@ -49,28 +51,29 @@ public class GetTopPositionTests(DirectoryTestWebFactory factory) : DirectoryBas
             await dbContext.SaveChangesAsync(cancellationToken);
         });
 
+        Result<TopDepartmentsResponse, Error> result5 =
+            await ExecuteHandler<TopDepartmentsResponse, GetTopDepartmentsHandler>(sut =>
+            {
+                GetTopDepartmentsQuery command = new(5);
 
-        var result5 = await ExecuteHandler<TopDepartmentsResponse, GetTopDepartmentsHandler>((sut) =>
-        {
-            var command = new GetTopDepartmentsQuery(5);
+                return sut.Handle(command, cancellationToken);
+            });
 
-            return sut.Handle(command, cancellationToken);
-        });
+        Result<TopDepartmentsResponse, Error> result8 =
+            await ExecuteHandler<TopDepartmentsResponse, GetTopDepartmentsHandler>(sut =>
+            {
+                GetTopDepartmentsQuery command = new(8);
 
-        var result8 = await ExecuteHandler<TopDepartmentsResponse, GetTopDepartmentsHandler>((sut) =>
-        {
-            var command = new GetTopDepartmentsQuery(8);
+                return sut.Handle(command, cancellationToken);
+            });
 
-            return sut.Handle(command, cancellationToken);
-        });
+        Result<TopDepartmentsResponse, Error> result1 =
+            await ExecuteHandler<TopDepartmentsResponse, GetTopDepartmentsHandler>(sut =>
+            {
+                GetTopDepartmentsQuery command = new(1);
 
-        var result1 = await ExecuteHandler<TopDepartmentsResponse, GetTopDepartmentsHandler>((sut) =>
-        {
-            var command = new GetTopDepartmentsQuery(1);
-
-            return sut.Handle(command, cancellationToken);
-        });
-
+                return sut.Handle(command, cancellationToken);
+            });
 
         Assert.NotNull(result5.Value);
         Assert.Equal(5, result5.Value.Count);

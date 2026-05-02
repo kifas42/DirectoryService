@@ -8,13 +8,7 @@ namespace DirectoryService.Infrastructure.BackgroundServices;
 
 public class CleanupInactiveRecordsService
 {
-    private static readonly string[] _tables = ["locations", "positions", "departments"];
-
-    private readonly IDbConnectionFactory _dbConnectionFactory;
-    private readonly CleanupInactiveRecordsOptions _options;
-    private readonly ILogger<CleanupInactiveRecordsService> _logger;
-
-    private const string DeleteSimpleSql = """
+    private const string DELETE_SIMPLE_SQL = """
                                            DELETE FROM {Table}
                                            WHERE id IN (
                                                SELECT id FROM {Table}
@@ -24,14 +18,14 @@ public class CleanupInactiveRecordsService
                                            );
                                            """;
 
-    private const string SelectBatchIdsSql = """
+    private const string SELECT_BATCH_IDS_SQL = """
                                              SELECT id FROM departments
                                              WHERE is_active = false AND deleted_at < @CutoffDate
                                              ORDER BY id
                                              LIMIT @BatchSize;
                                              """;
 
-    private const string ReparentSql = """
+    private const string REPARENT_SQL = """
                                        UPDATE departments AS d
                                        SET path = subpath(d.path, nlevel(dep.path)),
                                            parent_id = CASE WHEN d.parent_id = ANY(@IdsToDelete) THEN NULL ELSE d.parent_id END,
@@ -42,7 +36,12 @@ public class CleanupInactiveRecordsService
                                          AND d.id <> ALL(@IdsToDelete);
                                        """;
 
-    private const string DeleteDepartmentsSql = "DELETE FROM departments WHERE id = ANY(@IdsToDelete);";
+    private const string DELETE_DEPARTMENTS_SQL = "DELETE FROM departments WHERE id = ANY(@IdsToDelete);";
+    private static readonly string[] _tables = ["locations", "positions", "departments"];
+
+    private readonly IDbConnectionFactory _dbConnectionFactory;
+    private readonly ILogger<CleanupInactiveRecordsService> _logger;
+    private readonly CleanupInactiveRecordsOptions _options;
 
     public CleanupInactiveRecordsService(
         ILogger<CleanupInactiveRecordsService> logger,
@@ -54,17 +53,20 @@ public class CleanupInactiveRecordsService
         _options = options.Value;
     }
 
-
     public async Task RunCleanupAsync(CancellationToken stoppingToken)
     {
-        using var connection = await _dbConnectionFactory.CreateConnectionAsync(stoppingToken);
+        using IDbConnection connection = await _dbConnectionFactory.CreateConnectionAsync(stoppingToken);
 
-        var cutoff = DateTime.UtcNow.AddDays(-_options.RetentionDays);
+        DateTime cutoff = DateTime.UtcNow.AddDays(-_options.RetentionDays);
         _logger.LogInformation("Начало очистки. Cutoff: {Cutoff}", cutoff);
 
         foreach (string table in _tables)
         {
-            if (stoppingToken.IsCancellationRequested) break;
+            if (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+
             await CleanupTableAsync(connection, table, cutoff, stoppingToken);
         }
     }
@@ -81,25 +83,28 @@ public class CleanupInactiveRecordsService
             return;
         }
 
-        var sql = DeleteSimpleSql.Replace("{Table}", table);
-        int total = 0, batch = 0;
+        string sql = DELETE_SIMPLE_SQL.Replace("{Table}", table);
+        int total = 0;
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            batch++;
-            using var transaction = connection.BeginTransaction();
+            using IDbTransaction transaction = connection.BeginTransaction();
             try
             {
                 int deleted = await connection.ExecuteAsync(
                     sql,
-                    new { CutoffDate = cutoff, BatchSize = _options.BatchSize },
+                    new { CutoffDate = cutoff, _options.BatchSize },
                     transaction,
-                    commandTimeout: 30);
+                    30);
 
                 transaction.Commit();
                 total += deleted;
 
-                if (deleted < _options.BatchSize) break;
+                if (deleted < _options.BatchSize)
+                {
+                    break;
+                }
+
                 await Task.Delay(100, cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
@@ -119,38 +124,44 @@ public class CleanupInactiveRecordsService
         DateTime cutoff,
         CancellationToken cancellationToken)
     {
-        int total = 0, batch = 0;
+        int total = 0;
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            batch++;
-            using var transaction = connection.BeginTransaction();
+            using IDbTransaction transaction = connection.BeginTransaction();
             try
             {
-                var ids = (await connection.QueryAsync<Guid>(
-                    SelectBatchIdsSql,
-                    new { CutoffDate = cutoff, BatchSize = _options.BatchSize },
+                Guid[] ids = (await connection.QueryAsync<Guid>(
+                    SELECT_BATCH_IDS_SQL,
+                    new { CutoffDate = cutoff, _options.BatchSize },
                     transaction,
-                    commandTimeout: 10)).ToArray();
+                    10)).ToArray();
 
-                if (ids.Length == 0) break;
-
-                await connection.ExecuteAsync(
-                    ReparentSql,
-                    new { IdsToDelete = ids },
-                    transaction,
-                    commandTimeout: 30);
+                if (ids.Length == 0)
+                {
+                    break;
+                }
 
                 await connection.ExecuteAsync(
-                    DeleteDepartmentsSql,
+                    REPARENT_SQL,
                     new { IdsToDelete = ids },
                     transaction,
-                    commandTimeout: 30);
+                    30);
+
+                await connection.ExecuteAsync(
+                    DELETE_DEPARTMENTS_SQL,
+                    new { IdsToDelete = ids },
+                    transaction,
+                    30);
 
                 transaction.Commit();
                 total += ids.Length;
 
-                if (ids.Length < _options.BatchSize) break;
+                if (ids.Length < _options.BatchSize)
+                {
+                    break;
+                }
+
                 await Task.Delay(100, cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

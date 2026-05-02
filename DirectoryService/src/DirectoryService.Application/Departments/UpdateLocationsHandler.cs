@@ -7,6 +7,7 @@ using DirectoryService.Contracts.Departments;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using Shared;
 
@@ -16,11 +17,11 @@ public record UpdateLocationCommand(Guid DepartmentId, UpdateLocationsRequest Re
 
 public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand>
 {
-    private readonly ILogger<UpdateLocationsHandler> _logger;
     private readonly IDepartmentRepository _departmentRepository;
     private readonly ILocationRepository _locationRepository;
-    private readonly IValidator<UpdateLocationsRequest> _validator;
+    private readonly ILogger<UpdateLocationsHandler> _logger;
     private readonly ITransactionManager _transactionManager;
+    private readonly IValidator<UpdateLocationsRequest> _validator;
 
     public UpdateLocationsHandler(
         ILogger<UpdateLocationsHandler> logger,
@@ -39,21 +40,22 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
         UpdateLocationCommand command,
         CancellationToken cancellationToken = default)
     {
-        var validationResult = await _validator.ValidateAsync(command.Request, cancellationToken);
+        ValidationResult? validationResult = await _validator.ValidateAsync(command.Request, cancellationToken);
         if (!validationResult.IsValid)
         {
             return validationResult.ToError();
         }
 
-        var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        Result<ITransactionScope, Error> transactionScopeResult =
+            await _transactionManager.BeginTransactionAsync(cancellationToken);
         if (transactionScopeResult.IsFailure)
         {
             return transactionScopeResult.Error;
         }
 
-        using var transactionScope = transactionScopeResult.Value;
+        using ITransactionScope? transactionScope = transactionScopeResult.Value;
 
-        var departmentResult = await _departmentRepository.GetByIdIsActive(
+        Result<Department, Error> departmentResult = await _departmentRepository.GetByIdIsActive(
             new DepartmentId(command.DepartmentId),
             cancellationToken);
         if (departmentResult.IsFailure)
@@ -62,18 +64,18 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
             return departmentResult.Error;
         }
 
-        var locationIds = command.Request.LocationIds
+        List<LocationId> locationIds = command.Request.LocationIds
             .Select(g => new LocationId(g)).ToList();
 
         if (!await _locationRepository.IsAllExistAndActive(locationIds))
         {
             transactionScope.Rollback();
-            return Error.NotFound("find.active.locations", "Locations not found", null);
+            return Error.NotFound("find.active.locations", "Locations not found");
         }
 
-        var departmentLocations = command.Request.LocationIds
+        List<DepartmentLocation> departmentLocations = command.Request.LocationIds
             .Select(g => new DepartmentLocation(Guid.NewGuid(), departmentResult.Value.Id, new LocationId(g))).ToList();
-        var result = departmentResult.Value.SetLocations(departmentLocations);
+        Result<int, Error> result = departmentResult.Value.SetLocations(departmentLocations);
 
         if (result.IsFailure)
         {
@@ -81,7 +83,7 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
             return result.Error;
         }
 
-        var deleteLocationsResult =
+        UnitResult<Error> deleteLocationsResult =
             await _departmentRepository.DeleteLocationsAsync(departmentResult.Value.Id, cancellationToken);
         if (deleteLocationsResult.IsFailure)
         {
@@ -89,14 +91,14 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
             return deleteLocationsResult.Error;
         }
 
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
+        UnitResult<Error> saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)
         {
             transactionScope.Rollback();
             return saveResult.Error;
         }
 
-        var commitedResult = transactionScope.Commit();
+        UnitResult<Error> commitedResult = transactionScope.Commit();
         if (commitedResult.IsFailure)
         {
             return commitedResult.Error;

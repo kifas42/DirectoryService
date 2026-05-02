@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Data;
+using CSharpFunctionalExtensions;
 using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Database;
@@ -12,8 +13,8 @@ public record GetTopDepartmentsQuery(int Count) : IQuery;
 
 public class GetTopDepartmentsHandler : IQueryHandler<TopDepartmentsResponse, GetTopDepartmentsQuery>
 {
-    private readonly IDbConnectionFactory _connectionFactory;
     private readonly HybridCache _cache;
+    private readonly IDbConnectionFactory _connectionFactory;
 
     public GetTopDepartmentsHandler(IDbConnectionFactory connectionFactory, HybridCache cache)
     {
@@ -25,9 +26,9 @@ public class GetTopDepartmentsHandler : IQueryHandler<TopDepartmentsResponse, Ge
         GetTopDepartmentsQuery query,
         CancellationToken cancellationToken)
     {
-        var topDepartmentsResponse = await _cache.GetOrCreateAsync<TopDepartmentsResponse>(
-            key: $"top_departments:{query.Count}",
-            factory: ct => GetTopDepartmentsFromDataBase(query, ct),
+        TopDepartmentsResponse topDepartmentsResponse = await _cache.GetOrCreateAsync<TopDepartmentsResponse>(
+            $"top_departments:{query.Count}",
+            ct => GetTopDepartmentsFromDataBase(query, ct),
             tags: [CacheConstants.DEPARTMENTS_TAG, CacheConstants.TOP_DEPARTMENTS_TAG],
             cancellationToken: cancellationToken);
 
@@ -50,8 +51,8 @@ public class GetTopDepartmentsHandler : IQueryHandler<TopDepartmentsResponse, Ge
             ORDER BY pos_count DESC, d.name
             LIMIT @count
             """;
-        using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
-        var topDepartments = (await connection.QueryAsync<TopDepartmentDto, int, TopDepartmentDto>(
+        using IDbConnection connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+        List<TopDepartmentDto> topDepartments = (await connection.QueryAsync<TopDepartmentDto, int, TopDepartmentDto>(
                 sql,
                 param: new { count = query.Count },
                 splitOn: "pos_count",

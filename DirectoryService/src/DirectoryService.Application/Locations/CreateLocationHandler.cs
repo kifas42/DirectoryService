@@ -5,6 +5,7 @@ using DirectoryService.Contracts.Locations;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Shared;
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using Shared;
 
@@ -14,8 +15,8 @@ public record CreateLocationCommand(CreateLocationRequest LocationRequest) : ICo
 
 public sealed class CreateLocationHandler : ICommandHandler<Guid, CreateLocationCommand>
 {
-    private readonly ILogger<CreateLocationHandler> _logger;
     private readonly ILocationRepository _locationRepository;
+    private readonly ILogger<CreateLocationHandler> _logger;
     private readonly IValidator<CreateLocationRequest> _validator;
 
     public CreateLocationHandler(
@@ -32,13 +33,13 @@ public sealed class CreateLocationHandler : ICommandHandler<Guid, CreateLocation
         CreateLocationCommand command,
         CancellationToken cancellationToken = default)
     {
-        var validationResult = await _validator.ValidateAsync(command.LocationRequest, cancellationToken);
+        ValidationResult? validationResult = await _validator.ValidateAsync(command.LocationRequest, cancellationToken);
         if (!validationResult.IsValid)
         {
             return validationResult.ToError();
         }
 
-        var addressResult = Address.Create(
+        Result<Address, Error> addressResult = Address.Create(
             command.LocationRequest.Address.OfficeNumber,
             command.LocationRequest.Address.BuildingNumber,
             command.LocationRequest.Address.Street,
@@ -46,9 +47,9 @@ public sealed class CreateLocationHandler : ICommandHandler<Guid, CreateLocation
             command.LocationRequest.Address.StateOrProvince,
             command.LocationRequest.Address.Country,
             command.LocationRequest.Address.PostalCode);
-        var tzResult = Timezone.Create(command.LocationRequest.Timezone);
+        Result<Timezone, Error> tzResult = Timezone.Create(command.LocationRequest.Timezone);
 
-        var locationResult = Location.Create(
+        Result<Location, Error> locationResult = Location.Create(
             command.LocationRequest.Name,
             addressResult.Value,
             tzResult.Value);
@@ -59,7 +60,8 @@ public sealed class CreateLocationHandler : ICommandHandler<Guid, CreateLocation
             return locationResult.Error;
         }
 
-        var createLocationResult = await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
+        Result<LocationId, Error> createLocationResult =
+            await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
 
         if (createLocationResult.IsFailure)
         {

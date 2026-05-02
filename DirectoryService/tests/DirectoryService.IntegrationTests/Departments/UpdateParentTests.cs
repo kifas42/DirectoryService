@@ -1,9 +1,11 @@
-﻿using DirectoryService.Application.Departments;
+﻿using CSharpFunctionalExtensions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Shared;
 
 namespace DirectoryService.IntegrationTests.Departments;
 
@@ -36,8 +38,7 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
     public async Task UpdateParents_WithValidData_ShouldSucceed()
     {
         // arrange
-
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         LocationId? locationId;
         Department rootDepartmentA;
         Department rootDepartmentB;
@@ -56,7 +57,6 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
                 [],
                 "departmentA",
                 "dep-a",
-                null,
                 null);
 
             rootDepartmentB = await DataCreator.CreateDepartment(
@@ -65,7 +65,6 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
                 [],
                 "departmentB",
                 "dep-b",
-                null,
                 null);
 
             departmentA1 = await DataCreator.CreateDepartment(
@@ -102,16 +101,12 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
         });
 
         // act
-
-        var result = await ExecuteHandler<int, UpdateParentHandler>((sut) =>
+        Result<int, Error> result = await ExecuteHandler<int, UpdateParentHandler>(sut =>
         {
             // переносим B1 под A1
-            var command = new UpdateParentCommand(
+            UpdateParentCommand command = new(
                 departmentB1.Id.Value,
-                new UpdateParentRequest()
-                {
-                    ParentId = departmentA1.Id.Value,
-                }
+                new UpdateParentRequest { ParentId = departmentA1.Id.Value }
             );
 
             return sut.Handle(command, cancellationToken);
@@ -128,21 +123,21 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
         // dep-b
         await ExecuteInDb(async dbContext =>
         {
-            var depAaa = await dbContext.Departments
+            Department? depAaa = await dbContext.Departments
                 .Where(d => d.Id == departmentA2.Id)
                 .Include(d => d.Parent)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var depBb = await dbContext.Departments
+            Department? depBb = await dbContext.Departments
                 .Where(d => d.Id == departmentB1.Id)
                 .Include(d => d.Parent)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var depBbb = await dbContext.Departments
+            Department? depBbb = await dbContext.Departments
                 .Where(d => d.Id == departmentB2.Id)
                 .Include(d => d.Parent)
                 .FirstOrDefaultAsync(cancellationToken);
-            
+
             Assert.True(result.IsSuccess);
 
             // dep-aaa
@@ -172,8 +167,7 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
     public async Task RemoveParent_WithValidData_ShouldSucceed()
     {
         // arrange
-
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         LocationId? locationId;
         Department rootDepartmentA;
         Department departmentA1 = null!;
@@ -209,16 +203,12 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
         });
 
         // act
-
-        var result = await ExecuteHandler<int, UpdateParentHandler>((sut) =>
+        Result<int, Error> result = await ExecuteHandler<int, UpdateParentHandler>(sut =>
         {
             // переносим A1 как корень
-            var command = new UpdateParentCommand(
+            UpdateParentCommand command = new(
                 departmentA1.Id.Value,
-                new UpdateParentRequest()
-                {
-                    ParentId = null,
-                }
+                new UpdateParentRequest { ParentId = null }
             );
 
             return sut.Handle(command, cancellationToken);
@@ -232,12 +222,12 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
         // dep-aa.dep-aaa
         await ExecuteInDb(async dbContext =>
         {
-            var depAaa = await dbContext.Departments
+            Department? depAaa = await dbContext.Departments
                 .Where(d => d.Id == departmentA2.Id)
                 .Include(d => d.Parent)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var depAa = await dbContext.Departments
+            Department? depAa = await dbContext.Departments
                 .Where(d => d.Id == departmentA1.Id)
                 .Include(d => d.Parent)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -263,8 +253,7 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
     public async Task UpdateParents_WithCyclicChild_ShouldFailed()
     {
         // arrange
-
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         LocationId? locationId;
         Department rootDepartmentB = null!;
         Department departmentB1 = null!;
@@ -300,16 +289,12 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
         });
 
         // act
-
-        var result = await ExecuteHandler<int, UpdateParentHandler>((sut) =>
+        Result<int, Error> result = await ExecuteHandler<int, UpdateParentHandler>(sut =>
         {
             // переносим root B под B2
-            var command = new UpdateParentCommand(
+            UpdateParentCommand command = new(
                 rootDepartmentB.Id.Value,
-                new UpdateParentRequest()
-                {
-                    ParentId = departmentB2.Id.Value,
-                }
+                new UpdateParentRequest { ParentId = departmentB2.Id.Value }
             );
 
             return sut.Handle(command, cancellationToken);
@@ -323,17 +308,17 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
         // dep-b.dep-bb.dep-bbb
         await ExecuteInDb(async dbContext =>
         {
-            var depB = await dbContext.Departments
+            Department? depB = await dbContext.Departments
                 .Where(d => d.Id == rootDepartmentB.Id)
                 .Include(d => d.Parent)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var depBb = await dbContext.Departments
+            Department? depBb = await dbContext.Departments
                 .Where(d => d.Id == departmentB1.Id)
                 .Include(d => d.Parent)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var depBbb = await dbContext.Departments
+            Department? depBbb = await dbContext.Departments
                 .Where(d => d.Id == departmentB2.Id)
                 .Include(d => d.Parent)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -366,14 +351,13 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
     public async Task UpdateParents_WithNonExistParent_ShouldFailed()
     {
         // arrange
-
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         LocationId? locationId;
         Department rootDepartmentB = null!;
         Department departmentB1 = null!;
         Department departmentB2 = null!;
 
-        var fakeParentId = DepartmentId.New();
+        DepartmentId fakeParentId = DepartmentId.New();
 
         await ExecuteInDb(async dbContext =>
         {
@@ -405,16 +389,12 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
         });
 
         // act
-
-        var result = await ExecuteHandler<int, UpdateParentHandler>((sut) =>
+        Result<int, Error> result = await ExecuteHandler<int, UpdateParentHandler>(sut =>
         {
             // переносим root B под fake parent
-            var command = new UpdateParentCommand(
+            UpdateParentCommand command = new(
                 rootDepartmentB.Id.Value,
-                new UpdateParentRequest()
-                {
-                    ParentId = fakeParentId.Value,
-                }
+                new UpdateParentRequest { ParentId = fakeParentId.Value }
             );
 
             return sut.Handle(command, cancellationToken);
@@ -428,17 +408,17 @@ public class UpdateParentTests(DirectoryTestWebFactory factory) : DirectoryBaseT
         // dep-b.dep-bb.dep-bbb
         await ExecuteInDb(async dbContext =>
         {
-            var depB = await dbContext.Departments
+            Department? depB = await dbContext.Departments
                 .Where(d => d.Id == rootDepartmentB.Id)
                 .Include(d => d.Parent)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var depBb = await dbContext.Departments
+            Department? depBb = await dbContext.Departments
                 .Where(d => d.Id == departmentB1.Id)
                 .Include(d => d.Parent)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var depBbb = await dbContext.Departments
+            Department? depBbb = await dbContext.Departments
                 .Where(d => d.Id == departmentB2.Id)
                 .Include(d => d.Parent)
                 .FirstOrDefaultAsync(cancellationToken);

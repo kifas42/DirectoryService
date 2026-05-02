@@ -34,8 +34,8 @@ public static class DependencyInjectionExtensions
         services.AddDbContextPool<IReadDbContext, ApplicationDbContext>((sp, options) =>
         {
             string? connectionString = configuration.GetConnectionString(ApplicationDbContext.DATABASE);
-            var hostEnvironment = sp.GetRequiredService<IHostEnvironment>();
-            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            IHostEnvironment hostEnvironment = sp.GetRequiredService<IHostEnvironment>();
+            ILoggerFactory loggerFactory = sp.GetRequiredService<ILoggerFactory>();
 
             options.UseNpgsql(connectionString);
 

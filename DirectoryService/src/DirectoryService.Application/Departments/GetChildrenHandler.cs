@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Data;
+using CSharpFunctionalExtensions;
 using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Database;
@@ -13,16 +14,13 @@ public class GetChildrenHandler : IQueryHandler<DepartmentsResponse, GetChildDep
 {
     private readonly IDbConnectionFactory _connectionFactory;
 
-    public GetChildrenHandler(IDbConnectionFactory connectionFactory)
-    {
-        _connectionFactory = connectionFactory;
-    }
+    public GetChildrenHandler(IDbConnectionFactory connectionFactory) => _connectionFactory = connectionFactory;
 
     public async Task<Result<DepartmentsResponse, Error>> Handle(
         GetChildDepartmentsQuery query,
         CancellationToken cancellationToken = default)
     {
-        using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+        using IDbConnection connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
 
         string sql =
             """
@@ -46,9 +44,9 @@ public class GetChildrenHandler : IQueryHandler<DepartmentsResponse, GetChildDep
             OFFSET @offset LIMIT @limit;
             """;
 
-        var departmentRaws = (await connection.QueryAsync<DepartmentDto>(
+        List<DepartmentDto> departmentRaws = (await connection.QueryAsync<DepartmentDto>(
                 sql,
-                param: new
+                new
                 {
                     id = query.Id,
                     offset = (query.Request.Page - 1) * query.Request.Size,
@@ -56,12 +54,12 @@ public class GetChildrenHandler : IQueryHandler<DepartmentsResponse, GetChildDep
                 })
             ).ToList();
 
-        var departmentsDict = departmentRaws.ToDictionary(x => x.Id);
-        var roots = new List<DepartmentDto>();
+        Dictionary<Guid, DepartmentDto> departmentsDict = departmentRaws.ToDictionary(x => x.Id);
+        List<DepartmentDto> roots = new();
 
-        foreach (var row in departmentRaws)
+        foreach (DepartmentDto row in departmentRaws)
         {
-            if (row.ParentId.HasValue && departmentsDict.TryGetValue(row.ParentId.Value, out var parent))
+            if (row.ParentId.HasValue && departmentsDict.TryGetValue(row.ParentId.Value, out DepartmentDto? parent))
             {
                 parent.Children.Add(departmentsDict[row.Id]);
             }

@@ -16,7 +16,7 @@ public class LocationsController : ControllerBase
         [FromServices] ICommandHandler<Guid, CreateLocationCommand> handler,
         CancellationToken cancellationToken)
     {
-        var command = new CreateLocationCommand(locationRequest);
+        CreateLocationCommand command = new(locationRequest);
         return await handler.Handle(command, cancellationToken);
     }
 
@@ -24,8 +24,6 @@ public class LocationsController : ControllerBase
     public async Task<EndpointResult<PaginationLocationResponse>> Get(
         [FromQuery] GetLocationRequest locationRequest,
         [FromServices] IQueryHandler<PaginationLocationResponse, GetLocationQuery> handler,
-        CancellationToken cancellationToken)
-    {
-        return await handler.Handle(new GetLocationQuery(locationRequest), cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        await handler.Handle(new GetLocationQuery(locationRequest), cancellationToken);
 }

@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Data.Common;
+using CSharpFunctionalExtensions;
 using Dapper;
 using DirectoryService.Application.Locations;
 using DirectoryService.Domain.Departments;
@@ -13,8 +14,8 @@ namespace DirectoryService.Infrastructure.Repositories;
 
 public sealed class LocationRepository : ILocationRepository
 {
-    private readonly ILogger<LocationRepository> _logger;
     private readonly ApplicationDbContext _dbContext;
+    private readonly ILogger<LocationRepository> _logger;
 
     public LocationRepository(ILogger<LocationRepository> logger, ApplicationDbContext dbContext)
     {
@@ -42,25 +43,23 @@ public sealed class LocationRepository : ILocationRepository
                 { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null } when
                     pgEx.ConstraintName.Contains(IndexConstants.ADDRESS, StringComparison.CurrentCultureIgnoreCase) =>
                     Error.Conflict("unique.conflict", "Address conflict"),
-                _ => Error.Failure(null, "database error. check logs")
+                _ => Error.Failure("database.failure", "database error. check logs")
             };
         }
-        catch (OperationCanceledException ex)
+        catch (OperationCanceledException)
         {
-            return Error.Failure(null, "OperationCanceled");
+            return Error.Failure("canceled", "OperationCanceled");
         }
         catch (Exception ex)
         {
             _logger.LogError("AddAsync Error: {Message}", ex.Message);
-            return Error.Failure(null, "database error. check logs");
+            return Error.Failure("database.failure", "database error. check logs");
         }
     }
 
-    public async Task<bool> IsAllExistAndActive(IEnumerable<LocationId> departmentIds)
-    {
-        return await _dbContext.Locations
+    public async Task<bool> IsAllExistAndActive(IEnumerable<LocationId> departmentIds) =>
+        await _dbContext.Locations
             .CountAsync(d => departmentIds.Contains(d.Id) && d.IsActive) == departmentIds.Count();
-    }
 
     public async Task<UnitResult<Error>> SoftDeleteOrphans(
         DepartmentId departmentId,
@@ -85,7 +84,7 @@ public sealed class LocationRepository : ILocationRepository
 
         try
         {
-            var dbConn = _dbContext.Database.GetDbConnection();
+            DbConnection dbConn = _dbContext.Database.GetDbConnection();
 
             int updated = await dbConn.ExecuteAsync(
                 sql,

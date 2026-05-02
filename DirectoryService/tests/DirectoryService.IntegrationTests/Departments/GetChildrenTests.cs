@@ -1,23 +1,24 @@
-﻿using DirectoryService.Application.Departments;
+﻿using CSharpFunctionalExtensions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.IntegrationTests.Infrastructure;
+using Shared;
 
 namespace DirectoryService.IntegrationTests.Departments;
 
 public class GetChildrenTests(DirectoryTestWebFactory factory) : DirectoryBaseTests(factory)
 {
     private readonly Guid _engId = Guid.NewGuid();
-    private readonly Guid _salesId = Guid.NewGuid();
     private readonly Guid _hrId = Guid.NewGuid();
     private readonly Guid _itId = Guid.NewGuid();
-
+    private readonly Guid _salesId = Guid.NewGuid();
 
     [Fact]
     public async Task GetChildren_WithValidData_ShouldReturnChildren()
     {
         LocationId? locationId;
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
 
         await ExecuteInDb(async dbContext =>
         {
@@ -30,10 +31,9 @@ public class GetChildrenTests(DirectoryTestWebFactory factory) : DirectoryBaseTe
                 []);
         });
 
-
-        var result = await ExecuteHandler<DepartmentsResponse, GetChildrenHandler>((sut) =>
+        Result<DepartmentsResponse, Error> result = await ExecuteHandler<DepartmentsResponse, GetChildrenHandler>(sut =>
         {
-            var command = new GetChildDepartmentsQuery(
+            GetChildDepartmentsQuery command = new(
                 _salesId,
                 new ChildDepartmentsRequest()
             );
@@ -41,27 +41,29 @@ public class GetChildrenTests(DirectoryTestWebFactory factory) : DirectoryBaseTe
             return sut.Handle(command, cancellationToken);
         });
 
-        var result2 = await ExecuteHandler<DepartmentsResponse, GetChildrenHandler>((sut) =>
-        {
-            var command = new GetChildDepartmentsQuery(
-                _salesId,
-                new ChildDepartmentsRequest(
-                    Page: 2,
-                    Size: 2)
-            );
+        Result<DepartmentsResponse, Error> result2 =
+            await ExecuteHandler<DepartmentsResponse, GetChildrenHandler>(sut =>
+            {
+                GetChildDepartmentsQuery command = new(
+                    _salesId,
+                    new ChildDepartmentsRequest(
+                        2,
+                        2)
+                );
 
-            return sut.Handle(command, cancellationToken);
-        });
+                return sut.Handle(command, cancellationToken);
+            });
 
-        var result3 = await ExecuteHandler<DepartmentsResponse, GetChildrenHandler>((sut) =>
-        {
-            var command = new GetChildDepartmentsQuery(
-                _itId,
-                new ChildDepartmentsRequest()
-            );
+        Result<DepartmentsResponse, Error> result3 =
+            await ExecuteHandler<DepartmentsResponse, GetChildrenHandler>(sut =>
+            {
+                GetChildDepartmentsQuery command = new(
+                    _itId,
+                    new ChildDepartmentsRequest()
+                );
 
-            return sut.Handle(command, cancellationToken);
-        });
+                return sut.Handle(command, cancellationToken);
+            });
 
         Assert.NotNull(result.Value);
         Assert.Equal(6, result.Value.Departments.Count);

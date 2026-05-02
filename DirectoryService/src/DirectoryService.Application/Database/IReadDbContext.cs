@@ -1,5 +1,4 @@
-﻿using System.Data.Common;
-using DirectoryService.Domain.Departments;
+﻿using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 
 namespace DirectoryService.Application.Database;

@@ -6,8 +6,8 @@ using DirectoryService.Contracts.Positions;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Positions;
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Caching.Hybrid;
-using Microsoft.Extensions.Logging;
 using Shared;
 
 namespace DirectoryService.Application.Positions;
@@ -16,20 +16,17 @@ public record CreatePositionCommand(CreatePositionRequest PositionRequest) : ICo
 
 public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePositionCommand>
 {
-    private readonly ILogger<CreatePositionHandler> _logger;
-    private readonly IPositionRepository _positionRepository;
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IValidator<CreatePositionRequest> _validator;
     private readonly HybridCache _cache;
+    private readonly IDepartmentRepository _departmentRepository;
+    private readonly IPositionRepository _positionRepository;
+    private readonly IValidator<CreatePositionRequest> _validator;
 
     public CreatePositionHandler(
-        ILogger<CreatePositionHandler> logger,
         IPositionRepository positionRepository,
         IValidator<CreatePositionRequest> validator,
         IDepartmentRepository departmentRepository,
         HybridCache cache)
     {
-        _logger = logger;
         _positionRepository = positionRepository;
         _validator = validator;
         _departmentRepository = departmentRepository;
@@ -40,26 +37,26 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
         CreatePositionCommand command,
         CancellationToken cancellationToken = default)
     {
-        var validationResult = await _validator.ValidateAsync(command.PositionRequest, cancellationToken);
+        ValidationResult? validationResult = await _validator.ValidateAsync(command.PositionRequest, cancellationToken);
         if (!validationResult.IsValid)
         {
             return validationResult.ToError();
         }
 
-        var departmentIds = command.PositionRequest.DepartmentIds
+        List<DepartmentId> departmentIds = command.PositionRequest.DepartmentIds
             .Select(g => new DepartmentId(g)).ToList();
 
         if (!await _departmentRepository.IsAllExistAndActive(departmentIds))
         {
-            return Error.NotFound("find.active.departments", "Department not found", null);
+            return Error.NotFound("find.active.departments", "Department not found");
         }
 
-        var positionId = PositionId.New();
+        PositionId positionId = PositionId.New();
 
-        var departmentPositions = departmentIds
+        IEnumerable<DepartmentPosition> departmentPositions = departmentIds
             .Select(g => new DepartmentPosition(Guid.NewGuid(), g, positionId));
 
-        var positionResult = Position.Create(
+        Result<Position, Error> positionResult = Position.Create(
             positionId,
             command.PositionRequest.Name,
             command.PositionRequest.Description,
@@ -70,7 +67,8 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
             return positionResult.Error;
         }
 
-        var createPositionResult = await _positionRepository.AddAsync(positionResult.Value, cancellationToken);
+        Result<PositionId, Error> createPositionResult =
+            await _positionRepository.AddAsync(positionResult.Value, cancellationToken);
 
         if (createPositionResult.IsFailure)
         {

@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\Shared.csproj" />
+    <ProjectReference Include="..\..\Shared\Shared.csproj"/>
     <ProjectReference Include="..\DirectoryService.Contracts\DirectoryService.Contracts.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CSharpFunctionalExtensions" />
-    <PackageReference Include="TimeZoneConverter" />
+    <PackageReference Include="CSharpFunctionalExtensions"/>
+    <PackageReference Include="TimeZoneConverter"/>
   </ItemGroup>
 
 </Project>

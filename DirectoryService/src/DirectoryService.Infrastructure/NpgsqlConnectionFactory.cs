@@ -12,22 +12,19 @@ public class NpgsqlConnectionFactory : IDisposable, IAsyncDisposable, IDbConnect
 
     public NpgsqlConnectionFactory(IConfiguration configuration)
     {
-        var dataSourceBuilder =
-            new NpgsqlDataSourceBuilder(configuration.GetConnectionString(ApplicationDbContext.DATABASE));
+        NpgsqlDataSourceBuilder dataSourceBuilder =
+            new(configuration.GetConnectionString(ApplicationDbContext.DATABASE));
         dataSourceBuilder.UseLoggerFactory(CreateLoggerFactory());
-
 
         _dataSource = dataSourceBuilder.Build();
     }
 
-    public async Task<IDbConnection> CreateConnectionAsync(CancellationToken cancellationToken)
-    {
-        return await _dataSource.OpenConnectionAsync(cancellationToken);
-    }
+    public async ValueTask DisposeAsync() => await _dataSource.DisposeAsync();
+
+    public async Task<IDbConnection> CreateConnectionAsync(CancellationToken cancellationToken) =>
+        await _dataSource.OpenConnectionAsync(cancellationToken);
 
     public void Dispose() => _dataSource.Dispose();
-
-    public async ValueTask DisposeAsync() => await _dataSource.DisposeAsync();
 
     private ILoggerFactory CreateLoggerFactory() =>
         LoggerFactory.Create(builder => builder.AddConsole());

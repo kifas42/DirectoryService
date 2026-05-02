@@ -1,9 +1,11 @@
-﻿using DirectoryService.Application.Departments;
+﻿using CSharpFunctionalExtensions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Shared;
 
 namespace DirectoryService.IntegrationTests.Departments;
 
@@ -13,24 +15,20 @@ public class CreateDepartmentTests(DirectoryTestWebFactory factory) : DirectoryB
     public async Task CreateDepartment_WithValidData_ShouldSucceed()
     {
         // arrange
-        LocationId? locationId =  null;
+        LocationId? locationId = null;
         await ExecuteInDb(async dbContext =>
         {
             locationId = await DataCreator.CreateLocation(dbContext);
         });
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
 
         // act
-
-        var result = await ExecuteHandler<Guid, CreateDepartmentHandler>((sut) =>
+        Result<Guid, Error> result = await ExecuteHandler<Guid, CreateDepartmentHandler>(sut =>
         {
-            var command = new CreateDepartmentCommand(
-                new CreateDepartmentRequest()
+            CreateDepartmentCommand command = new(
+                new CreateDepartmentRequest
                 {
-                    Name = "Подразделение",
-                    Identifier = "dep",
-                    ParentId = null,
-                    LocationIds = [locationId!.Value],
+                    Name = "Подразделение", Identifier = "dep", ParentId = null, LocationIds = [locationId!.Value],
                 }
             );
 
@@ -40,7 +38,7 @@ public class CreateDepartmentTests(DirectoryTestWebFactory factory) : DirectoryB
         // assert
         await ExecuteInDb(async dbContext =>
         {
-            var department = await dbContext.Departments
+            Department department = await dbContext.Departments
                 .FirstAsync(d => d.Id == new DepartmentId(result.Value), cancellationToken);
 
             Assert.NotNull(department);
@@ -55,31 +53,27 @@ public class CreateDepartmentTests(DirectoryTestWebFactory factory) : DirectoryB
     public async Task CreateDepartment_WithInvalidLocation_ShouldFailed()
     {
         // arrange
-        var locationId = Guid.NewGuid();
-        var cancellationToken = CancellationToken.None;
+        Guid locationId = Guid.NewGuid();
+        CancellationToken cancellationToken = CancellationToken.None;
 
         // act
-
-        var result = await ExecuteHandler<Guid, CreateDepartmentHandler>((sut) =>
+        Result<Guid, Error> result = await ExecuteHandler<Guid, CreateDepartmentHandler>(sut =>
         {
-            var command = new CreateDepartmentCommand(
-                new CreateDepartmentRequest()
+            CreateDepartmentCommand command = new(
+                new CreateDepartmentRequest
                 {
-                    Name = "Подразделение",
-                    Identifier = "dep",
-                    ParentId = null,
-                    LocationIds = [locationId],
+                    Name = "Подразделение", Identifier = "dep", ParentId = null, LocationIds = [locationId],
                 }
             );
 
             return sut.Handle(command, cancellationToken);
         });
 
-        var checkDb = await ExecuteInDb(async dbContext =>
+        bool checkDb = await ExecuteInDb(async dbContext =>
         {
             return await dbContext.DepartmentLocations.AnyAsync(
                 dl => dl.LocationId == new LocationId(locationId),
-                cancellationToken: cancellationToken);
+                cancellationToken);
         });
 
         // assert
@@ -92,19 +86,13 @@ public class CreateDepartmentTests(DirectoryTestWebFactory factory) : DirectoryB
     public async Task CreateDepartment_WithEmptyData_ShouldFailed()
     {
         // arrange
-        var cancellationToken = CancellationToken.None;
-        // act
+        CancellationToken cancellationToken = CancellationToken.None;
 
-        var result = await ExecuteHandler<Guid, CreateDepartmentHandler>((sut) =>
+        // act
+        Result<Guid, Error> result = await ExecuteHandler<Guid, CreateDepartmentHandler>(sut =>
         {
-            var command = new CreateDepartmentCommand(
-                new CreateDepartmentRequest()
-                {
-                    Name = "",
-                    Identifier = "",
-                    ParentId = null,
-                    LocationIds = [],
-                }
+            CreateDepartmentCommand command = new(
+                new CreateDepartmentRequest { Name = string.Empty, Identifier = string.Empty, ParentId = null, LocationIds = [] }
             );
 
             return sut.Handle(command, cancellationToken);

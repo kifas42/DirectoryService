@@ -13,10 +13,10 @@ public record UpdateParentCommand(Guid DepartmentId, UpdateParentRequest Request
 
 public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
 {
-    private readonly ILogger<UpdateParentHandler> _logger;
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly ITransactionManager _transactionManager;
     private readonly HybridCache _cache;
+    private readonly IDepartmentRepository _departmentRepository;
+    private readonly ILogger<UpdateParentHandler> _logger;
+    private readonly ITransactionManager _transactionManager;
 
     public UpdateParentHandler(
         ILogger<UpdateParentHandler> logger,
@@ -34,21 +34,22 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
         UpdateParentCommand command,
         CancellationToken cancellationToken = default)
     {
-        var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        Result<ITransactionScope, Error> transactionScopeResult =
+            await _transactionManager.BeginTransactionAsync(cancellationToken);
         if (transactionScopeResult.IsFailure)
         {
             return transactionScopeResult.Error;
         }
 
-        using var transactionScope = transactionScopeResult.Value;
-        var departmentId = new DepartmentId(command.DepartmentId);
+        using ITransactionScope? transactionScope = transactionScopeResult.Value;
+        DepartmentId departmentId = new(command.DepartmentId);
 
         bool isParentNotNull = command.Request.ParentId.HasValue;
 
         DepartmentId? parentId =
             isParentNotNull ? new DepartmentId(command.Request.ParentId!.Value) : null;
 
-        var lockDep = await _departmentRepository.LockDepartmentsById(departmentId, cancellationToken);
+        UnitResult<Error> lockDep = await _departmentRepository.LockDepartmentsById(departmentId, cancellationToken);
         if (lockDep.IsFailure)
         {
             _logger.LogWarning("Fail to lock department {departmentId}", departmentId.Value);
@@ -57,7 +58,8 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
         }
 
         // редактируемый департамент активен
-        var departmentResult = await _departmentRepository.GetByIdIsActive(departmentId, cancellationToken);
+        Result<Department, Error> departmentResult =
+            await _departmentRepository.GetByIdIsActive(departmentId, cancellationToken);
         if (departmentResult.IsFailure)
         {
             transactionScope.Rollback();
@@ -75,7 +77,8 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
         if (isParentNotNull)
         {
             // новый родитель существует
-            var parentResult = await _departmentRepository.GetByIdIsActive(parentId!, cancellationToken);
+            Result<Department, Error> parentResult =
+                await _departmentRepository.GetByIdIsActive(parentId!, cancellationToken);
             if (parentResult.IsFailure)
             {
                 transactionScope.Rollback();
@@ -90,7 +93,7 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
             }
         }
 
-        var updateResult =
+        UnitResult<Error> updateResult =
             await _departmentRepository.UpdateDepartmentDescendants(departmentResult.Value, newParent,
                 cancellationToken);
 
@@ -100,14 +103,14 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
             return updateResult.Error;
         }
 
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
+        UnitResult<Error> saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)
         {
             transactionScope.Rollback();
             return saveResult.Error;
         }
 
-        var commitedResult = transactionScope.Commit();
+        UnitResult<Error> commitedResult = transactionScope.Commit();
         if (commitedResult.IsFailure)
         {
             return commitedResult.Error;

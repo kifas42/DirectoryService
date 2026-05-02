@@ -17,14 +17,14 @@ public record Timezone
 
     public static Result<Timezone, Error> Create(string value)
     {
-        if (TZConvert.TryGetTimeZoneInfo(value, out var timezone))
+        if (TZConvert.TryGetTimeZoneInfo(value, out TimeZoneInfo? timezone))
         {
             return new Timezone(value, timezone);
         }
 
-        var zones = TZConvert.KnownIanaTimeZoneNames;
+        IReadOnlyCollection<string> zones = TZConvert.KnownIanaTimeZoneNames;
         return Error.Validation(
-            null,
+            "invalid.timezone",
             "Invalid timezone. Available zones:\n" + string.Join("\n", zones),
             "timeZone");
     }

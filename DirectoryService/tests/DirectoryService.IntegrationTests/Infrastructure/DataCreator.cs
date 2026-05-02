@@ -1,25 +1,25 @@
-﻿using DirectoryService.Domain.Departments;
+﻿using CSharpFunctionalExtensions;
+using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Positions;
 using DirectoryService.Domain.Shared;
 using DirectoryService.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
+using Shared;
 
 namespace DirectoryService.IntegrationTests.Infrastructure;
 
 public static class DataCreator
 {
-    public static async Task<LocationId> CreateLocation(ApplicationDbContext dbContext)
-    {
-        return await CreateLocation(dbContext, "ЛОХация", "C-1");
-    }
-
+    public static async Task<LocationId> CreateLocation(ApplicationDbContext dbContext) =>
+        await CreateLocation(dbContext, "ЛОХация", "C-1");
 
     public static async Task<LocationId> CreateLocation(
         ApplicationDbContext dbContext,
         string name,
         string officeNumber)
     {
-        var location = Location.Create(
+        Result<Location, Error> location = Location.Create(
             name,
             Address.Create(
                 officeNumber,
@@ -39,10 +39,10 @@ public static class DataCreator
 
     public static async Task<Department> CreateDepartment(ApplicationDbContext dbContext, LocationId locationId)
     {
-        var departmentId = DepartmentId.New();
-        var departmentLocation = new DepartmentLocation(Guid.NewGuid(), departmentId, locationId);
+        DepartmentId departmentId = DepartmentId.New();
+        DepartmentLocation departmentLocation = new(Guid.NewGuid(), departmentId, locationId);
 
-        var department = Department.Create(
+        Result<Department, Error> department = Department.Create(
             departmentId,
             "Dev Team",
             Identifier.Create("dev-team").Value,
@@ -76,18 +76,17 @@ public static class DataCreator
                 depth = (short)(parent.Depth + 1);
             }
 
-            var departmentPositions =
+            List<DepartmentPosition> departmentPositions =
                 positionIds.Select(x =>
                         new DepartmentPosition(Guid.NewGuid(), departmentId, new PositionId(x.Value)))
                     .ToList();
 
-
-            var departmentLocations =
+            List<DepartmentLocation> departmentLocations =
                 locationIds.Select(x =>
                         new DepartmentLocation(Guid.NewGuid(), departmentId, new LocationId(x.Value)))
                     .ToList();
 
-            var department = Department.Create(
+            Result<Department, Error> department = Department.Create(
                 departmentId,
                 name,
                 Identifier.Create(identifier).Value,
@@ -115,12 +114,12 @@ public static class DataCreator
         Department? parent,
         DepartmentId? departmentId = null)
     {
-        var res = await CreateDepartmentNoSave(dbContext, locationIds, positionIds, name, identifier, departmentId, parent);
+        Department res = await CreateDepartmentNoSave(dbContext, locationIds, positionIds, name, identifier,
+            departmentId, parent);
 
         await dbContext.SaveChangesAsync();
         return res;
     }
-
 
     public static async Task GenerateDepartmentStruct(
         ApplicationDbContext dbContext,
@@ -128,10 +127,10 @@ public static class DataCreator
         IReadOnlyList<LocationId> locationIds,
         IReadOnlyList<PositionId> positionIds)
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync();
+        await using IDbContextTransaction transaction = await dbContext.Database.BeginTransactionAsync();
         try
         {
-            foreach (var dto in dtos)
+            foreach (TestDepartmentDto dto in dtos)
             {
                 await ProcessDepartmentNodeAsync(dbContext, locationIds, positionIds, dto, null);
             }
@@ -147,253 +146,251 @@ public static class DataCreator
         }
     }
 
-    private static async Task<Department> ProcessDepartmentNodeAsync(
-        ApplicationDbContext dbContext,
-        IReadOnlyList<LocationId> locationIds,
-        IReadOnlyList<PositionId> positionIds,
-        TestDepartmentDto dto,
-        Department? parent)
-    {
-        var departmentId = new DepartmentId(dto.Id);
-
-        var department = await CreateDepartmentNoSave(
-            dbContext: dbContext,
-            locationIds: locationIds,
-            positionIds: positionIds,
-            name: dto.Name,
-            identifier: dto.Identifier,
-            departmentId: departmentId,
-            parent: parent
-        );
-
-        if (dto.Children.Length <= 0) return department;
-
-        foreach (var childDto in dto.Children)
-        {
-            await ProcessDepartmentNodeAsync(dbContext, locationIds, positionIds, childDto, department);
-        }
-
-        return department;
-    }
-
-    public static TestDepartmentDto[] GetDepartmentStruct(Guid engId, Guid salesId, Guid hrId, Guid itId)
-    {
-        return
-        [
-            new TestDepartmentDto(
-                engId,
-                "Engineering",
-                "engineering",
-                [
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "Eng Software Dev",
-                        "eng-software-dev",
-                        [
-                            new TestDepartmentDto(
-                                Guid.NewGuid(),
-                                "Eng Soft Backend",
-                                "eng-soft-backend",
-                                [
-                                    new TestDepartmentDto(
-                                        Guid.NewGuid(),
-                                        "Eng Back Core",
-                                        "eng-back-core",
-                                        []),
-                                    new TestDepartmentDto(
-                                        Guid.NewGuid(),
-                                        "Eng Back Api",
-                                        "eng-back-api",
-                                        [])
-                                ]),
-                            new TestDepartmentDto(
-                                Guid.NewGuid(),
-                                "Eng Soft Frontend",
-                                "eng-soft-frontend",
-                                [])
-                        ]),
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "Eng Hardware Dev",
-                        "eng-hardware-dev",
-                        [])
-                ]),
-            new TestDepartmentDto(
-                salesId,
-                "Sales Division",
-                "sales-division",
-                [
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "Sales Region East",
-                        "sales-region-east",
-                        []),
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "Sales Region West",
-                        "sales-region-west",
-                        []),
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "Sales Region North",
-                        "sales-region-north",
-                        []),
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "Support",
-                        "sales-support",
-                        []),
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "Sales B2B",
-                        "sales-bb",
-                        []),
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "ssssssssss",
-                        "sssssssssss",
-                        [])
-                ]),
-            new TestDepartmentDto(
-                Guid.NewGuid(),
-                "Marketing",
-                "marketing",
-                [
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "Mkt Digital",
-                        "mkt-digital",
-                        [
-                            new TestDepartmentDto(
-                                Guid.NewGuid(),
-                                "Mkt Dig SEO",
-                                "mkt-dig-seo",
-                                [
-                                    new TestDepartmentDto(
-                                        Guid.NewGuid(),
-                                        "Mkt SEO Content",
-                                        "mkt-seo-content",
-                                        [])
-                                ])
-                        ])
-                ]),
-            new TestDepartmentDto(
-                hrId,
-                "HR Division",
-                "hr-division",
-                [
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "HR Recruiting",
-                        "hr-recruiting",
-                        [])
-                ]),
-            new TestDepartmentDto(
-                Guid.NewGuid(),
-                "Finance Corp",
-                "finance-corp",
-                [
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "Fin Accounting",
-                        "fin-accounting",
-                        [])
-                ]),
-            new TestDepartmentDto(
-                Guid.NewGuid(),
-                "Operations",
-                "operations",
-                [
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "Ops Supply",
-                        "ops-supply",
-                        [])
-                ]),
-            new TestDepartmentDto(
-                Guid.NewGuid(),
-                "Legal Team",
-                "legal-team",
-                [
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "Leg Compliance",
-                        "leg-compliance",
-                        [])
-                ]),
-            new TestDepartmentDto(
-                itId,
-                "IT Support",
-                "it-support",
-                [
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "IT Helpdesk",
-                        "it-helpdesk",
-                        [
-                            new TestDepartmentDto(
-                                Guid.NewGuid(),
-                                "IT Help Lev",
-                                "it-help-lev",
-                                [
-                                    new TestDepartmentDto(
-                                        Guid.NewGuid(),
-                                        "IT Help Shift A",
-                                        "it-help-shift-a",
-                                        []),
-                                    new TestDepartmentDto(
-                                        Guid.NewGuid(),
-                                        "IT Help Shift B",
-                                        "it-help-shift-b",
-                                        []),
-                                    new TestDepartmentDto(
-                                        Guid.NewGuid(),
-                                        "IT Help Shift C",
-                                        "it-help-shift-c",
-                                        [])
-                                ])
-                        ])
-                ]),
-            new TestDepartmentDto(
-                Guid.NewGuid(),
-                "Research",
-                "research",
-                [
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "Res Lab",
-                        "res-lab",
-                        [])
-                ]),
-            new TestDepartmentDto(
-                Guid.NewGuid(),
-                "Logistics",
-                "logistics",
-                [
-                    new TestDepartmentDto(
-                        Guid.NewGuid(),
-                        "Log Transport",
-                        "log-transport",
-                        [])
-                ])
-        ];
-    }
+    public static TestDepartmentDto[] GetDepartmentStruct(Guid engId, Guid salesId, Guid hrId, Guid itId) =>
+    [
+        new(
+            engId,
+            "Engineering",
+            "engineering",
+            [
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "Eng Software Dev",
+                    "eng-software-dev",
+                    [
+                        new TestDepartmentDto(
+                            Guid.NewGuid(),
+                            "Eng Soft Backend",
+                            "eng-soft-backend",
+                            [
+                                new TestDepartmentDto(
+                                    Guid.NewGuid(),
+                                    "Eng Back Core",
+                                    "eng-back-core",
+                                    []),
+                                new TestDepartmentDto(
+                                    Guid.NewGuid(),
+                                    "Eng Back Api",
+                                    "eng-back-api",
+                                    [])
+                            ]),
+                        new TestDepartmentDto(
+                            Guid.NewGuid(),
+                            "Eng Soft Frontend",
+                            "eng-soft-frontend",
+                            [])
+                    ]),
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "Eng Hardware Dev",
+                    "eng-hardware-dev",
+                    [])
+            ]),
+        new(
+            salesId,
+            "Sales Division",
+            "sales-division",
+            [
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "Sales Region East",
+                    "sales-region-east",
+                    []),
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "Sales Region West",
+                    "sales-region-west",
+                    []),
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "Sales Region North",
+                    "sales-region-north",
+                    []),
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "Support",
+                    "sales-support",
+                    []),
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "Sales B2B",
+                    "sales-bb",
+                    []),
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "ssssssssss",
+                    "sssssssssss",
+                    [])
+            ]),
+        new(
+            Guid.NewGuid(),
+            "Marketing",
+            "marketing",
+            [
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "Mkt Digital",
+                    "mkt-digital",
+                    [
+                        new TestDepartmentDto(
+                            Guid.NewGuid(),
+                            "Mkt Dig SEO",
+                            "mkt-dig-seo",
+                            [
+                                new TestDepartmentDto(
+                                    Guid.NewGuid(),
+                                    "Mkt SEO Content",
+                                    "mkt-seo-content",
+                                    [])
+                            ])
+                    ])
+            ]),
+        new(
+            hrId,
+            "HR Division",
+            "hr-division",
+            [
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "HR Recruiting",
+                    "hr-recruiting",
+                    [])
+            ]),
+        new(
+            Guid.NewGuid(),
+            "Finance Corp",
+            "finance-corp",
+            [
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "Fin Accounting",
+                    "fin-accounting",
+                    [])
+            ]),
+        new(
+            Guid.NewGuid(),
+            "Operations",
+            "operations",
+            [
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "Ops Supply",
+                    "ops-supply",
+                    [])
+            ]),
+        new(
+            Guid.NewGuid(),
+            "Legal Team",
+            "legal-team",
+            [
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "Leg Compliance",
+                    "leg-compliance",
+                    [])
+            ]),
+        new(
+            itId,
+            "IT Support",
+            "it-support",
+            [
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "IT Helpdesk",
+                    "it-helpdesk",
+                    [
+                        new TestDepartmentDto(
+                            Guid.NewGuid(),
+                            "IT Help Lev",
+                            "it-help-lev",
+                            [
+                                new TestDepartmentDto(
+                                    Guid.NewGuid(),
+                                    "IT Help Shift A",
+                                    "it-help-shift-a",
+                                    []),
+                                new TestDepartmentDto(
+                                    Guid.NewGuid(),
+                                    "IT Help Shift B",
+                                    "it-help-shift-b",
+                                    []),
+                                new TestDepartmentDto(
+                                    Guid.NewGuid(),
+                                    "IT Help Shift C",
+                                    "it-help-shift-c",
+                                    [])
+                            ])
+                    ])
+            ]),
+        new(
+            Guid.NewGuid(),
+            "Research",
+            "research",
+            [
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "Res Lab",
+                    "res-lab",
+                    [])
+            ]),
+        new(
+            Guid.NewGuid(),
+            "Logistics",
+            "logistics",
+            [
+                new TestDepartmentDto(
+                    Guid.NewGuid(),
+                    "Log Transport",
+                    "log-transport",
+                    [])
+            ])
+    ];
 
     public static async Task<IReadOnlyList<PositionId>> CreatePositions(
         ApplicationDbContext dbContext,
         IReadOnlyList<TestPositionDto> testPositions,
         CancellationToken cancellationToken = default)
     {
-        var positions = testPositions.Select(x => Position.Create(new PositionId(x.Id),
-                x.Name,
-                null,
-                []))
+        List<Position> positions = testPositions.Select(x => Position.Create(
+            new PositionId(x.Id),
+            x.Name,
+            null,
+            []))
             .Select(y => y.Value).ToList();
 
         await dbContext.Positions.AddRangeAsync(positions, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return positions.Select(x => x.Id).ToList();
+    }
+
+    private static async Task ProcessDepartmentNodeAsync(
+        ApplicationDbContext dbContext,
+        IReadOnlyList<LocationId> locationIds,
+        IReadOnlyList<PositionId> positionIds,
+        TestDepartmentDto dto,
+        Department? parent)
+    {
+        DepartmentId departmentId = new(dto.Id);
+
+        Department department = await CreateDepartmentNoSave(
+            dbContext,
+            locationIds,
+            positionIds,
+            dto.Name,
+            dto.Identifier,
+            departmentId,
+            parent);
+
+        if (dto.Children.Length <= 0)
+        {
+            return;
+        }
+
+        foreach (TestDepartmentDto childDto in dto.Children)
+        {
+            await ProcessDepartmentNodeAsync(dbContext, locationIds, positionIds, childDto, department);
+        }
     }
 }
 
