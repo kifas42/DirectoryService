@@ -1,6 +1,5 @@
-import Image from "next/image";
-import Hello from "./hello";
+import MainPage from "@/components/main/main";
 
 export default function Home() {
-  return <Hello />;
+  return <MainPage />;
 }

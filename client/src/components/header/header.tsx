@@ -8,7 +8,7 @@ export default function Header() {
         <SidebarTrigger />
         <div className="h-6 w-[1px] bg-border mx-2 hidden md:block" />{" "}
         {/* Разделитель */}
-        <span className="font-semibold tracking-tight">Project Name</span>
+        <span className="font-semibold tracking-tight">Directory Service</span>
       </div>
 
       {/* Правая часть */}

@@ -3,7 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import Header from "@/components/header/header";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/sidebar/app.sidebar";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -37,14 +37,16 @@ export default function RootLayout({
         geistMono.variable,
         "font-sans",
         inter.variable,
-        "dark",
+        //"dark",
       )}
     >
       <body className="min-h-full flex flex-col">
         <SidebarProvider>
-          <Header />
           <AppSidebar />
-          <main className="p-10 dark">{children}</main>
+          <div className="flex flex-col w-full">
+            <Header />
+            <main className="p-10 flex-1">{children}</main>
+          </div>
         </SidebarProvider>
       </body>
     </html>
