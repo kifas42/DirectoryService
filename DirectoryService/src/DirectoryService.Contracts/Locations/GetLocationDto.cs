@@ -2,6 +2,8 @@
 
 public record GetLocationDto
 {
+    public Guid Id { get; init; }
+
     public string Name { get; init; } = string.Empty;
 
     public string OfficeNumber { get; init; } = string.Empty;
@@ -25,4 +27,9 @@ public record GetLocationDto
     public DateTime CreatedAt { get; init; }
 }
 
-public record PaginationLocationResponse(IReadOnlyList<GetLocationDto> Locations, int TotalCount);
+public record PaginationLocationResponse(
+    IReadOnlyList<GetLocationDto> Items,
+    int TotalCount,
+    int Page,
+    int PageSize,
+    int TotalPages);
