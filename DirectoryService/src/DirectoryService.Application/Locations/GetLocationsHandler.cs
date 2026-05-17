@@ -22,6 +22,9 @@ public class GetLocationsHandler : IQueryHandler<PaginationLocationResponse, Get
         GetLocationQuery locationQuery,
         CancellationToken cancellationToken)
     {
+        int page = locationQuery.Request.Page ?? 1;
+        int pageSize = locationQuery.Request.PageSize ?? 10;
+
         IQueryable<Location> query = _readDbContext.LocationsRead;
 
         if (!string.IsNullOrWhiteSpace(locationQuery.Request.Search))
@@ -41,27 +44,30 @@ public class GetLocationsHandler : IQueryHandler<PaginationLocationResponse, Get
                 select l).Distinct();
         }
 
-        if (locationQuery.Request.IsActive is not null)
+        if (locationQuery.Request.IsActive.HasValue)
         {
             query = query.Where(l => l.IsActive == locationQuery.Request.IsActive);
         }
 
-        Expression<Func<Location, object>> keySelector = locationQuery.Request.SortBy.ToLower() switch
+        Expression<Func<Location, object>> keySelector = locationQuery.Request.SortBy?.ToLower() switch
         {
             "name" => l => l.Name,
             "date" => l => l.CreatedAt,
             _ => l => l.Name
         };
 
-        query = locationQuery.Request.SortOrder == "asc"
+        query = locationQuery.Request.SortOrder?.ToLower() == "asc"
             ? query.OrderBy(keySelector)
             : query.OrderByDescending(keySelector);
 
         int locationsCount = await query.CountAsync(cancellationToken);
 
+        int totalPages = (int)Math.Ceiling((double)locationsCount / pageSize);
+
         List<GetLocationDto> locations = await query
             .Select(l => new GetLocationDto
             {
+                Id = l.Id.Value,
                 Name = l.Name,
                 OfficeNumber = l.Address.OfficeNumber,
                 BuildingNumber = l.Address.BuildingNumber,
@@ -74,10 +80,10 @@ public class GetLocationsHandler : IQueryHandler<PaginationLocationResponse, Get
                 IsActive = l.IsActive,
                 CreatedAt = l.CreatedAt,
             })
-            .Skip((locationQuery.Request.Page - 1) * locationQuery.Request.PageSize ?? 0)
-            .Take(locationQuery.Request.PageSize ?? 10)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return new PaginationLocationResponse(locations, locationsCount);
+        return new PaginationLocationResponse(locations, locationsCount, page, pageSize, totalPages);
     }
 }

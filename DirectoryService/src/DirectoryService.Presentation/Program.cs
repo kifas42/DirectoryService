@@ -17,6 +17,7 @@ string environment = builder.Environment.EnvironmentName;
 builder.Configuration.AddJsonFile($"appsettings.{environment}.json", true, true);
 builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddSerilog();
+builder.Services.AddCors();
 builder.Services.AddControllers();
 builder.Services.Configure<ApiBehaviorOptions>(options => options.SuppressModelStateInvalidFilter = true);
 builder.Services.AddHttpLogging();
@@ -37,6 +38,13 @@ builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 WebApplication app = builder.Build();
+app.UseCors(policyBuilder =>
+{
+    policyBuilder.WithOrigins("http://localhost:3000", "http://localhost:3001")
+        .AllowCredentials()
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+});
 app.UseExceptionMiddleware();
 app.UseHttpLogging();
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))

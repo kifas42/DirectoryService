@@ -1,4 +1,4 @@
-import { SidebarTrigger } from "../ui/sidebar";
+import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 
 export default function Header() {
   return (
@@ -6,7 +6,7 @@ export default function Header() {
       {/* Левая часть */}
       <div className="flex items-center gap-2">
         <SidebarTrigger />
-        <div className="h-6 w-[1px] bg-border mx-2 hidden md:block" />{" "}
+        <div className="h-6 w-px bg-border mx-2 hidden md:block" />{" "}
         {/* Разделитель */}
         <span className="font-semibold tracking-tight">Directory Service</span>
       </div>
