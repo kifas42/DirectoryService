@@ -22,3 +22,19 @@ export interface GetLocationRequest {
   sortBy?: string; // default: "name"
   sortOrder?: string; // default: "asc"
 }
+
+export interface AddressDto {
+  officeNumber: string;
+  buildingNumber: string;
+  street: string;
+  city: string;
+  stateOrProvince: string | null;
+  country: string;
+  postalCode: string | null;
+}
+
+export interface CreateLocationRequest {
+  name: string;
+  address: AddressDto;
+  timezone: string;
+}
