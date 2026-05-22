@@ -5,9 +5,9 @@ export interface GetLocationDto {
   buildingNumber: string;
   street: string;
   city: string;
-  stateOrProvince: string | null;
+  stateOrProvince?: string;
   country: string;
-  postalCode: string | null;
+  postalCode?: string;
   timezone: string;
   isActive: boolean;
   createdAt: string; // ISO 8601 (например, "2026-05-08T14:30:00Z")
@@ -28,9 +28,9 @@ export interface AddressDto {
   buildingNumber: string;
   street: string;
   city: string;
-  stateOrProvince: string | null;
+  stateOrProvince?: string;
   country: string;
-  postalCode: string | null;
+  postalCode?: string;
 }
 
 export interface CreateLocationRequest {

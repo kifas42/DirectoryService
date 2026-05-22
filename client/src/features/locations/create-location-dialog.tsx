@@ -7,16 +7,37 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { Spinner } from "@/shared/components/ui/spinner";
-import { SubmitEvent, useState } from "react";
 import { useCreateLocation } from "./model/use-create-location";
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
-import { AddressDto, CreateLocationRequest } from "@/entities/locations/types";
+import { CreateLocationRequest } from "@/entities/locations/types";
+import z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const createLocationSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Имя обязательно")
+    .min(3, "Минимум 3 символа")
+    .max(200, "Не должно превышать 100 символов"),
+  officeNumber: z.string().min(1, "Укажите номер офиса/помещения"),
+  buildingNumber: z.string().min(1, "Укажите номер здания"),
+  street: z.string().min(1, "Укажите улицу"),
+  city: z.string().min(1, "Укажите город"),
+  country: z.string().min(1, "Укажите страну"),
+  timezone: z.string().min(1, "Выберите часовой пояс"),
+  stateOrProvince: z.string().optional(),
+  postalCode: z.string().optional(),
+});
+
+type CreateLocationFormValues = z.infer<typeof createLocationSchema>;
 
 export function CreateLocationDialog({
   open,
@@ -25,30 +46,45 @@ export function CreateLocationDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const defaultData: CreateLocationRequest = {
+  const defaultData: CreateLocationFormValues = {
     name: "",
-    address: {
-      officeNumber: "",
-      buildingNumber: "",
-      street: "",
-      city: "",
-      stateOrProvince: null,
-      country: "",
-      postalCode: null,
-    },
+    officeNumber: "",
+    buildingNumber: "",
+    street: "",
+    city: "",
+    stateOrProvince: undefined,
+    country: "",
+    postalCode: undefined,
     timezone: "Europe/Moscow",
   };
 
-  const [formData, setFormData] = useState<CreateLocationRequest>(defaultData);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<CreateLocationFormValues>({
+    defaultValues: defaultData,
+    resolver: zodResolver(createLocationSchema),
+  });
 
   const { createLocation, isPending, isError, error } = useCreateLocation();
 
-  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    createLocation(formData, {
+  const onSubmit = ({
+    name,
+    timezone,
+    ...addressFields
+  }: CreateLocationFormValues) => {
+    const request: CreateLocationRequest = {
+      name,
+      timezone,
+      address: addressFields,
+    };
+
+    createLocation(request, {
       onSuccess: () => {
-        setFormData(defaultData);
         onOpenChange(false);
+        reset();
       },
     });
   };
@@ -56,173 +92,127 @@ export function CreateLocationDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-187.5">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <DialogTitle>Создание локации</DialogTitle>
-          <DialogDescription>заполните форму</DialogDescription>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+            {/* Левая колонка */}
             <div className="flex flex-col gap-4">
               <FieldGroup>
-                <Field>
+                <Field data-invalid={!!errors.name}>
                   <FieldLabel htmlFor="name">Название</FieldLabel>
                   <Input
                     id="name"
                     placeholder="Название"
-                    required
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
+                    {...register("name")}
                   />
+                  <FieldError>{errors.name?.message}</FieldError>
                 </Field>
-                <Field>
+
+                <Field data-invalid={!!errors.timezone}>
                   <FieldLabel htmlFor="timezone">Часовой пояс</FieldLabel>
                   <Input
                     id="timezone"
                     placeholder="Europe/Moscow"
-                    required
-                    value={formData.timezone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, timezone: e.target.value })
-                    }
+                    {...register("timezone")}
                   />
+                  <FieldError>{errors.timezone?.message}</FieldError>
                 </Field>
               </FieldGroup>
             </div>
 
+            {/* Правая колонка */}
             <div className="flex flex-col gap-4">
               <FieldGroup>
-                <Field>
+                <Field data-invalid={!!errors.officeNumber}>
                   <FieldLabel htmlFor="officeNumber">Номер офиса</FieldLabel>
                   <Input
                     id="officeNumber"
                     placeholder="A12"
-                    required
-                    value={formData.address.officeNumber}
-                    onChange={(e) => {
-                      const addr: AddressDto = {
-                        ...formData.address,
-                        officeNumber: e.target.value,
-                      };
-                      setFormData({ ...formData, address: addr });
-                    }}
+                    {...register("officeNumber")}
                   />
+                  <FieldError>{errors.officeNumber?.message}</FieldError>
                 </Field>
-                <Field>
+
+                <Field data-invalid={!!errors.buildingNumber}>
                   <FieldLabel htmlFor="buildingNumber">Номер дома</FieldLabel>
                   <Input
                     id="buildingNumber"
                     placeholder="45"
-                    required
-                    value={formData.address.buildingNumber}
-                    onChange={(e) => {
-                      const addr: AddressDto = {
-                        ...formData.address,
-                        buildingNumber: e.target.value,
-                      };
-                      setFormData({ ...formData, address: addr });
-                    }}
+                    {...register("buildingNumber")}
                   />
+                  <FieldError>{errors.buildingNumber?.message}</FieldError>
                 </Field>
-                <Field>
+
+                <Field data-invalid={!!errors.street}>
                   <FieldLabel htmlFor="street">Улица</FieldLabel>
                   <Input
                     id="street"
                     placeholder="Тверская"
-                    required
-                    value={formData.address.street}
-                    onChange={(e) => {
-                      const addr: AddressDto = {
-                        ...formData.address,
-                        street: e.target.value,
-                      };
-                      setFormData({ ...formData, address: addr });
-                    }}
+                    {...register("street")}
                   />
+                  <FieldError>{errors.street?.message}</FieldError>
                 </Field>
-                <Field>
+
+                <Field data-invalid={!!errors.city}>
                   <FieldLabel htmlFor="city">Город</FieldLabel>
-                  <Input
-                    id="city"
-                    placeholder="Москва"
-                    required
-                    value={formData.address.city}
-                    onChange={(e) => {
-                      const addr: AddressDto = {
-                        ...formData.address,
-                        city: e.target.value,
-                      };
-                      setFormData({ ...formData, address: addr });
-                    }}
-                  />
+                  <Input id="city" placeholder="Москва" {...register("city")} />
+                  <FieldError>{errors.city?.message}</FieldError>
                 </Field>
-                <Field>
+
+                <Field data-invalid={!!errors.stateOrProvince}>
                   <FieldLabel htmlFor="stateOrProvince">Регион</FieldLabel>
                   <Input
                     id="stateOrProvince"
                     placeholder="Москва"
-                    value={formData.address.stateOrProvince ?? ""}
-                    onChange={(e) => {
-                      const addr: AddressDto = {
-                        ...formData.address,
-                        stateOrProvince: e.target.value,
-                      };
-                      setFormData({ ...formData, address: addr });
-                    }}
+                    {...register("stateOrProvince")}
                   />
+                  <FieldError>{errors.stateOrProvince?.message}</FieldError>
                 </Field>
-                <Field>
+
+                <Field data-invalid={!!errors.country}>
                   <FieldLabel htmlFor="country">Страна</FieldLabel>
                   <Input
                     id="country"
                     placeholder="РФ"
-                    required
-                    value={formData.address.country}
-                    onChange={(e) => {
-                      const addr: AddressDto = {
-                        ...formData.address,
-                        country: e.target.value,
-                      };
-                      setFormData({ ...formData, address: addr });
-                    }}
+                    {...register("country")}
                   />
+                  <FieldError>{errors.country?.message}</FieldError>
                 </Field>
-                <Field>
+
+                <Field data-invalid={!!errors.postalCode}>
                   <FieldLabel htmlFor="postalCode">Индекс</FieldLabel>
                   <Input
                     id="postalCode"
                     placeholder="11144"
-                    required
-                    value={formData.address.postalCode ?? ""}
-                    onChange={(e) => {
-                      const addr: AddressDto = {
-                        ...formData.address,
-                        postalCode: e.target.value,
-                      };
-                      setFormData({ ...formData, address: addr });
-                    }}
+                    {...register("postalCode")}
                   />
+                  <FieldError>{errors.postalCode?.message}</FieldError>
                 </Field>
               </FieldGroup>
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-4 items-center justify-between w-full">
             <Field orientation="horizontal">
               <Button
+                type="button"
                 variant="outline"
-                onClick={() => setFormData(defaultData)}
+                onClick={() => reset()}
                 disabled={isPending}
               >
                 Сброс
               </Button>
               <Button type="submit" disabled={isPending}>
                 Создать
-                {isPending && <Spinner />}
+                {isPending && <Spinner className="ml-2" />}
               </Button>
             </Field>
+
             {error && (
-              <div className="text-red-500 text-sm mt-2">{error.message}</div>
+              <div className="text-destructive text-sm font-medium">
+                {error.message}
+              </div>
             )}
           </DialogFooter>
         </form>
