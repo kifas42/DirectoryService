@@ -80,12 +80,12 @@ public record Address
 
         if (city.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
         {
-            return GeneralErrors.LenghtIsInvalid(city, Constants.MIN_NAME_TEXT_LENGTH, Constants.MAX_NAME_TEXT_LENGTH);
+            return GeneralErrors.LenghtIsInvalid(nameof(city), Constants.MIN_NAME_TEXT_LENGTH, Constants.MAX_NAME_TEXT_LENGTH);
         }
 
         if (country.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
         {
-            return GeneralErrors.LenghtIsInvalid(country, Constants.MIN_NAME_TEXT_LENGTH,
+            return GeneralErrors.LenghtIsInvalid(nameof(country), Constants.MIN_NAME_TEXT_LENGTH,
                 Constants.MAX_NAME_TEXT_LENGTH);
         }
 
