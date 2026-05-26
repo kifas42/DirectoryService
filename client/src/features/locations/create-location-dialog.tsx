@@ -209,9 +209,11 @@ export function CreateLocationDialog({
               </Button>
             </Field>
 
-            {error && (
+            {isError && (
               <div className="text-destructive text-sm font-medium">
-                {error.message}
+                {error
+                  ? error.firstMessage
+                  : "Неизвестная ошибка или сбой сети"}
               </div>
             )}
           </DialogFooter>

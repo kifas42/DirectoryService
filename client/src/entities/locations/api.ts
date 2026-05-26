@@ -1,4 +1,4 @@
-import { ApiEnvelope, PaginationResponse } from "@/shared/api/types";
+import { PaginationResponse } from "@/shared/api/types";
 import {
   CreateLocationRequest,
   GetLocationDto,
@@ -6,6 +6,7 @@ import {
 } from "./types";
 import { apiClient } from "@/shared/api/axios";
 import { queryOptions } from "@tanstack/react-query";
+import { ApiEnvelope } from "@/shared/api/envelope";
 
 export const locationsApi = {
   getLocations: async (request: GetLocationRequest) => {
@@ -17,6 +18,7 @@ export const locationsApi = {
 
     return response.data.result;
   },
+
   createLocation: async (request: CreateLocationRequest) => {
     const response = await apiClient.post<ApiEnvelope<string>>(
       "/locations",

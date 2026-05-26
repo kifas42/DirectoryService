@@ -18,16 +18,15 @@ export default function Locations() {
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
 
-  const { locations, isPending, error, totalPages, totalCount } =
+  const { locations, isPending, error, totalPages, totalCount, isError } =
     useLocationsLists({ page });
 
   if (isPending) {
     return <LocationTableSkeleton rows={5} />;
   }
 
-  if (error) {
-    const message =
-      error instanceof Error ? error.message : "Не удалось загрузить данные";
+  if (isError) {
+    const message = error ? error.message : "Не удалось загрузить данные";
 
     return (
       <Alert variant="destructive" className="max-w-lg">
