@@ -4,6 +4,7 @@ using Dapper;
 using DirectoryService.Application.Locations;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
+using DirectoryService.Domain.Shared;
 using DirectoryService.Infrastructure.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -37,23 +38,32 @@ public sealed class LocationRepository : ILocationRepository
         {
             return pgEx switch
             {
-                { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null } when
-                    pgEx.ConstraintName.Contains(IndexConstants.NAME, StringComparison.CurrentCultureIgnoreCase) =>
-                    Error.Conflict("unique.conflict", "Name conflict"),
-                { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null } when
-                    pgEx.ConstraintName.Contains(IndexConstants.ADDRESS, StringComparison.CurrentCultureIgnoreCase) =>
-                    Error.Conflict("unique.conflict", "Address conflict"),
-                _ => Error.Failure("database.failure", "database error. check logs")
+                { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null }
+                    when pgEx.ConstraintName.Contains(IndexConstants.NAME, StringComparison.OrdinalIgnoreCase) =>
+                    Error.Conflict(
+                        DomainErrorCodes.Location.NameConflict,
+                        "Локация с таким названием уже существует",
+                        "name"),
+                { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null }
+                    when pgEx.ConstraintName.Contains(IndexConstants.ADDRESS, StringComparison.OrdinalIgnoreCase) =>
+                    Error.Conflict(
+                        DomainErrorCodes.Location.AddressConflict,
+                        "Локация с таким адресом уже существует",
+                        null),
+
+                _ => HandleUnexpectedDbError(ex)
             };
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
-            return Error.Failure("canceled", "OperationCanceled");
+            _logger.LogWarning(ex, "Operation was canceled while adding location");
+            return Error.Failure(
+                SharedErrorCodes.System.OperationCanceled,
+                "Операция была отменена");
         }
         catch (Exception ex)
         {
-            _logger.LogError("AddAsync Error: {Message}", ex.Message);
-            return Error.Failure("database.failure", "database error. check logs");
+            return HandleUnexpectedDbError(ex);
         }
     }
 
@@ -88,15 +98,31 @@ public sealed class LocationRepository : ILocationRepository
 
             int updated = await dbConn.ExecuteAsync(
                 sql,
-                new { departmentId = departmentId.Value });
+                new { departmentId = departmentId.Value },
+                commandTimeout: 30);
 
-            _logger.LogInformation("Deleted(soft) {Count} locations", updated);
+            _logger.LogInformation(
+                "Successfully soft-deleted {Count} orphan locations for DepartmentId {DepartmentId}",
+                updated,
+                departmentId.Value);
+
             return UnitResult.Success<Error>();
         }
         catch (Exception e)
         {
-            _logger.LogError("Failed to soft delete orphans locations: {Message}", e.Message);
-            return Error.Failure("delete.locations", "Failed to soft delete orphans locations");
+            _logger.LogError(e, "Failed to soft-delete orphan locations for DepartmentId {DepartmentId}",
+                departmentId.Value);
+            return Error.Failure(
+                DomainErrorCodes.Location.OrphanDeleteFailed,
+                "Не удалось удалить связанные локации. Пожалуйста, попробуйте позже.");
         }
+    }
+
+    private Error HandleUnexpectedDbError(Exception ex)
+    {
+        _logger.LogError(ex, "Unexpected database error while adding location");
+        return Error.Failure(
+            SharedErrorCodes.System.Database.OperationFailed,
+            "Произошла внутренняя ошибка базы данных. Пожалуйста, попробуйте позже.");
     }
 }

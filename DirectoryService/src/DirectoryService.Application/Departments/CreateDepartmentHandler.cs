@@ -35,45 +35,51 @@ public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepart
     {
         if (command.DepartmentRequest == null)
         {
-            return Error.Failure("fail", "invalid request");
+            return Error.Validation(
+                SharedErrorCodes.Validation.InvalidRequest,
+                "Некорректный формат запроса. Проверьте переданные данные.");
         }
 
-        ValidationResult? validationResult =
+        ValidationResult validationResult =
             await _validator.ValidateAsync(command.DepartmentRequest, cancellationToken);
         if (!validationResult.IsValid)
         {
             return validationResult.ToError();
         }
 
-        Result<Identifier, Error> identifierResult = Identifier.Create(command.DepartmentRequest.Identifier);
+        var identifierResult = Identifier.Create(command.DepartmentRequest.Identifier);
         if (identifierResult.IsFailure)
         {
             return identifierResult.Error;
         }
 
-        short depth = 0;
         Department? parent = null;
-        if (command.DepartmentRequest.ParentId != null)
+        short depth = 0;
+
+        if (command.DepartmentRequest.ParentId.HasValue)
         {
-            DepartmentId parentId = new(command.DepartmentRequest.ParentId.Value);
-            Result<Department, Error> parentResult =
-                await _departmentRepository.GetByIdIsActive(parentId, cancellationToken);
+            var parentId = new DepartmentId(command.DepartmentRequest.ParentId.Value);
+            var parentResult = await _departmentRepository.GetByIdIsActive(parentId, cancellationToken);
 
             if (parentResult.IsFailure)
             {
-                _logger.LogError("Parent department not found: {ErrorMessage}", parentResult.Error);
+                _logger.LogWarning(
+                    "Parent department not found or inactive: {ParentId}, Reason: {@Error}",
+                    parentId.Value,
+                    parentResult.Error);
+
+                return parentResult.Error;
             }
 
             parent = parentResult.Value;
-
-            depth = (short)(parentResult.Value.Depth + 1);
+            depth = (short)(parent.Depth + 1);
         }
 
-        DepartmentId departmentId = DepartmentId.New();
-        IEnumerable<DepartmentLocation> departmentLocations = command.DepartmentRequest.LocationIds
-            .Select(g => new DepartmentLocation(Guid.NewGuid(), departmentId, new LocationId(g)));
+        var departmentId = DepartmentId.New();
+        var departmentLocations = command.DepartmentRequest.LocationIds
+            .Select(locationId => new DepartmentLocation(Guid.NewGuid(), departmentId, new LocationId(locationId)));
 
-        Result<Department, Error> departmentResult = Department.Create(
+        var departmentResult = Department.Create(
             departmentId,
             command.DepartmentRequest.Name,
             identifierResult.Value,
@@ -84,20 +90,19 @@ public sealed class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepart
 
         if (departmentResult.IsFailure)
         {
-            _logger.LogError("Failed to create department: {ErrorMessage}", departmentResult.Error);
+            _logger.LogError("Failed to create department entity: {@Error}", departmentResult.Error);
             return departmentResult.Error;
         }
 
-        Result<DepartmentId, Error> createDepartmentResult =
-            await _departmentRepository.AddAsync(departmentResult.Value, cancellationToken);
+        var createDepartmentResult = await _departmentRepository.AddAsync(departmentResult.Value, cancellationToken);
 
         if (createDepartmentResult.IsFailure)
         {
-            _logger.LogError("Failed to add location: {ErrorMessage}", createDepartmentResult.Error);
+            _logger.LogError("Failed to add department to database");
             return createDepartmentResult.Error;
         }
 
-        _logger.LogInformation("Added Department: {DepartmentId}", createDepartmentResult.Value);
+        _logger.LogInformation("Successfully added Department: {DepartmentId}", createDepartmentResult.Value.Value);
 
         return createDepartmentResult.Value.Value;
     }

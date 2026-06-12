@@ -4,6 +4,7 @@ using Dapper;
 using DirectoryService.Application.Positions;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Positions;
+using DirectoryService.Domain.Shared;
 using DirectoryService.Infrastructure.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,9 @@ public class PositionRepository : IPositionRepository
         _logger = logger;
     }
 
-    public async Task<Result<PositionId, Error>> AddAsync(Position position, CancellationToken cancellationToken)
+    public async Task<Result<PositionId, Error>> AddAsync(
+        Position position,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -35,22 +38,28 @@ public class PositionRepository : IPositionRepository
         {
             return pgEx switch
             {
-                { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null } when
-                    pgEx.ConstraintName.Contains(
+                { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null }
+                    when pgEx.ConstraintName.Contains(
                         IndexConstants.POSITION_ACTIVE_NAME,
-                        StringComparison.CurrentCultureIgnoreCase) =>
-                    Error.Conflict("unique.conflict", "Name conflict"),
-                _ => Error.Failure("database.failure", "database error. check logs")
+                        StringComparison.OrdinalIgnoreCase) =>
+                    Error.Conflict(
+                        DomainErrorCodes.Position.NameConflict,
+                        "Позиция с таким названием уже существует в этом департаменте",
+                        "name"),
+
+                _ => HandleUnexpectedDbError(ex)
             };
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
-            return Error.Failure("database.failure", "OperationCanceled");
+            _logger.LogWarning(ex, "Operation was canceled while adding position {PositionName}", position.Name);
+            return Error.Failure(
+                SharedErrorCodes.System.OperationCanceled,
+                "Операция была прервана");
         }
         catch (Exception ex)
         {
-            _logger.LogError("AddAsync Error: {Message}", ex.Message);
-            return Error.Failure("database.failure", "database error. check logs");
+            return HandleUnexpectedDbError(ex);
         }
     }
 
@@ -81,15 +90,32 @@ public class PositionRepository : IPositionRepository
 
             int updated = await dbConn.ExecuteAsync(
                 sql,
-                new { departmentId = departmentId.Value });
+                new { departmentId = departmentId.Value },
+                commandTimeout: 30);
 
-            _logger.LogInformation("Deleted(soft) {Count} positions", updated);
+            _logger.LogInformation(
+                "Successfully soft-deleted {Count} orphan positions for DepartmentId {DepartmentId}",
+                updated,
+                departmentId.Value);
+
             return UnitResult.Success<Error>();
         }
         catch (Exception e)
         {
-            _logger.LogError("Failed to soft delete orphans positions: {Message}", e.Message);
-            return Error.Failure("delete.positions", "Failed to soft delete orphans positions");
+            _logger.LogError(e, "Failed to soft-delete orphan positions for DepartmentId {DepartmentId}",
+                departmentId.Value);
+
+            return Error.Failure(
+                DomainErrorCodes.Position.OrphanDeleteFailed,
+                "Не удалось удалить связанные позиции. Пожалуйста, попробуйте позже.");
         }
+    }
+
+    private Error HandleUnexpectedDbError(Exception ex)
+    {
+        _logger.LogError(ex, "Unexpected database error while adding position");
+        return Error.Failure(
+            SharedErrorCodes.System.Database.OperationFailed,
+            "Произошла внутренняя ошибка базы данных. Пожалуйста, попробуйте позже.");
     }
 }

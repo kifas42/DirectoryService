@@ -4,6 +4,7 @@ using CSharpFunctionalExtensions;
 using Dapper;
 using DirectoryService.Application.Departments;
 using DirectoryService.Domain.Departments;
+using DirectoryService.Domain.Shared;
 using DirectoryService.Infrastructure.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -35,25 +36,33 @@ public class DepartmentRepository : IDepartmentRepository
         {
             return pgEx switch
             {
-                { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null } when
-                    pgEx.ConstraintName.Contains(
+                { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null }
+                    when pgEx.ConstraintName.Contains(
                         IndexConstants.DEPARTMENT_IDENTIFIER,
-                        StringComparison.CurrentCultureIgnoreCase) =>
-                    Error.Conflict("unique.conflict", "Identifier conflict"),
-                { SqlState: PostgresErrorCodes.ForeignKeyViolation, ConstraintName: not null } when
-                    pgEx.ConstraintName == "FK_department_location_locations_location_id" =>
-                    Error.Conflict("fk.conflict", "Specified location does not exist"),
-                _ => Error.Failure("db.fail", "database error. check logs")
+                        StringComparison.OrdinalIgnoreCase) =>
+                    Error.Conflict(
+                        DomainErrorCodes.Department.IdentifierConflict,
+                        "Департамент с таким идентификатором уже существует",
+                        "identifier"),
+                { SqlState: PostgresErrorCodes.ForeignKeyViolation, ConstraintName: not null }
+                    when pgEx.ConstraintName.Equals(
+                        "FK_department_location_locations_location_id",
+                        StringComparison.OrdinalIgnoreCase) =>
+                    Error.Conflict(
+                        DomainErrorCodes.Department.InvalidLocationReference,
+                        "Выбранная локация не существует или была удалена",
+                        "locationId"),
+                _ => HandleUnexpectedDbError(ex)
             };
         }
         catch (OperationCanceledException)
         {
-            return Error.Failure("db.fail", "OperationCanceled");
+            _logger.LogWarning("Operation was canceled while adding department");
+            return Error.Failure(SharedErrorCodes.System.OperationCanceled, "Операция была прервана");
         }
         catch (Exception ex)
         {
-            _logger.LogError("Add Error: {Message}", ex.Message);
-            return Error.Failure("db.fail", "database error. check logs");
+            return HandleUnexpectedDbError(ex);
         }
     }
 
@@ -63,22 +72,25 @@ public class DepartmentRepository : IDepartmentRepository
     {
         try
         {
-            Department? department =
-                await _dbContext.Departments.SingleOrDefaultAsync(
-                    d => d.Id == departmentId && d.IsActive,
-                    cancellationToken);
+            Department? department = await _dbContext.Departments.SingleOrDefaultAsync(
+                d => d.Id == departmentId && d.IsActive,
+                cancellationToken);
 
             if (department is null)
             {
-                return Error.NotFound("get.department", "Department not found or not single");
+                return Error.NotFound(
+                    DomainErrorCodes.Department.NotFound,
+                    $"Департамент с ID '{departmentId.Value}' не найден или неактивен");
             }
 
             return department;
         }
         catch (Exception ex)
         {
-            _logger.LogError("GetById Error: {Message}", ex.Message);
-            return Error.Failure("db.fail", "database error. check logs");
+            _logger.LogError(ex, "Ошибка при получении активного департамента с ID {DepartmentId}", departmentId.Value);
+            return Error.Failure(
+                SharedErrorCodes.System.Database.OperationFailed,
+                "Произошла внутренняя ошибка базы данных при получении данных");
         }
     }
 
@@ -121,15 +133,24 @@ public class DepartmentRepository : IDepartmentRepository
 
             int updated = await dbConn.ExecuteAsync(
                 sql,
-                new { oldPath = department.Path.Value, newIdentifier });
+                new { oldPath = department.Path.Value, newIdentifier },
+                commandTimeout: 30);
 
-            _logger.LogInformation("Updated {Count} departments", updated);
+            _logger.LogInformation(
+                "Successfully updated path for {Count} departments (Target DepartmentId: {DepartmentId})",
+                updated,
+                department.Id.Value);
+
             return UnitResult.Success<Error>();
         }
         catch (Exception e)
         {
-            _logger.LogError("Failed to soft delete departments: {Message}", e.Message);
-            return Error.Failure("delete.departments", "Failed to soft delete departments");
+            _logger.LogError(e, "Failed to update department path for DepartmentId {DepartmentId}",
+                department.Id.Value);
+
+            return Error.Failure(
+                DomainErrorCodes.Department.PathUpdateFailed,
+                "Не удалось обновить данные департамента. Пожалуйста, попробуйте позже.");
         }
     }
 
@@ -139,11 +160,11 @@ public class DepartmentRepository : IDepartmentRepository
     {
         try
         {
-            await _dbContext.Database.ExecuteSqlAsync(
+            await _dbContext.Database.ExecuteSqlInterpolatedAsync(
                 $"""
                  SELECT * FROM departments 
-                                    WHERE path <@ (SELECT path FROM departments WHERE id = {departmentId.Value} AND is_active = true) 
-                                    FOR UPDATE
+                 WHERE path <@ (SELECT path FROM departments WHERE id = {departmentId.Value} AND is_active = true) 
+                 FOR UPDATE
                  """,
                 cancellationToken);
 
@@ -151,8 +172,12 @@ public class DepartmentRepository : IDepartmentRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError("Lock Error: {Message}", ex.Message);
-            return Error.Failure("data.is.locked", "Lock departments error");
+            _logger.LogError(ex, "Failed to acquire row lock for departments under DepartmentId {DepartmentId}",
+                departmentId.Value);
+
+            return Error.Failure(
+                DomainErrorCodes.Department.LockFailed,
+                "Не удалось заблокировать данные для операции. Возможно, система перегружена, попробуйте через несколько секунд.");
         }
     }
 
@@ -165,7 +190,7 @@ public class DepartmentRepository : IDepartmentRepository
 
         if (department is null)
         {
-            return GeneralErrors.NotFound(null, "department");
+            return Error.NotFound(DomainErrorCodes.Department.NotFound, "Не найдено подразделение по заданным фильтрам");
         }
 
         return department;
@@ -189,11 +214,7 @@ public class DepartmentRepository : IDepartmentRepository
         Department? newParent,
         CancellationToken cancellationToken)
     {
-        // const string sql = """
-        //                     SELECT * FROM departments
-        //                     WHERE path <@ @rootPath::ltree
-        //                     ORDER BY depth
-        //                    """;
+
         const string sql = """
                            UPDATE departments
                            SET 
@@ -220,7 +241,6 @@ public class DepartmentRepository : IDepartmentRepository
         {
             DbConnection dbConn = _dbContext.Database.GetDbConnection();
 
-            // var departmentRaws = (await dbConn.QueryAsync<DepartmentDto>(sql, new { rootPath })).ToList();
             int updated = await dbConn.ExecuteAsync(
                 sql,
                 new
@@ -229,15 +249,33 @@ public class DepartmentRepository : IDepartmentRepository
                     newParentId = newParent?.Id.Value,
                     oldPath = root.Path.Value,
                     newParentPath = newParent?.Path.Value,
-                });
+                },
+                commandTimeout: 30);
 
-            _logger.LogInformation("Updated {Count} departments", updated);
+            _logger.LogInformation(
+                "Successfully updated hierarchy for {Count} departments (Root: {RootId}, NewParent: {NewParentId})",
+                updated,
+                root.Id.Value,
+                newParent?.Id.Value);
+
             return UnitResult.Success<Error>();
         }
         catch (Exception e)
         {
-            _logger.LogError("Failed to update departments hierarchy: {Message}", e.Message);
-            return Error.Failure("update.departments", "Failed to update departments hierarchy");
+            _logger.LogError(e, "Failed to update departments hierarchy for Root {RootId}", root.Id.Value);
+
+            return Error.Failure(
+                DomainErrorCodes.Department.HierarchyUpdateFailed,
+                "Не удалось обновить иерархию департаментов. Пожалуйста, попробуйте позже.");
         }
+    }
+
+    private Error HandleUnexpectedDbError(Exception ex)
+    {
+        _logger.LogError(ex, "Unexpected database error while adding department");
+
+        return Error.Failure(
+            SharedErrorCodes.System.Database.OperationFailed,
+            "Произошла внутренняя ошибка. Пожалуйста, попробуйте позже.");
     }
 }

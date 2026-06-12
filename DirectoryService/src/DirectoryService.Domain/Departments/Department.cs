@@ -64,7 +64,7 @@ public sealed class Department : Entity
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return GeneralErrors.ValueIsEmpty("name");
+            return GeneralErrors.RequiredField("name");
         }
 
         if (name.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
@@ -82,34 +82,11 @@ public sealed class Department : Entity
         return new Department(id, name.Trim(), identifier, parent, updatePathResult.Value, depth, positions, locations);
     }
 
-    public UnitResult<Error> SetParent(Department? parent)
-    {
-        if (parent != null)
-        {
-            if (parent.Id == Id)
-            {
-                return Error.Conflict("set.parent.conflict", "parent cannot be a child himself");
-            }
-        }
-
-        Result<Path, Error> updatePathResult = SetPath(Parent, Identifier);
-        if (updatePathResult.IsFailure)
-        {
-            return updatePathResult.Error;
-        }
-
-        Path = updatePathResult.Value;
-        Parent = parent;
-        Depth = (short)((parent?.Depth ?? 0) + 1);
-        Update();
-        return UnitResult.Success<Error>();
-    }
-
     public Result<string, Error> Rename(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return GeneralErrors.ValueIsEmpty("name");
+            return GeneralErrors.RequiredField("name");
         }
 
         if (name.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
@@ -123,20 +100,6 @@ public sealed class Department : Entity
         return Name;
     }
 
-    public Result<Identifier, Error> SetIdentifier(Identifier identifier)
-    {
-        Result<Path, Error> updatePathResult = SetPath(Parent, identifier);
-        if (updatePathResult.IsFailure)
-        {
-            return updatePathResult.Error;
-        }
-
-        Path = updatePathResult.Value;
-        Identifier = identifier;
-        Update();
-        return identifier;
-    }
-
     public Result<int, Error> SetLocations(IEnumerable<DepartmentLocation> locations)
     {
         try
@@ -145,7 +108,7 @@ public sealed class Department : Entity
         }
         catch (Exception)
         {
-            return Error.Failure(string.Empty, "locations cannot be empty");
+            return GeneralErrors.RequiredField("locations");
         }
 
         Update();

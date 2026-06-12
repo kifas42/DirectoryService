@@ -27,7 +27,9 @@ public class TransactionScope : ITransactionScope
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to commit transaction");
-            return UnitResult.Failure(Error.Failure("transaction.commit.failed", "Failed to commit transaction"));
+            return UnitResult.Failure(Error.Failure(
+                SharedErrorCodes.System.Database.TransactionFailed,
+                "Произошла внутренняя ошибка сервера при сохранении данных. Пожалуйста, попробуйте позже."));
         }
     }
 
@@ -41,7 +43,7 @@ public class TransactionScope : ITransactionScope
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to rollback transaction");
-            return UnitResult.Failure(Error.Failure("transaction.rollback.failed", "Failed to rollback transaction"));
+            return UnitResult.Failure(Error.Failure(SharedErrorCodes.System.UnexpectedError, "Failed to rollback transaction"));
         }
     }
 

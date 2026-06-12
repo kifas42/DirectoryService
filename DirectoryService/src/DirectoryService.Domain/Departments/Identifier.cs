@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using CSharpFunctionalExtensions;
+using DirectoryService.Domain.Shared;
 using Shared;
 
 namespace DirectoryService.Domain.Departments;
@@ -15,14 +16,12 @@ public sealed record Identifier
     {
         if (string.IsNullOrWhiteSpace(identifier))
         {
-            return GeneralErrors.ValueIsEmpty("identifier");
+            return GeneralErrors.RequiredField("identifier");
         }
 
-        return _englishLetterRegex.IsMatch(identifier)
-            ? new Identifier(identifier.ToLower())
-            : Error.Validation(
-                "validation.is.eng",
-                "identifier must be only English letters and `-`.\nidentifier must be between 3 and 150 characters",
-                "identifier");
+        return Error.Validation(
+            DomainErrorCodes.Validation.InvalidIdentifierFormat,
+            "Идентификатор должен содержать только английские буквы и дефис (-), длина от 3 до 150 символов",
+            "identifier");
     }
 }

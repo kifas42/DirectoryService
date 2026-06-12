@@ -12,27 +12,19 @@ public class CreatePositionValidator : AbstractValidator<CreatePositionRequest>
     {
         RuleFor(x => x.Name)
             .Length(Constants.MIN_NAME_TEXT_LENGTH, Constants.MAX_NAME_TEXT_LENGTH)
-            .WithError(Error.Validation(
-                "create.position",
-                $"Название должно быть от {Constants.MIN_NAME_TEXT_LENGTH} до {Constants.MAX_NAME_TEXT_LENGTH} символов",
-                "Name"));
+            .WithError(GeneralErrors.LenghtIsInvalid(
+                "name",
+                min: Constants.MIN_NAME_TEXT_LENGTH,
+                max: Constants.MAX_NAME_TEXT_LENGTH));
+
         RuleFor(x => x.Description)
             .MaximumLength(Constants.MAX_TEXT_LENGTH)
-            .WithError(Error.Validation(
-                "create.position",
-                $"Описание не может превышать {Constants.MAX_TEXT_LENGTH} символов",
-                "Description"));
+            .WithError(GeneralErrors.LenghtIsInvalid(name: "description", max: Constants.MAX_TEXT_LENGTH));
 
         RuleFor(x => x.DepartmentIds)
             .NotEmpty()
-            .WithError(Error.Validation(
-                "create.position",
-                "Список позиций не должен быть пустым",
-                "PositionIds"))
+            .WithError(GeneralErrors.RequiredField("departmentIds"))
             .Must(items => items.Distinct().Count() == items.Length)
-            .WithError(Error.Validation(
-                "create.position",
-                "Список позиций не содержать дубликаты",
-                "PositionIds"));
+            .WithError(GeneralErrors.Duplicate("departmentIds", "департаментов"));
     }
 }

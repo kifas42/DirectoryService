@@ -6,6 +6,7 @@ using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
+using DirectoryService.Domain.Shared;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
@@ -70,7 +71,7 @@ public class UpdateLocationsHandler : ICommandHandler<int, UpdateLocationCommand
         if (!await _locationRepository.IsAllExistAndActive(locationIds))
         {
             transactionScope.Rollback();
-            return Error.NotFound("find.active.locations", "Locations not found");
+            return Error.NotFound(DomainErrorCodes.Location.NotFound, "Привязанные локации не существуют или не активны", "locationIds");
         }
 
         List<DepartmentLocation> departmentLocations = command.Request.LocationIds

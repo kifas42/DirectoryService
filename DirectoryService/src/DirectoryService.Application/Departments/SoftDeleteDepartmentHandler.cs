@@ -4,6 +4,7 @@ using DirectoryService.Application.Database;
 using DirectoryService.Application.Locations;
 using DirectoryService.Application.Positions;
 using DirectoryService.Domain.Departments;
+using DirectoryService.Domain.Shared;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Shared;
@@ -41,87 +42,118 @@ public class SoftDeleteDepartmentHandler : ICommandHandler<DeleteDepartmentComma
         DeleteDepartmentCommand command,
         CancellationToken cancellationToken)
     {
-        DepartmentId departmentId = new(command.DepartmentId);
+        var departmentId = new DepartmentId(command.DepartmentId);
 
-        Result<ITransactionScope, Error> transactionScopeResult =
-            await _transactionManager.BeginTransactionAsync(cancellationToken);
+        var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
         if (transactionScopeResult.IsFailure)
         {
             return transactionScopeResult.Error;
         }
 
-        // открыли транзакцию
-        using ITransactionScope? transactionScope = transactionScopeResult.Value;
+        using var transactionScope = transactionScopeResult.Value;
 
-        Result<Department, Error> departmentResult =
-            await _departmentRepository.GetBy(d => d.Id == departmentId, cancellationToken);
+        var departmentResult = await _departmentRepository.GetBy(d => d.Id == departmentId, cancellationToken);
 
         if (departmentResult.IsFailure)
         {
             _logger.LogError(
-                "Get department {departmentId} failed: {Error}",
+                "Failed to get department {DepartmentId} for deletion. Details: {@Error}",
                 departmentId.Value,
                 departmentResult.Error);
+
             transactionScope.Rollback();
             return departmentResult.Error;
         }
 
-        // Уже удаленный
-        if (!departmentResult.Value.IsActive)
+        var department = departmentResult.Value;
+
+        // 3. Проверка: уже удален
+        if (!department.IsActive)
         {
+            _logger.LogWarning(
+                "Attempted to delete already inactive department {DepartmentId} (Identifier: {Identifier})",
+                departmentId.Value,
+                department.Identifier.Value);
+
             transactionScope.Rollback();
-            _logger.LogError("Failed to delete department {Id}: Already deleted", departmentId.Value);
-            return Error.Conflict("already.deleted", "Failed to delete department: Already deleted");
+
+            return Error.Conflict(
+                DomainErrorCodes.Department.AlreadyDeleted,
+                "Департамент уже был удален ранее",
+                null);
         }
 
-        UnitResult<Error> updateResult = await _departmentRepository.SoftDeleteWithUpdatePath(
-            departmentResult.Value,
-            $"deleted-{departmentResult.Value.Identifier.Value}",
+        // 4. Soft delete департамента
+        var updateResult = await _departmentRepository.SoftDeleteWithUpdatePath(
+            department,
+            $"deleted-{department.Identifier.Value}",
             cancellationToken);
 
         if (updateResult.IsFailure)
         {
-            _logger.LogError("Update department {departmentId} failed: {Error}", departmentId.Value,
+            _logger.LogError(
+                "Failed to soft-delete department {DepartmentId}. Details: {@Error}",
+                departmentId.Value,
                 updateResult.Error);
             transactionScope.Rollback();
             return updateResult.Error;
         }
 
-        UnitResult<Error> updateLocationsResult =
-            await _locationRepository.SoftDeleteOrphans(departmentId, cancellationToken);
+        var updateLocationsResult = await _locationRepository.SoftDeleteOrphans(departmentId, cancellationToken);
 
         if (updateLocationsResult.IsFailure)
         {
-            _logger.LogError("Update locations failed: {Error}", updateLocationsResult.Error);
+            _logger.LogError(
+                "Failed to soft-delete orphan locations for department {DepartmentId}. Details: {@Error}",
+                departmentId.Value,
+                updateLocationsResult.Error);
             transactionScope.Rollback();
             return updateLocationsResult.Error;
         }
 
-        UnitResult<Error> updatePositionsResult =
-            await _positionRepository.SoftDeleteOrphans(departmentId, cancellationToken);
+        var updatePositionsResult = await _positionRepository.SoftDeleteOrphans(departmentId, cancellationToken);
 
         if (updatePositionsResult.IsFailure)
         {
-            _logger.LogError("Update positions failed: {Error}", updatePositionsResult.Error);
+            _logger.LogError(
+                "Failed to soft-delete orphan positions for department {DepartmentId}. Details: {@Error}",
+                departmentId.Value,
+                updatePositionsResult.Error);
             transactionScope.Rollback();
             return updatePositionsResult.Error;
         }
 
-        UnitResult<Error> result = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (result.IsFailure)
+        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
+        if (saveResult.IsFailure)
         {
-            _logger.LogError("Failed to SaveChanges for {DepartmentId}: {Error}", departmentId.Value, result.Error);
+            _logger.LogError(
+                "Failed to SaveChanges for department {DepartmentId}. Details: {@Error}",
+                departmentId.Value,
+                saveResult.Error);
             transactionScope.Rollback();
-            return Error.Failure("db.failure", "Failed to SaveChanges");
+
+            return Error.Failure(
+                SharedErrorCodes.System.Database.OperationFailed,
+                "Не удалось сохранить изменения в базе данных");
         }
 
-        UnitResult<Error> commitedResult = transactionScope.Commit();
-        if (commitedResult.IsFailure)
+        var commitResult = transactionScope.Commit();
+        if (commitResult.IsFailure)
         {
-            return commitedResult.Error;
+            _logger.LogError(
+                "Failed to commit transaction for department deletion {DepartmentId}. Details: {@Error}",
+                departmentId.Value,
+                commitResult.Error);
+            return commitResult.Error;
         }
 
         await _cache.RemoveByTagAsync(CacheConstants.DEPARTMENTS_TAG, cancellationToken);
+
+        _logger.LogInformation(
+            "Successfully deleted department {DepartmentId} (Identifier: {Identifier}, Name: {Name})",
+            departmentId.Value,
+            department.Identifier.Value,
+            department.Name);
 
         return UnitResult.Success<Error>();
     }
