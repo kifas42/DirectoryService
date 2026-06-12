@@ -21,10 +21,6 @@ export default function Locations() {
   const { locations, isPending, error, totalPages, totalCount, isError } =
     useLocationsLists({ page });
 
-  if (isPending) {
-    return <LocationTableSkeleton rows={5} />;
-  }
-
   if (isError) {
     const message = error ? error.message : "Не удалось загрузить данные";
 
@@ -60,6 +56,7 @@ export default function Locations() {
       >
         Создать
       </Button>
+      {isPending && <LocationTableSkeleton rows={5} />}
       {locations && <LocationTable locations={locations} />}
       <CreateLocationDialog open={open} onOpenChange={setOpen} />
     </>

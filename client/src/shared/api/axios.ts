@@ -5,6 +5,7 @@ import { EnvelopeError } from "./error";
 export const apiClient = axios.create({
   baseURL: "http://localhost:8001/api/",
   headers: { "Content-Type": "application/json" },
+  timeout: 15000,
 });
 
 apiClient.interceptors.response.use(
