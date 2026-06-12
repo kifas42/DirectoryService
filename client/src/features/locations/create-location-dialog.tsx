@@ -105,7 +105,7 @@ export function CreateLocationDialog({
 
             {/* Правая колонка */}
             <div
-              className={`flex flex-col gap-4" ${
+              className={`flex flex-col gap-4 ${
                 errors._addressGroupError
                   ? "border-destructive bg-destructive/10" // Красная рамка при ошибке группы
                   : "border-border"

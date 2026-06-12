@@ -19,9 +19,11 @@ public sealed record Identifier
             return GeneralErrors.RequiredField("identifier");
         }
 
-        return Error.Validation(
-            DomainErrorCodes.Validation.InvalidIdentifierFormat,
-            "Идентификатор должен содержать только английские буквы и дефис (-), длина от 3 до 150 символов",
-            "identifier");
+        return _englishLetterRegex.IsMatch(identifier)
+            ? new Identifier(identifier.ToLower())
+            : Error.Validation(
+                DomainErrorCodes.Validation.InvalidIdentifierFormat,
+                "Идентификатор должен содержать только английские буквы и дефис (-), длина от 3 до 150 символов",
+                "identifier");
     }
 }
