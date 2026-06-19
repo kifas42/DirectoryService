@@ -5,6 +5,7 @@ using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.Positions;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Positions;
+using DirectoryService.Domain.Shared;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -48,7 +49,10 @@ public sealed class CreatePositionHandler : ICommandHandler<Guid, CreatePosition
 
         if (!await _departmentRepository.IsAllExistAndActive(departmentIds))
         {
-            return Error.NotFound("find.active.departments", "Department not found");
+            return Error.NotFound(
+                DomainErrorCodes.Department.NotFound,
+                "Привязанные подразделения не существуют или не активны",
+                "departmentIds");
         }
 
         PositionId positionId = PositionId.New();

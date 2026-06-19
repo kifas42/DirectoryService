@@ -20,16 +20,31 @@ public class ExceptionMiddleware
         {
             await _next(httpContext);
         }
-        catch (Exception e)
+        catch (OperationCanceledException)
         {
-            _logger.LogError("{Message}", e.Message);
-            _logger.LogDebug("{Trace}", e.StackTrace);
+            _logger.LogInformation("Request was canceled for {RequestPath}", httpContext.Request.Path);
+
+            httpContext.Response.StatusCode = (int)HttpStatusCode.RequestTimeout;
+            var envelope = Envelope.Fail(Error.Failure(
+                SharedErrorCodes.System.OperationCanceled,
+                "Запрос был отменен"));
+            await httpContext.Response.WriteAsJsonAsync(envelope);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Unhandled exception occurred during {RequestMethod} {RequestPath}",
+                httpContext.Request.Method,
+                httpContext.Request.Path);
             httpContext.Response.ContentType = "application/json";
             httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-            Error err = Error.Failure("exception.middleware", e.Message);
+            var err = Error.Failure(
+                SharedErrorCodes.System.UnexpectedError,
+                "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
 
-            Envelope envelope = Envelope.Fail(err);
+            var envelope = Envelope.Fail(err);
             await httpContext.Response.WriteAsJsonAsync(envelope);
         }
     }

@@ -36,7 +36,7 @@ public sealed class Location : Entity
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return GeneralErrors.ValueIsEmpty("name");
+            return GeneralErrors.RequiredField("name");
         }
 
         if (name.Length is < MIN_LOW_LENGTH or > MAX_LOW_LENGTH)

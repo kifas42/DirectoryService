@@ -1,28 +1,44 @@
-import { locationsApi, locationsQueryOptions } from "@/entities/locations/api";
-import { queryClient } from "@/shared/api/query-client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { UseFormSetError } from "react-hook-form";
+import { locationsApi, locationsQueryOptions } from "@/entities/locations/api";
+import { queryClient } from "@/shared/api/query-client";
+import { handleApiError } from "@/shared/api/handle-api-error";
+import { CreateLocationFormValues } from "./types";
+import { locationErrorMap } from "../location-error-map";
 
-export function useCreateLocation() {
+interface UseCreateLocationOptions {
+  setError?: UseFormSetError<CreateLocationFormValues>;
+}
+
+export function useCreateLocation(options?: UseCreateLocationOptions) {
   const mutation = useMutation({
     mutationFn: locationsApi.createLocation,
-    onSettled: () =>
+    onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: [locationsQueryOptions.baseKey],
-      }),
-    onError: () => {
-      toast.error("Ошибка при создании");
+      });
     },
-
     onSuccess: () => {
-      toast.success("Локация создана");
+      toast.success("Локация успешно создана");
+    },
+    onError: (error) => {
+      if (options?.setError) {
+        handleApiError(error, options.setError, locationErrorMap);
+      } else {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Ошибка при создании локации",
+        );
+      }
     },
   });
 
   return {
     createLocation: mutation.mutate,
+    isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error,
-    isPending: mutation.isPending,
   };
 }

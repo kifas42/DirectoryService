@@ -3,6 +3,7 @@ using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Database;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Domain.Departments;
+using DirectoryService.Domain.Shared;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Shared;
@@ -70,7 +71,10 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
         if (parentId == departmentId)
         {
             transactionScope.Rollback();
-            return Error.Conflict("invalid.parent", "Не может быть сам себе родителем");
+            return Error.Conflict(
+                DomainErrorCodes.Department.SelfReferenceParent,
+                "Департамент не может быть родителем самого себя",
+                "parentId");
         }
 
         Department? newParent = null;
@@ -89,7 +93,10 @@ public class UpdateParentHandler : ICommandHandler<int, UpdateParentCommand>
             if (newParent.Path.Value.StartsWith(departmentResult.Value.Path.Value + "."))
             {
                 transactionScope.Rollback();
-                return Error.Failure("invalid.parent", "Нельзя переместить в своего потомка");
+                return Error.Conflict(
+                    DomainErrorCodes.Department.CyclicReference,
+                    "Нельзя переместить департамент в его собственного потомка",
+                    "parentId");
             }
         }
 

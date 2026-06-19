@@ -17,15 +17,19 @@ public record Timezone
 
     public static Result<Timezone, Error> Create(string value)
     {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return GeneralErrors.RequiredField("timezone");
+        }
+
         if (TZConvert.TryGetTimeZoneInfo(value, out TimeZoneInfo? timezone))
         {
             return new Timezone(value, timezone);
         }
 
-        IReadOnlyCollection<string> zones = TZConvert.KnownIanaTimeZoneNames;
         return Error.Validation(
-            "invalid.timezone",
-            "Invalid timezone. Available zones:\n" + string.Join("\n", zones),
-            "timeZone");
+            DomainErrorCodes.Validation.InvalidTimezone,
+            "Указан неверный часовой пояс. Используйте формат IANA (например, 'Europe/Moscow')",
+            "timezone");
     }
 }

@@ -30,7 +30,7 @@ public sealed record Path
     {
         if (path.Length == 0)
         {
-            return GeneralErrors.ValueIsEmpty("path");
+            return GeneralErrors.RequiredField("path");
         }
 
         return

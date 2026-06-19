@@ -42,7 +42,7 @@ public sealed class Position : Entity
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return GeneralErrors.ValueIsEmpty("name");
+            return GeneralErrors.RequiredField("name");
         }
 
         if (name.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.TEXT_100)

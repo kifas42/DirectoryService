@@ -12,30 +12,24 @@ public class CreateDepartmentValidator : AbstractValidator<CreateDepartmentReque
     {
         RuleFor(x => x.Name)
             .Length(Constants.MIN_NAME_TEXT_LENGTH, Constants.MAX_NAME_TEXT_LENGTH)
-            .WithError(Error.Validation(
-                "create.department",
-                $"Название должно быть от {Constants.MIN_NAME_TEXT_LENGTH} до {Constants.MAX_NAME_TEXT_LENGTH} символов",
-                "Name"));
+            .WithError(GeneralErrors.LenghtIsInvalid(
+                name: "name",
+                min: Constants.MIN_NAME_TEXT_LENGTH,
+                max: Constants.MAX_NAME_TEXT_LENGTH));
+
         RuleFor(x => x.Identifier)
             .Length(Constants.MIN_NAME_TEXT_LENGTH, Constants.MAX_NAME_TEXT_LENGTH)
-            .WithError(Error.Validation(
-                "create.department",
-                $"Идентификатор должен быть быть от {Constants.MIN_NAME_TEXT_LENGTH} до {Constants.MAX_NAME_TEXT_LENGTH} символов",
-                "Identifier"))
+            .WithError(GeneralErrors.LenghtIsInvalid("identifier", Constants.MIN_NAME_TEXT_LENGTH,
+                Constants.MAX_NAME_TEXT_LENGTH))
             .Matches("^[a-zA-Z\\-]+$").WithError(Error.Validation(
-                "create.department",
-                "Только латиница и знак `-`",
-                "Identifier"));
+                SharedErrorCodes.Validation.InvalidFormat,
+                "Допускаются только латинские буквы и дефис (-)",
+                "identifier"));
+
         RuleFor(x => x.LocationIds)
             .NotEmpty()
-            .WithError(Error.Validation(
-                "create.department",
-                "Список локаций не должен быть пустым",
-                "LocationIds"))
+            .WithError(GeneralErrors.RequiredField("locationIds"))
             .Must(items => items != null && items.Distinct().Count() == items.Length)
-            .WithError(Error.Validation(
-                "create.department",
-                "Список локаций не должен содержать дубликаты",
-                "LocationIds"));
+            .WithError(GeneralErrors.Duplicate("locationIds", "локаций"));
     }
 }

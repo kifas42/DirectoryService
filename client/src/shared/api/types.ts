@@ -5,10 +5,3 @@ export type PaginationResponse<T> = {
   pageSize: number;
   totalPages: number;
 };
-
-export interface ApiEnvelope<T = unknown> {
-  result: T | null;
-  error: string | null;
-  isError: boolean;
-  timeGenerated: string;
-}

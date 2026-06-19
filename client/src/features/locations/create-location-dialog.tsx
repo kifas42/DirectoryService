@@ -2,42 +2,23 @@ import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogTitle,
+  DialogFooter,
 } from "@/shared/components/ui/dialog";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { useCreateLocation } from "./model/use-create-location";
 import {
   Field,
-  FieldDescription,
+  FieldLabel,
   FieldError,
   FieldGroup,
-  FieldLabel,
 } from "@/shared/components/ui/field";
 import { Input } from "@/shared/components/ui/input";
 import { CreateLocationRequest } from "@/entities/locations/types";
-import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-const createLocationSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Имя обязательно")
-    .min(3, "Минимум 3 символа")
-    .max(200, "Не должно превышать 100 символов"),
-  officeNumber: z.string().min(1, "Укажите номер офиса/помещения"),
-  buildingNumber: z.string().min(1, "Укажите номер здания"),
-  street: z.string().min(1, "Укажите улицу"),
-  city: z.string().min(1, "Укажите город"),
-  country: z.string().min(1, "Укажите страну"),
-  timezone: z.string().min(1, "Выберите часовой пояс"),
-  stateOrProvince: z.string().optional(),
-  postalCode: z.string().optional(),
-});
-
-type CreateLocationFormValues = z.infer<typeof createLocationSchema>;
+import { CreateLocationFormValues, createLocationSchema } from "./model/types";
+import { AlertCircle } from "lucide-react";
 
 export function CreateLocationDialog({
   open,
@@ -63,12 +44,13 @@ export function CreateLocationDialog({
     handleSubmit,
     formState: { errors },
     reset,
+    setError,
   } = useForm<CreateLocationFormValues>({
     defaultValues: defaultData,
     resolver: zodResolver(createLocationSchema),
   });
 
-  const { createLocation, isPending, isError, error } = useCreateLocation();
+  const { createLocation, isPending } = useCreateLocation({ setError });
 
   const onSubmit = ({
     name,
@@ -91,7 +73,7 @@ export function CreateLocationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-187.5">
+      <DialogContent className="sm:max-w-150 w-[95vw] max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogTitle>Создание локации</DialogTitle>
 
@@ -122,7 +104,19 @@ export function CreateLocationDialog({
             </div>
 
             {/* Правая колонка */}
-            <div className="flex flex-col gap-4">
+            <div
+              className={`flex flex-col gap-4 ${
+                errors._addressGroupError
+                  ? "border-destructive bg-destructive/10" // Красная рамка при ошибке группы
+                  : "border-border"
+              }`}
+            >
+              {errors._addressGroupError && (
+                <p className="text-sm text-destructive font-medium mb-3 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  {errors._addressGroupError.message}
+                </p>
+              )}
               <FieldGroup>
                 <Field data-invalid={!!errors.officeNumber}>
                   <FieldLabel htmlFor="officeNumber">Номер офиса</FieldLabel>
@@ -194,7 +188,7 @@ export function CreateLocationDialog({
           </div>
 
           <DialogFooter className="flex flex-col sm:flex-row gap-4 items-center justify-between w-full">
-            <Field orientation="horizontal">
+            <div className="flex gap-4">
               <Button
                 type="button"
                 variant="outline"
@@ -207,13 +201,7 @@ export function CreateLocationDialog({
                 Создать
                 {isPending && <Spinner className="ml-2" />}
               </Button>
-            </Field>
-
-            {error && (
-              <div className="text-destructive text-sm font-medium">
-                {error.message}
-              </div>
-            )}
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

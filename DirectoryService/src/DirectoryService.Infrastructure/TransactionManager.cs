@@ -32,7 +32,7 @@ public class TransactionManager : ITransactionManager
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to begin transaction");
-            return Error.Failure("database", "Failed to begin transaction");
+            return Error.Failure(SharedErrorCodes.System.Database.TransactionFailed, "Failed to begin transaction");
         }
     }
 
@@ -45,7 +45,7 @@ public class TransactionManager : ITransactionManager
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to save changes");
-            return Error.Failure("database", "Failed to save changes");
+            return Error.Failure(SharedErrorCodes.System.Database.SaveChangesFailed, "Failed to save changes");
         }
 
         return UnitResult.Success<Error>();

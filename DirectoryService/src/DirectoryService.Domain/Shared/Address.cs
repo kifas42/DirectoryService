@@ -47,45 +47,45 @@ public record Address
     {
         if (string.IsNullOrWhiteSpace(officeNumber))
         {
-            return GeneralErrors.ValueIsEmpty(officeNumber);
+            return GeneralErrors.RequiredField(officeNumber);
         }
 
         if (string.IsNullOrWhiteSpace(buildingNumber))
         {
-            return GeneralErrors.ValueIsEmpty(buildingNumber);
+            return GeneralErrors.RequiredField(buildingNumber);
         }
 
         if (string.IsNullOrWhiteSpace(street))
         {
-            return GeneralErrors.ValueIsEmpty(street);
+            return GeneralErrors.RequiredField(street);
         }
 
         if (street.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
         {
             return GeneralErrors.LenghtIsInvalid(
-                street,
+                "street",
                 Constants.MIN_NAME_TEXT_LENGTH,
                 Constants.MAX_NAME_TEXT_LENGTH);
         }
 
         if (string.IsNullOrWhiteSpace(city))
         {
-            return GeneralErrors.ValueIsEmpty(city);
+            return GeneralErrors.RequiredField(city);
         }
 
         if (string.IsNullOrWhiteSpace(country))
         {
-            return GeneralErrors.ValueIsEmpty(country);
+            return GeneralErrors.RequiredField(country);
         }
 
         if (city.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
         {
-            return GeneralErrors.LenghtIsInvalid(nameof(city), Constants.MIN_NAME_TEXT_LENGTH, Constants.MAX_NAME_TEXT_LENGTH);
+            return GeneralErrors.LenghtIsInvalid("city", Constants.MIN_NAME_TEXT_LENGTH, Constants.MAX_NAME_TEXT_LENGTH);
         }
 
         if (country.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
         {
-            return GeneralErrors.LenghtIsInvalid(nameof(country), Constants.MIN_NAME_TEXT_LENGTH,
+            return GeneralErrors.LenghtIsInvalid("country", Constants.MIN_NAME_TEXT_LENGTH,
                 Constants.MAX_NAME_TEXT_LENGTH);
         }
 
@@ -103,7 +103,7 @@ public record Address
 
         if (!_internationalPostalcodeRegex.IsMatch(postalCode.Trim()))
         {
-            return Error.Validation("validation.wrong.regex", "wrong postal code", "postalCode");
+            return Error.Validation(DomainErrorCodes.Validation.InvalidPostalCodeFormat, "Некорректный формат индекса", "postalCode");
         }
 
         return new Address(

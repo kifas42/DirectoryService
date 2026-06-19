@@ -10,13 +10,7 @@ public class UpdateLocationsValidator : AbstractValidator<UpdateLocationsRequest
     public UpdateLocationsValidator() =>
         RuleFor(x => x.LocationIds)
             .NotEmpty()
-            .WithError(Error.Validation(
-                "update.locations",
-                "Список локаций не должен быть пустым",
-                "LocationIds"))
+            .WithError(GeneralErrors.RequiredField("locationIds"))
             .Must(items => items.Distinct().Count() == items.Length)
-            .WithError(Error.Validation(
-                "update.locations",
-                "Список локаций не должен содержать дубликаты",
-                "LocationIds"));
+            .WithError(GeneralErrors.Duplicate("locationIds", "локаций"));
 }
