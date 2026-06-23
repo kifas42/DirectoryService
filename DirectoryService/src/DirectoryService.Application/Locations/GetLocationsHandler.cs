@@ -2,6 +2,7 @@
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Database;
+using DirectoryService.Contracts;
 using DirectoryService.Contracts.Locations;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
@@ -12,13 +13,13 @@ namespace DirectoryService.Application.Locations;
 
 public record GetLocationQuery(GetLocationRequest Request) : IQuery;
 
-public class GetLocationsHandler : IQueryHandler<PaginationLocationResponse, GetLocationQuery>
+public class GetLocationsHandler : IQueryHandler<PaginationResponse<GetLocationDto>, GetLocationQuery>
 {
     private readonly IReadDbContext _readDbContext;
 
     public GetLocationsHandler(IReadDbContext readDbContext) => _readDbContext = readDbContext;
 
-    public async Task<Result<PaginationLocationResponse, Error>> Handle(
+    public async Task<Result<PaginationResponse<GetLocationDto>, Error>> Handle(
         GetLocationQuery locationQuery,
         CancellationToken cancellationToken)
     {
@@ -84,6 +85,6 @@ public class GetLocationsHandler : IQueryHandler<PaginationLocationResponse, Get
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return new PaginationLocationResponse(locations, locationsCount, page, pageSize, totalPages);
+        return new PaginationResponse<GetLocationDto>(locations, locationsCount, page, pageSize, totalPages);
     }
 }

@@ -27,8 +27,13 @@ public class ApplicationDbContext : DbContext, IReadDbContext
 
     public IQueryable<Location> LocationsRead => Set<Location>().AsNoTracking().AsQueryable();
 
+    public IQueryable<Position> PositionsRead => Set<Position>().AsNoTracking().AsQueryable();
+
     public IQueryable<DepartmentLocation> DepartmentLocationsRead =>
         Set<DepartmentLocation>().AsNoTracking().AsQueryable();
+
+    public IQueryable<DepartmentPosition> DepartmentPositionsRead =>
+        Set<DepartmentPosition>().AsNoTracking().AsQueryable();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

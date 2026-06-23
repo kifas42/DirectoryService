@@ -26,10 +26,3 @@ public record GetLocationDto
 
     public DateTime CreatedAt { get; init; }
 }
-
-public record PaginationLocationResponse(
-    IReadOnlyList<GetLocationDto> Items,
-    int TotalCount,
-    int Page,
-    int PageSize,
-    int TotalPages);

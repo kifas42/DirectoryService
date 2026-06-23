@@ -5,3 +5,8 @@ export type PaginationResponse<T> = {
   pageSize: number;
   totalPages: number;
 };
+
+export type InfinityScrollResponse<T> = {
+  items: T[];
+  nextCursor?: string;
+};

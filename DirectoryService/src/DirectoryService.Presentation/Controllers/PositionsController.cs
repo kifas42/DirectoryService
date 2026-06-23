@@ -1,5 +1,6 @@
 ﻿using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Positions;
+using DirectoryService.Contracts;
 using DirectoryService.Contracts.Positions;
 using DirectoryService.Presentation.EndpointResults;
 using Microsoft.AspNetCore.Mvc;
@@ -19,4 +20,11 @@ public class PositionsController : ControllerBase
         CreatePositionCommand command = new(positionRequest);
         return await handler.Handle(command, cancellationToken);
     }
+
+    [HttpGet]
+    public async Task<EndpointResult<InfiniteScrollResponse<GetPositionDto>>> Get(
+        [FromQuery] GetPositionRequest locationRequest,
+        [FromServices] IQueryHandler<InfiniteScrollResponse<GetPositionDto>, GetPositionQuery> handler,
+        CancellationToken cancellationToken) =>
+        await handler.Handle(new GetPositionQuery(locationRequest), cancellationToken);
 }
