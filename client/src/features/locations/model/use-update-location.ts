@@ -7,20 +7,20 @@ import { handleApiError } from "@/shared/api/handle-api-error";
 import { LocationFormValues } from "./types";
 import { locationErrorMap } from "../location-error-map";
 
-interface UseCreateLocationOptions {
+interface UseUpdateLocationOptions {
   setError?: UseFormSetError<LocationFormValues>;
 }
 
-export function useCreateLocation(options?: UseCreateLocationOptions) {
+export function useUpdateLocation(options?: UseUpdateLocationOptions) {
   const mutation = useMutation({
-    mutationFn: locationsApi.createLocation,
+    mutationFn: locationsApi.updateLocation,
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: [locationsQueryOptions.baseKey],
       });
     },
     onSuccess: () => {
-      toast.success("Локация успешно создана");
+      toast.success("Локация успешно изменена");
     },
     onError: (error) => {
       if (options?.setError) {
@@ -29,14 +29,14 @@ export function useCreateLocation(options?: UseCreateLocationOptions) {
         toast.error(
           error instanceof Error
             ? error.message
-            : "Ошибка при создании локации",
+            : "Ошибка при обновлении локации",
         );
       }
     },
   });
 
   return {
-    createLocation: mutation.mutate,
+    updateLocation: mutation.mutate,
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error,

@@ -1,6 +1,7 @@
 import { PaginationResponse } from "@/shared/api/types";
 import {
   CreateLocationRequest,
+  EditLocationRequest,
   GetLocationDto,
   GetLocationRequest,
 } from "./types";
@@ -27,6 +28,15 @@ export const locationsApi = {
 
     return response.data.result;
   },
+
+  updateLocation: async (request: EditLocationRequest) => {
+    const response = await apiClient.put<ApiEnvelope<string>>(
+      "/locations",
+      request,
+    );
+
+    return response.data.result;
+  },
 };
 
 export const locationsQueryOptions = {
@@ -40,8 +50,13 @@ export const locationsQueryOptions = {
   }) => {
     return queryOptions({
       queryFn: () =>
-        locationsApi.getLocations({ page: page, pageSize: pageSize }),
+        locationsApi.getLocations({
+          page: page,
+          pageSize: pageSize,
+          sortBy: "date",
+          sortOrder: "desc",
+        }),
       queryKey: [locationsQueryOptions.baseKey, page, pageSize],
-    });
+    }); // сделать переключатель фильтра
   },
 };

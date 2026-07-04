@@ -38,3 +38,7 @@ export interface CreateLocationRequest {
   address: AddressDto;
   timezone: string;
 }
+
+export interface EditLocationRequest extends CreateLocationRequest {
+  id: string;
+}

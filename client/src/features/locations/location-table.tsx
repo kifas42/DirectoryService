@@ -8,12 +8,20 @@ import {
 } from "@/shared/components/ui/table";
 import { Badge } from "@/shared/components/ui/badge";
 import { GetLocationDto } from "@/entities/locations/types";
+import { SquarePen, Trash2 } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
 
 interface LocationTableProps {
   locations: GetLocationDto[];
+  onEdit: (location: GetLocationDto) => void;
+  onDelete?: (location: GetLocationDto) => void;
 }
 
-export function LocationTable({ locations }: LocationTableProps) {
+export function LocationTable({
+  locations,
+  onEdit,
+  onDelete,
+}: LocationTableProps) {
   if (locations.length === 0) {
     return (
       <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
@@ -83,6 +91,18 @@ export function LocationTable({ locations }: LocationTableProps) {
                 <Badge variant={loc.isActive ? "default" : "secondary"}>
                   {loc.isActive ? "Активна" : "Неактивна"}
                 </Badge>
+              </TableCell>
+              <TableCell>
+                <Button
+                  variant="secondary"
+                  className="mx-2"
+                  onClick={() => onEdit(loc)}
+                >
+                  <SquarePen />
+                </Button>
+                <Button variant="destructive" className="mx-2">
+                  <Trash2 />
+                </Button>
               </TableCell>
             </TableRow>
           ))}
