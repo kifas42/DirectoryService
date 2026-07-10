@@ -20,6 +20,7 @@ public static class DataCreator
         string officeNumber)
     {
         Result<Location, Error> location = Location.Create(
+            LocationId.New(),
             name,
             Address.Create(
                 officeNumber,

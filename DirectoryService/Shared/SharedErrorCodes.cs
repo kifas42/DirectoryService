@@ -28,6 +28,8 @@ public static class SharedErrorCodes
             public static readonly ErrorCode TransactionFailed = new("system.database.transaction_failed");
 
             public static readonly ErrorCode SaveChangesFailed = new("system.database.save_failed");
+
+            public static readonly ErrorCode ConcurrencyConflict = new("system.database.concurrency_conflict");
         }
     }
 }

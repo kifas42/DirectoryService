@@ -27,4 +27,25 @@ public class LocationsController : ControllerBase
         [FromServices] IQueryHandler<PaginationResponse<GetLocationDto>, GetLocationQuery> handler,
         CancellationToken cancellationToken) =>
         await handler.Handle(new GetLocationQuery(locationRequest), cancellationToken);
+
+    [HttpPut("{id:guid}")]
+    public async Task<EndpointResult> Update(
+        [FromRoute] Guid id,
+        [FromBody] CreateLocationRequest locationRequest,
+        [FromServices] ICommandHandler<UpdateLocationCommand> handler,
+        CancellationToken cancellationToken)
+    {
+        UpdateLocationCommand command = new(id, locationRequest);
+        return await handler.Handle(command, cancellationToken);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<EndpointResult> Delete(
+        [FromRoute] Guid id,
+        [FromServices] ICommandHandler<DeleteLocationCommand> handler,
+        CancellationToken cancellationToken)
+    {
+        DeleteLocationCommand command = new(id);
+        return await handler.Handle(command, cancellationToken);
+    }
 }

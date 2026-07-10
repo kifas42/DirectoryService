@@ -12,9 +12,9 @@ public sealed class Location : Entity
 
     private Location() { }
 
-    private Location(string name, Address address, Timezone timezone)
+    private Location(LocationId id, string name, Address address, Timezone timezone)
     {
-        Id = new LocationId(Guid.NewGuid());
+        Id = id;
         Name = name;
         IsActive = true;
         Address = address;
@@ -30,6 +30,7 @@ public sealed class Location : Entity
     public Timezone Timezone { get; private set; } = null!;
 
     public static Result<Location, Error> Create(
+        LocationId id,
         string name,
         Address address,
         Timezone timezone)
@@ -44,6 +45,36 @@ public sealed class Location : Entity
             return GeneralErrors.LenghtIsInvalid("name", MIN_LOW_LENGTH, MAX_LOW_LENGTH);
         }
 
-        return new Location(name, address, timezone);
+        return new Location(id, name, address, timezone);
+    }
+
+    public void SetAddress(Address address)
+    {
+        Address = address;
+        Update();
+    }
+
+    public UnitResult<Error> SetName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return GeneralErrors.RequiredField("name");
+        }
+
+        if (name.Length is < MIN_LOW_LENGTH or > MAX_LOW_LENGTH)
+        {
+            return GeneralErrors.LenghtIsInvalid("name", MIN_LOW_LENGTH, MAX_LOW_LENGTH);
+        }
+
+        Name = name;
+
+        Update();
+        return UnitResult.Success<Error>();
+    }
+
+    public void SetTimeZone(Timezone timezone)
+    {
+        Timezone = timezone;
+        Update();
     }
 }

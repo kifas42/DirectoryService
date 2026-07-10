@@ -10,5 +10,10 @@ public abstract class Entity
 
     public DateTime? DeletedAt { get; protected set; }
 
-    protected void Update() => UpdatedAt = DateTime.UtcNow;
+    public uint Version { get; private set; }
+
+    protected void Update()
+    {
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

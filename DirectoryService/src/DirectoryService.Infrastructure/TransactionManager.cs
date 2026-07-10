@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using DirectoryService.Application.Database;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Shared;
@@ -41,13 +42,33 @@ public class TransactionManager : ITransactionManager
         try
         {
             await _context.SaveChangesAsync(cancellationToken);
+            return UnitResult.Success<Error>();
         }
-        catch (Exception e)
+        catch (DbUpdateConcurrencyException ex)
         {
-            _logger.LogError(e, "Failed to save changes");
-            return Error.Failure(SharedErrorCodes.System.Database.SaveChangesFailed, "Failed to save changes");
-        }
+            _logger.LogWarning(
+                ex,
+                "Concurrency conflict detected. Entities: {Entities}",
+                string.Join(", ", ex.Entries.Select(e => e.Entity.GetType().Name)));
 
-        return UnitResult.Success<Error>();
+            return Error.Conflict(
+                SharedErrorCodes.System.Database.ConcurrencyConflict,
+                "Запись была изменена другим пользователем. Обновите данные и попробуйте снова.");
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Database update error");
+            return Error.Failure(
+                SharedErrorCodes.System.Database.OperationFailed,
+                "Ошибка при сохранении в базу данных.");
+        }
+        catch (Exception ex)
+        {
+            // Неожиданные ошибки
+            _logger.LogError(ex, "Failed to save changes");
+            return Error.Failure(
+                SharedErrorCodes.System.Database.SaveChangesFailed,
+                "Не удалось сохранить изменения.");
+        }
     }
 }

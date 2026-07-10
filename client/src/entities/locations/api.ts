@@ -30,8 +30,8 @@ export const locationsApi = {
   },
 
   updateLocation: async (request: EditLocationRequest) => {
-    const response = await apiClient.put<ApiEnvelope<string>>(
-      "/locations",
+    const response = await apiClient.put<ApiEnvelope>(
+      `/locations/${request.id}`,
       request,
     );
 
