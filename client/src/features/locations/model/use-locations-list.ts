@@ -1,17 +1,30 @@
 import { locationsQueryOptions } from "@/entities/locations/api";
 import { EnvelopeError } from "@/shared/api/error";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-const PAGE_SIZE = 10;
-export function useLocationsLists({ page }: { page: number }) {
-  const {
-    data: data,
-    isPending,
-    error,
-    isError,
-  } = useQuery(
-    locationsQueryOptions.getLocationsOptions({ page, pageSize: PAGE_SIZE }),
-  );
+export function useLocationsLists({
+  page,
+  pageSize,
+  search,
+  sortBy,
+  sortOrder,
+}: {
+  page: number;
+  pageSize: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder: "asc" | "desc";
+}) {
+  const { data, isPending, error, isError, isPlaceholderData } = useQuery({
+    ...locationsQueryOptions.getLocationsOptions({
+      page,
+      pageSize,
+      search,
+      sortBy,
+      sortOrder,
+    }),
+    placeholderData: keepPreviousData,
+  });
 
   return {
     locations: data?.items,
@@ -21,5 +34,6 @@ export function useLocationsLists({ page }: { page: number }) {
     isPending,
     error: error instanceof EnvelopeError ? error : undefined,
     isError: isError,
+    isPlaceholderData,
   };
 }

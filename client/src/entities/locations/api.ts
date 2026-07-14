@@ -44,19 +44,33 @@ export const locationsQueryOptions = {
   getLocationsOptions: ({
     page,
     pageSize,
+    search,
+    sortBy,
+    sortOrder,
   }: {
     page: number;
     pageSize: number;
+    search?: string;
+    sortBy?: string;
+    sortOrder: "asc" | "desc";
   }) => {
     return queryOptions({
       queryFn: () =>
         locationsApi.getLocations({
           page: page,
+          search: search,
           pageSize: pageSize,
-          sortBy: "date",
-          sortOrder: "desc",
+          sortBy: sortBy,
+          sortOrder: sortOrder,
         }),
-      queryKey: [locationsQueryOptions.baseKey, page, pageSize],
-    }); // сделать переключатель фильтра
+      queryKey: [
+        locationsQueryOptions.baseKey,
+        page,
+        pageSize,
+        sortBy,
+        sortOrder,
+        search,
+      ],
+    });
   },
 };

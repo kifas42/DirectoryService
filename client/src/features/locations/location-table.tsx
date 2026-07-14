@@ -32,14 +32,17 @@ export function LocationTable({
 
   return (
     <div className="rounded-lg border bg-card">
-      <Table>
+      {/* table-layout: fixed гарантирует, что ширина колонок будет строго по Head */}
+      <Table className="table-fixed w-full">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead>Название</TableHead>
-            <TableHead>Адрес</TableHead>
-            <TableHead>Часовой пояс</TableHead>
-            <TableHead>Дата создания</TableHead>
-            <TableHead className="text-right">Статус</TableHead>
+            {/* Задаем фиксированную или процентную ширину каждой колонке */}
+            <TableHead className="w-[25%]">Название</TableHead>
+            <TableHead className="w-[35%]">Адрес</TableHead>
+            <TableHead className="w-[15%]">Часовой пояс</TableHead>
+            <TableHead className="w-[15%]">Дата создания</TableHead>
+            <TableHead className="w-[10%] text-right">Статус</TableHead>
+            <TableHead className="w-30"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -48,13 +51,15 @@ export function LocationTable({
               key={loc.id}
               className="hover:bg-muted/50 transition-colors"
             >
-              <TableCell className="font-medium max-w-55 truncate">
+              <TableCell className="font-medium truncate max-w-0">
                 {loc.name}
               </TableCell>
 
-              <TableCell>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm leading-none">{loc.street}</span>
+              <TableCell className="truncate max-w-0">
+                <div className="flex flex-col gap-0.5 truncate">
+                  <span className="text-sm leading-none truncate">
+                    {loc.street}
+                  </span>
                   {(loc.buildingNumber || loc.officeNumber) && (
                     <span className="text-xs text-muted-foreground">
                       {loc.buildingNumber}
@@ -62,7 +67,7 @@ export function LocationTable({
                       {loc.officeNumber}
                     </span>
                   )}
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground truncate">
                     {[loc.city, loc.stateOrProvince, loc.postalCode]
                       .filter(Boolean)
                       .join(", ")}
@@ -92,16 +97,22 @@ export function LocationTable({
                   {loc.isActive ? "Активна" : "Неактивна"}
                 </Badge>
               </TableCell>
-              <TableCell>
+
+              <TableCell className="text-right whitespace-nowrap">
                 <Button
                   variant="secondary"
-                  className="mx-2"
+                  size="icon"
+                  className="mr-2"
                   onClick={() => onEdit(loc)}
                 >
-                  <SquarePen />
+                  <SquarePen className="h-4 w-4" />
                 </Button>
-                <Button variant="destructive" className="mx-2">
-                  <Trash2 />
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => onDelete?.(loc)}
+                >
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </TableCell>
             </TableRow>

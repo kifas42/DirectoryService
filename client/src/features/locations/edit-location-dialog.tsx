@@ -12,12 +12,14 @@ interface EditLocationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   location: GetLocationDto;
+  resetSelected: () => void;
 }
 
 export function EditLocationDialog({
   open,
   onOpenChange,
   location,
+  resetSelected,
 }: EditLocationDialogProps) {
   const {
     control,
@@ -46,6 +48,7 @@ export function EditLocationDialog({
       onSuccess: () => {
         onOpenChange(false);
         reset();
+        resetSelected();
       },
     });
   };
