@@ -45,6 +45,18 @@ public record Address
         string country,
         string? postalCode)
     {
+        // normalize string.Empty to null
+        if (string.IsNullOrWhiteSpace(postalCode))
+        {
+            postalCode = null;
+        }
+
+        if (string.IsNullOrWhiteSpace(stateOrProvince))
+        {
+            stateOrProvince = null;
+        }
+
+
         if (string.IsNullOrWhiteSpace(officeNumber))
         {
             return GeneralErrors.RequiredField(officeNumber);
@@ -80,7 +92,8 @@ public record Address
 
         if (city.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
         {
-            return GeneralErrors.LenghtIsInvalid("city", Constants.MIN_NAME_TEXT_LENGTH, Constants.MAX_NAME_TEXT_LENGTH);
+            return GeneralErrors.LenghtIsInvalid("city", Constants.MIN_NAME_TEXT_LENGTH,
+                Constants.MAX_NAME_TEXT_LENGTH);
         }
 
         if (country.Length is < Constants.MIN_NAME_TEXT_LENGTH or > Constants.MAX_NAME_TEXT_LENGTH)
@@ -103,7 +116,8 @@ public record Address
 
         if (!_internationalPostalcodeRegex.IsMatch(postalCode.Trim()))
         {
-            return Error.Validation(DomainErrorCodes.Validation.InvalidPostalCodeFormat, "Некорректный формат индекса", "postalCode");
+            return Error.Validation(DomainErrorCodes.Validation.InvalidPostalCodeFormat, "Некорректный формат индекса",
+                "postalCode");
         }
 
         return new Address(

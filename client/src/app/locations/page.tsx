@@ -27,7 +27,11 @@ export default function Locations() {
   });
 
   const handleEditClick = (location: GetLocationDto) => {
-    setSelectedLocation(location);
+    setSelectedLocation({
+      ...location,
+      stateOrProvince: location.stateOrProvince ?? undefined,
+      postalCode: location.postalCode ?? undefined,
+    });
     setEditOpen(true);
   };
 
