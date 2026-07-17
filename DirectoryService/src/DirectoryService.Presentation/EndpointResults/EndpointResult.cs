@@ -24,6 +24,7 @@ public sealed class EndpointResult : IResult, IEndpointMetadataProvider
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.Metadata.Add(new ProducesResponseTypeMetadata(200, typeof(Envelope), ["application/json"]));
+        builder.Metadata.Add(new ProducesResponseTypeMetadata(204, typeof(Envelope), ["application/json"]));
         builder.Metadata.Add(new ProducesResponseTypeMetadata(500, typeof(Envelope), ["application/json"]));
         builder.Metadata.Add(new ProducesResponseTypeMetadata(400, typeof(Envelope), ["application/json"]));
         builder.Metadata.Add(new ProducesResponseTypeMetadata(404, typeof(Envelope), ["application/json"]));
@@ -56,6 +57,7 @@ public sealed class EndpointResult<TValue> : IResult, IEndpointMetadataProvider
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.Metadata.Add(new ProducesResponseTypeMetadata(200, typeof(Envelope<TValue>), ["application/json"]));
+        builder.Metadata.Add(new ProducesResponseTypeMetadata(204, typeof(Envelope<TValue>), ["application/json"]));
         builder.Metadata.Add(new ProducesResponseTypeMetadata(500, typeof(Envelope<TValue>), ["application/json"]));
         builder.Metadata.Add(new ProducesResponseTypeMetadata(400, typeof(Envelope<TValue>), ["application/json"]));
         builder.Metadata.Add(new ProducesResponseTypeMetadata(404, typeof(Envelope<TValue>), ["application/json"]));

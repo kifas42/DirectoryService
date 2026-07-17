@@ -12,4 +12,6 @@ public interface ILocationRepository
     Task<bool> IsAllExistAndActive(IEnumerable<LocationId> departmentIds);
 
     Task<UnitResult<Error>> SoftDeleteOrphans(DepartmentId departmentId, CancellationToken cancellationToken);
+
+    Task<Result<Location, Error>> GetAsync(LocationId locationId, CancellationToken cancellationToken);
 }

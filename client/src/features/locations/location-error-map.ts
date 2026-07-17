@@ -1,10 +1,7 @@
 import { Path } from "react-hook-form";
-import { CreateLocationFormValues } from "./model/types";
+import { LocationFormValues } from "./model/types";
 
-export const locationErrorMap: Record<
-  string,
-  Path<CreateLocationFormValues>
-> = {
+export const locationErrorMap: Record<string, Path<LocationFormValues>> = {
   "location.name.conflict": "name",
   "location.address.conflict": "_addressGroupError",
   "validation.timezone.invalid_format": "timezone",

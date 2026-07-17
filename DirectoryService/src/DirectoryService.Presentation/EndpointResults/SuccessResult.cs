@@ -7,7 +7,7 @@ public sealed class SuccessResult : IResult
         ArgumentNullException.ThrowIfNull(httpContext);
         Envelope envelope = Envelope.Ok();
 
-        httpContext.Response.StatusCode = StatusCodes.Status200OK;
+        httpContext.Response.StatusCode = StatusCodes.Status204NoContent;
         return httpContext.Response.WriteAsJsonAsync(envelope);
     }
 }

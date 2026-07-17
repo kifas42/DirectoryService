@@ -50,6 +50,7 @@ public sealed class CreateLocationHandler : ICommandHandler<Guid, CreateLocation
         Result<Timezone, Error> tzResult = Timezone.Create(command.LocationRequest.Timezone);
 
         Result<Location, Error> locationResult = Location.Create(
+            LocationId.New(),
             command.LocationRequest.Name,
             addressResult.Value,
             tzResult.Value);

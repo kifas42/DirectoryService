@@ -118,6 +118,15 @@ public sealed class LocationRepository : ILocationRepository
         }
     }
 
+    public async Task<Result<Location, Error>> GetAsync(LocationId locationId, CancellationToken cancellationToken)
+    {
+        var location = await _dbContext.Locations.FirstOrDefaultAsync(l => l.Id == locationId, cancellationToken);
+
+        if (location == null) return Error.NotFound();
+
+        return location;
+    }
+
     private Error HandleUnexpectedDbError(Exception ex)
     {
         _logger.LogError(ex, "Unexpected database error while adding location");

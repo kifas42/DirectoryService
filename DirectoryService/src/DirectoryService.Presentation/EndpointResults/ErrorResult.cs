@@ -10,13 +10,8 @@ public sealed class ErrorResult : IResult
 
     public Task ExecuteAsync(HttpContext httpContext)
     {
-        if (!_error.Messages.Any())
-        {
-            httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            return httpContext.Response.WriteAsJsonAsync(Envelope.Fail(_error));
-        }
-
         int statusCode = GetStatusCodeFromErrorType(_error.Type);
+
         Envelope envelope = Envelope.Fail(_error);
 
         httpContext.Response.StatusCode = statusCode;
@@ -31,7 +26,7 @@ public sealed class ErrorResult : IResult
             ErrorType.NOT_FOUND => StatusCodes.Status404NotFound,
             ErrorType.CONFLICT => StatusCodes.Status409Conflict,
             ErrorType.FAILURE => StatusCodes.Status500InternalServerError,
-            ErrorType.AUTHENTIFICATION => StatusCodes.Status401Unauthorized,
+            ErrorType.AUTHENTICATION => StatusCodes.Status401Unauthorized,
             ErrorType.AUTHORIZATION => StatusCodes.Status403Forbidden,
             _ => StatusCodes.Status500InternalServerError
         };

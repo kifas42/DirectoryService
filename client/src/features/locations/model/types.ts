@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const createLocationSchema = z.object({
+export const locationSchema = z.object({
   name: z
     .string()
     .min(1, "Имя обязательно")
@@ -17,4 +17,13 @@ export const createLocationSchema = z.object({
   _addressGroupError: z.string().optional(),
 });
 
-export type CreateLocationFormValues = z.infer<typeof createLocationSchema>;
+export type LocationFormValues = z.infer<typeof locationSchema>;
+
+export interface DataTableFilterParams {
+  page: number;
+  pageSize: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder: "asc" | "desc";
+  isActive?: boolean;
+}

@@ -1,29 +1,26 @@
-import { useCreateLocation } from "./model/use-create-location";
-import { CreateLocationRequest } from "@/entities/locations/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LocationFormValues, locationSchema } from "./model/types";
 import { LocationForm } from "./location-form";
+import {
+  EditLocationRequest,
+  GetLocationDto,
+} from "@/entities/locations/types";
+import { useUpdateLocation } from "./model/use-update-location";
 
-export function CreateLocationDialog({
-  open,
-  onOpenChange,
-}: {
+interface EditLocationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}) {
-  const defaultData: LocationFormValues = {
-    name: "",
-    officeNumber: "",
-    buildingNumber: "",
-    street: "",
-    city: "",
-    stateOrProvince: undefined,
-    country: "",
-    postalCode: undefined,
-    timezone: "Europe/Moscow",
-  };
+  location: GetLocationDto;
+  resetSelected: () => void;
+}
 
+export function EditLocationDialog({
+  open,
+  onOpenChange,
+  location,
+  resetSelected,
+}: EditLocationDialogProps) {
   const {
     control,
     handleSubmit,
@@ -31,27 +28,27 @@ export function CreateLocationDialog({
     reset,
     setError,
   } = useForm<LocationFormValues>({
-    defaultValues: defaultData,
     resolver: zodResolver(locationSchema),
+    defaultValues: location,
   });
-
-  const { createLocation, isPending } = useCreateLocation({ setError });
-
+  const { updateLocation, isPending } = useUpdateLocation({ setError });
   const onSubmit = ({
     name,
     timezone,
     ...addressFields
   }: LocationFormValues) => {
-    const request: CreateLocationRequest = {
+    const request: EditLocationRequest = {
+      id: location.id,
       name,
       timezone,
       address: addressFields,
     };
 
-    createLocation(request, {
+    updateLocation(request, {
       onSuccess: () => {
         onOpenChange(false);
         reset();
+        resetSelected();
       },
     });
   };
@@ -60,8 +57,8 @@ export function CreateLocationDialog({
     <LocationForm
       open={open}
       onOpenChange={onOpenChange}
-      title="Создание локации"
-      submitText="Создать"
+      title="Редактирование локации"
+      submitText="Сохранить"
       isPending={isPending}
       onSubmit={handleSubmit(onSubmit)}
       onReset={() => reset()}

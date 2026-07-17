@@ -33,6 +33,7 @@ public static class DomainErrorCodes
         public static readonly ErrorCode NameConflict = new("location.name.conflict");
         public static readonly ErrorCode AddressConflict = new("location.address.conflict");
         public static readonly ErrorCode OrphanDeleteFailed = new("location.delete.orphans_failed");
+        public static readonly ErrorCode DeleteFailed = new("location.delete.failed");
     }
 
     public static class Position

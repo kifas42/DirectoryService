@@ -17,6 +17,7 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
         builder.Property(e => e.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(e => e.UpdatedAt).HasColumnName("updated_at").IsRequired();
         builder.Property(e => e.DeletedAt).HasColumnName("deleted_at").IsRequired(false);
+        builder.Property(e => e.Version).IsRowVersion();
 
         // Location
         builder.Property(l => l.Id)
