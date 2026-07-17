@@ -1,8 +1,7 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { UseFormSetError } from "react-hook-form";
 import { locationsApi, locationsQueryOptions } from "@/entities/locations/api";
-import { queryClient } from "@/shared/api/query-client";
 import { handleApiError } from "@/shared/api/handle-api-error";
 import { LocationFormValues } from "./types";
 import { locationErrorMap } from "../location-error-map";
@@ -12,6 +11,8 @@ interface UseUpdateLocationOptions {
 }
 
 export function useUpdateLocation(options?: UseUpdateLocationOptions) {
+  const queryClient = useQueryClient();
+
   const mutation = useMutation({
     mutationFn: locationsApi.updateLocation,
     onSettled: () => {

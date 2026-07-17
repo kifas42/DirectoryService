@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Search, ArrowDownAZ, ArrowUpZA } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 
 interface FilterBarProps {
   search?: string;
@@ -17,6 +18,8 @@ interface FilterBarProps {
   onSortByChange: (value: string) => void;
   sortOrder: "asc" | "desc";
   onSortOrderChange: (value: "asc" | "desc") => void;
+  isActive?: boolean;
+  onIsActiveChange: (value: boolean | undefined) => void;
   children?: React.ReactNode;
 }
 
@@ -27,6 +30,8 @@ export function FilterBar({
   onSortByChange,
   sortOrder,
   onSortOrderChange,
+  isActive,
+  onIsActiveChange,
   children,
 }: FilterBarProps) {
   return (
@@ -73,6 +78,21 @@ export function FilterBar({
             <ArrowUpZA className="h-4 w-4" />
           )}
         </Button>
+
+        <Tabs
+          value={isActive === undefined ? "all" : String(isActive)}
+          onValueChange={(val) => {
+            if (val === "all") onIsActiveChange(undefined);
+            else onIsActiveChange(val === "true");
+          }}
+          className="w-full sm:w-auto shrink-0"
+        >
+          <TabsList className="grid w-full grid-cols-3 sm:w-75">
+            <TabsTrigger value="all">Все</TabsTrigger>
+            <TabsTrigger value="true">Активные</TabsTrigger>
+            <TabsTrigger value="false">Удаленные</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
     </div>
   );

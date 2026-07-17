@@ -13,12 +13,16 @@ import { Button } from "@/shared/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useDataFilters } from "@/hooks/use-data-filters";
+import useDeleteLocation from "@/features/locations/model/use-delete-location";
+import DeleteLocationDialog from "@/features/locations/delete-location-dialog";
 
 const PAGE_SIZE = 8;
 
 export default function Locations() {
-  const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
   const [selectedLocation, setSelectedLocation] =
     useState<GetLocationDto | null>(null);
 
@@ -35,6 +39,11 @@ export default function Locations() {
     setEditOpen(true);
   };
 
+  const handleDeleteClick = (location: GetLocationDto) => {
+    setSelectedLocation(location);
+    setDeleteOpen(true);
+  };
+
   const {
     locations,
     isPending,
@@ -43,6 +52,16 @@ export default function Locations() {
     isError,
     isPlaceholderData,
   } = useLocationsLists(filters.apiParams);
+
+  const { deleteLocation, isPending: isDeletePending } = useDeleteLocation();
+
+  const handleConfirmDelete = () => {
+    if (!selectedLocation) return;
+
+    deleteLocation(selectedLocation);
+    setDeleteOpen(false);
+    setSelectedLocation(null);
+  };
 
   if (isError) {
     console.error(error);
@@ -64,11 +83,13 @@ export default function Locations() {
           onSortByChange={filters.handleSortByChange}
           sortOrder={filters.sortOrder}
           onSortOrderChange={filters.handleSortOrderChange}
+          isActive={filters.isActive}
+          onIsActiveChange={filters.handleIsActiveChange}
         >
           <Button
             size="lg"
             className="shadow-md hover:shadow-lg transition-shadow"
-            onClick={() => setOpen(true)}
+            onClick={() => setCreateOpen(true)}
           >
             <Plus className="mr-2 h-5 w-5" />
             Создать новую локацию
@@ -87,7 +108,11 @@ export default function Locations() {
         )}
 
         {locations && (
-          <LocationTable locations={locations} onEdit={handleEditClick} />
+          <LocationTable
+            locations={locations}
+            onEdit={handleEditClick}
+            onDelete={handleDeleteClick}
+          />
         )}
 
         <DataTablePagination
@@ -99,14 +124,25 @@ export default function Locations() {
         />
       </div>
 
-      <CreateLocationDialog open={open} onOpenChange={setOpen} />
+      <CreateLocationDialog open={createOpen} onOpenChange={setCreateOpen} />
+
       {selectedLocation && (
         <EditLocationDialog
-          key={selectedLocation.id}
+          key={`edit-${selectedLocation.id}`}
           open={editOpen}
           onOpenChange={setEditOpen}
           location={selectedLocation}
           resetSelected={() => setSelectedLocation(null)}
+        />
+      )}
+      {selectedLocation && deleteOpen && (
+        <DeleteLocationDialog
+          key={`delete-${selectedLocation.id}`}
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          location={selectedLocation}
+          onConfirm={handleConfirmDelete}
+          isPending={isDeletePending}
         />
       )}
     </>

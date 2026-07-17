@@ -1,3 +1,4 @@
+import { DataTableFilterParams } from "@/features/locations/model/types";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
 
@@ -15,6 +16,7 @@ export function useDataFilters(options: UseDataTableFiltersOptions = {}) {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">(
     options.initialSortOrder ?? "desc",
   );
+  const [isActive, setIsActive] = useState<boolean | undefined>(true);
 
   // Дебаунсим поиск для отправки на бэкенд
   const [debouncedSearch] = useDebounce(search, 500);
@@ -35,12 +37,26 @@ export function useDataFilters(options: UseDataTableFiltersOptions = {}) {
     setPage(1);
   };
 
+  const handleIsActiveChange = (value: boolean | undefined) => {
+    setIsActive(value);
+    setPage(1);
+  };
+
   // Методы навигации, которые знают про верхнюю границу страниц
   const handleNextPage = (maxPages: number) => {
     if (page < maxPages) setPage((prev) => prev + 1);
   };
   const handlePrevPage = () => {
     if (page > 1) setPage((prev) => prev - 1);
+  };
+
+  const apiParams: DataTableFilterParams = {
+    page,
+    pageSize,
+    search: debouncedSearch,
+    sortBy,
+    sortOrder,
+    isActive,
   };
 
   return {
@@ -51,6 +67,8 @@ export function useDataFilters(options: UseDataTableFiltersOptions = {}) {
     handleSearchChange,
     handleSortByChange,
     handleSortOrderChange,
+    isActive,
+    handleIsActiveChange,
 
     // 2. Для DataTablePagination (чистые готовые методы без параметров)
     currentPage: page,
@@ -59,12 +77,6 @@ export function useDataFilters(options: UseDataTableFiltersOptions = {}) {
     handlePrevPage,
 
     // 3. Параметры для передачи в ЛЮБОЙ хук данных / useQuery
-    apiParams: {
-      page,
-      pageSize,
-      search: debouncedSearch,
-      sortBy,
-      sortOrder,
-    },
+    apiParams,
   };
 }

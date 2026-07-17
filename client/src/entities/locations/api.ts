@@ -1,6 +1,7 @@
 import { PaginationResponse } from "@/shared/api/types";
 import {
   CreateLocationRequest,
+  DeleteLocationRequest,
   EditLocationRequest,
   GetLocationDto,
   GetLocationRequest,
@@ -8,6 +9,7 @@ import {
 import { apiClient } from "@/shared/api/axios";
 import { queryOptions } from "@tanstack/react-query";
 import { ApiEnvelope } from "@/shared/api/envelope";
+import { DataTableFilterParams } from "@/features/locations/model/types";
 
 export const locationsApi = {
   getLocations: async (request: GetLocationRequest) => {
@@ -37,40 +39,22 @@ export const locationsApi = {
 
     return response.data.result;
   },
+
+  deleteLocation: async (request: DeleteLocationRequest) => {
+    const response = await apiClient.delete<ApiEnvelope>(
+      `/locations/${request.id}`,
+    );
+
+    return response.data.result;
+  },
 };
 
 export const locationsQueryOptions = {
   baseKey: "locations",
-  getLocationsOptions: ({
-    page,
-    pageSize,
-    search,
-    sortBy,
-    sortOrder,
-  }: {
-    page: number;
-    pageSize: number;
-    search?: string;
-    sortBy?: string;
-    sortOrder: "asc" | "desc";
-  }) => {
+  getLocationsOptions: (params: DataTableFilterParams) => {
     return queryOptions({
-      queryFn: () =>
-        locationsApi.getLocations({
-          page: page,
-          search: search,
-          pageSize: pageSize,
-          sortBy: sortBy,
-          sortOrder: sortOrder,
-        }),
-      queryKey: [
-        locationsQueryOptions.baseKey,
-        page,
-        pageSize,
-        sortBy,
-        sortOrder,
-        search,
-      ],
+      queryFn: () => locationsApi.getLocations(params),
+      queryKey: [locationsQueryOptions.baseKey, ...Object.values(params)],
     });
   },
 };

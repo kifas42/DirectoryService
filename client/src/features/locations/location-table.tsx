@@ -13,7 +13,7 @@ import { Button } from "@/shared/components/ui/button";
 
 interface LocationTableProps {
   locations: GetLocationDto[];
-  onEdit: (location: GetLocationDto) => void;
+  onEdit?: (location: GetLocationDto) => void;
   onDelete?: (location: GetLocationDto) => void;
 }
 
@@ -103,7 +103,7 @@ export function LocationTable({
                   variant="secondary"
                   size="icon"
                   className="mr-2"
-                  onClick={() => onEdit(loc)}
+                  onClick={() => onEdit?.(loc)}
                 >
                   <SquarePen className="h-4 w-4" />
                 </Button>
@@ -111,6 +111,7 @@ export function LocationTable({
                   variant="destructive"
                   size="icon"
                   onClick={() => onDelete?.(loc)}
+                  disabled={!loc.isActive}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

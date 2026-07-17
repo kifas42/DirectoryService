@@ -18,3 +18,12 @@ export const locationSchema = z.object({
 });
 
 export type LocationFormValues = z.infer<typeof locationSchema>;
+
+export interface DataTableFilterParams {
+  page: number;
+  pageSize: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder: "asc" | "desc";
+  isActive?: boolean;
+}

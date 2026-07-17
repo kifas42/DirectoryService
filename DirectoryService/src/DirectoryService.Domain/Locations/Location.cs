@@ -77,4 +77,16 @@ public sealed class Location : Entity
         Timezone = timezone;
         Update();
     }
+
+    public UnitResult<Error> SoftDelete()
+    {
+        if (!IsActive)
+        {
+            return Error.Conflict(DomainErrorCodes.Location.DeleteFailed, $"Локация {Id.Value} уже удалена");
+        }
+
+        IsActive = false;
+        Update();
+        return UnitResult.Success<Error>();
+    }
 }
