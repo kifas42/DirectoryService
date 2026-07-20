@@ -1,4 +1,5 @@
 import { SidebarTrigger } from "@/shared/components/ui/sidebar";
+import { ModeToggle } from "../theme/mode-toggle";
 
 export default function Header() {
   return (
@@ -13,7 +14,7 @@ export default function Header() {
 
       {/* Правая часть */}
       <div className="flex items-center gap-4">
-        {/* Сюда можно добавить поиск, уведомления или ThemeToggle */}
+        <ModeToggle />
         <button className="text-sm font-medium hover:underline">Профиль</button>
         <div className="h-8 w-8 rounded-full bg-muted" />{" "}
         {/* Заглушка под аватар */}
