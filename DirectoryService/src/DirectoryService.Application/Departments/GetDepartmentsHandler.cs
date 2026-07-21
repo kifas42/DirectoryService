@@ -86,7 +86,7 @@ public class GetDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetDepar
 
         if (departmentsQuery.Request.IsActive.HasValue)
         {
-            query = query.Where(l => l.IsActive == departmentsQuery.Request.IsActive);
+            query = query.Where(d => d.IsActive == departmentsQuery.Request.IsActive);
         }
 
         if (departmentsQuery.Request.ExcludeIds != null && departmentsQuery.Request.ExcludeIds.Length != 0)
