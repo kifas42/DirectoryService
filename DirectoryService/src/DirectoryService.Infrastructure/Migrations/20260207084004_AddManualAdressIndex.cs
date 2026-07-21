@@ -12,7 +12,7 @@ namespace DirectoryService.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql($@"
-                CREATE UNIQUE INDEX IF NOT EXISTS {IndexConstants.ADDRESS} 
+                CREATE UNIQUE INDEX IF NOT EXISTS {IndexConstants.LOCATION_ADDRESS} 
                 ON locations (timezone, building_number, city, country, office_number, postal_code, state_or_province, street);
             ");
         }
@@ -21,7 +21,7 @@ namespace DirectoryService.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(@$"
-                DROP INDEX IF EXISTS {IndexConstants.ADDRESS};
+                DROP INDEX IF EXISTS {IndexConstants.LOCATION_ADDRESS};
             ");
         }
     }

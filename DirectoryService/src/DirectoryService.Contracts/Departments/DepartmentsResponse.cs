@@ -1,6 +1,8 @@
 ﻿namespace DirectoryService.Contracts.Departments;
 
-public record DepartmentsResponse(IReadOnlyList<DepartmentDto> Departments);
+public record DepartmentsResponse(
+    IReadOnlyList<DepartmentDto> Departments,
+    int TotalCount);
 
 public class DepartmentDto
 {
@@ -21,6 +23,8 @@ public class DepartmentDto
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }
+
+    public DateTime? DeletedAt { get; set; }
 
     public List<DepartmentDto> Children { get; set; } = [];
 

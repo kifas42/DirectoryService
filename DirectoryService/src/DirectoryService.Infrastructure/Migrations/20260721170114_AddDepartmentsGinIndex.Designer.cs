@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using DirectoryService.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DirectoryService.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260721170114_AddDepartmentsGinIndex")]
+    partial class AddDepartmentsGinIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,10 +62,6 @@ namespace DirectoryService.Infrastructure.Migrations
                         .HasColumnType("character varying(150)")
                         .HasColumnName("name");
 
-                    b.Property<Guid?>("ParentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("parent_id");
-
                     b.Property<string>("Path")
                         .IsRequired()
                         .HasColumnType("ltree")
@@ -78,6 +77,9 @@ namespace DirectoryService.Infrastructure.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
+                    b.Property<Guid?>("parent_id")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id")
                         .HasName("pk_department");
 
@@ -91,13 +93,12 @@ namespace DirectoryService.Infrastructure.Migrations
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Name"), "gin");
                     NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Name"), new[] { "gin_trgm_ops" });
 
-                    b.HasIndex("ParentId")
-                        .HasDatabaseName("ix_departments_parent_id");
-
                     b.HasIndex("Path")
                         .HasDatabaseName("ix_departments_path");
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Path"), "gist");
+
+                    b.HasIndex("parent_id");
 
                     b.ToTable("departments", (string)null);
                 });
@@ -300,7 +301,7 @@ namespace DirectoryService.Infrastructure.Migrations
                 {
                     b.HasOne("DirectoryService.Domain.Departments.Department", "Parent")
                         .WithMany()
-                        .HasForeignKey("ParentId");
+                        .HasForeignKey("parent_id");
 
                     b.Navigation("Parent");
                 });

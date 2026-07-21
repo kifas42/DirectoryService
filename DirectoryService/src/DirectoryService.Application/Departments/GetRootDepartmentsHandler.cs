@@ -119,6 +119,6 @@ public class GetRootDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetR
             }
         }
 
-        return new DepartmentsResponse(roots);
+        return new DepartmentsResponse(roots, roots.Count);
     }
 }

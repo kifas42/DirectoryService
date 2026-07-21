@@ -10,6 +10,8 @@ public interface IReadDbContext
 
     IQueryable<Position> PositionsRead { get; }
 
+    IQueryable<Department> DepartmentsRead { get; }
+
     IQueryable<DepartmentLocation> DepartmentLocationsRead { get; }
 
     IQueryable<DepartmentPosition> DepartmentPositionsRead { get; }

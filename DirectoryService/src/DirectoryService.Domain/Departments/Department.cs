@@ -19,6 +19,7 @@ public sealed class Department : Entity
         string name,
         Identifier identifier,
         Department? parent,
+        DepartmentId? parentId,
         Path path,
         short depth,
         IEnumerable<DepartmentPosition> positions,
@@ -27,6 +28,7 @@ public sealed class Department : Entity
         Id = id;
         Name = name;
         Identifier = identifier;
+        ParentId = parentId;
         Parent = parent;
         Path = path;
         Depth = depth;
@@ -42,6 +44,8 @@ public sealed class Department : Entity
     public string Name { get; private set; } = string.Empty;
 
     public Identifier Identifier { get; private set; } = null!;
+
+    public DepartmentId? ParentId { get; private set; }
 
     public Department? Parent { get; private set; }
 
@@ -79,7 +83,7 @@ public sealed class Department : Entity
             return updatePathResult.Error;
         }
 
-        return new Department(id, name.Trim(), identifier, parent, updatePathResult.Value, depth, positions, locations);
+        return new Department(id, name.Trim(), identifier, parent, parent?.Id, updatePathResult.Value, depth, positions, locations);
     }
 
     public Result<string, Error> Rename(string name)

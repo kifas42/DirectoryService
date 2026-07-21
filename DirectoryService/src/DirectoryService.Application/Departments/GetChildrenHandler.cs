@@ -69,6 +69,6 @@ public class GetChildrenHandler : IQueryHandler<DepartmentsResponse, GetChildDep
             }
         }
 
-        return new DepartmentsResponse(roots);
+        return new DepartmentsResponse(roots, roots.Count);
     }
 }

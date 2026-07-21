@@ -46,15 +46,26 @@ public sealed class DepartmentConfiguration : IEntityTypeConfiguration<Departmen
         builder.Property(d => d.Depth)
             .HasColumnName("depth")
             .IsRequired();
+        builder.Property(d => d.ParentId)
+            .HasColumnName("parent_id")
+            .HasConversion(
+                value => value != null ? value.Value : (Guid?)null,
+                value => value.HasValue ? new DepartmentId(value.Value) : null)
+            .IsRequired(false);
         builder.HasOne(d => d.Parent)
             .WithMany()
-            .HasForeignKey("parent_id")
+            .HasForeignKey(d => d.ParentId)
             .IsRequired(false);
 
         builder.HasIndex(d => d.Identifier)
             .IsUnique()
             .HasDatabaseName(IndexConstants.DEPARTMENT_IDENTIFIER);
 
+        builder.HasIndex(d => d.ParentId)
+            .HasDatabaseName(IndexConstants.DEPARTMENT_PARENT_ID);
+
         builder.HasIndex(d => d.Path).HasMethod("gist").HasDatabaseName(IndexConstants.DEPARTMENT_PATH);
+        builder.HasIndex(d => d.Name).HasMethod("gin").HasOperators("gin_trgm_ops")
+            .HasDatabaseName(IndexConstants.DEPARTMENT_NAME);
     }
 }

@@ -39,13 +39,13 @@ public sealed class LocationRepository : ILocationRepository
             return pgEx switch
             {
                 { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null }
-                    when pgEx.ConstraintName.Contains(IndexConstants.NAME, StringComparison.OrdinalIgnoreCase) =>
+                    when pgEx.ConstraintName.Contains(IndexConstants.LOCATION_NAME, StringComparison.OrdinalIgnoreCase) =>
                     Error.Conflict(
                         DomainErrorCodes.Location.NameConflict,
                         "Локация с таким названием уже существует",
                         "name"),
                 { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: not null }
-                    when pgEx.ConstraintName.Contains(IndexConstants.ADDRESS, StringComparison.OrdinalIgnoreCase) =>
+                    when pgEx.ConstraintName.Contains(IndexConstants.LOCATION_ADDRESS, StringComparison.OrdinalIgnoreCase) =>
                     Error.Conflict(
                         DomainErrorCodes.Location.AddressConflict,
                         "Локация с таким адресом уже существует",
