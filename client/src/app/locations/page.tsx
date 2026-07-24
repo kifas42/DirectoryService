@@ -63,14 +63,8 @@ export default function Locations() {
     setSelectedLocation(null);
   };
 
-  if (isError) {
+  if (isError && error) {
     console.error(error);
-    return (
-      <QueryErrorAlert
-        message={error ? error.message : "Не удалось загрузить данные"}
-        queryKey={["locations"]}
-      />
-    );
   }
 
   return (
@@ -105,6 +99,13 @@ export default function Locations() {
       >
         {isPending && (
           <LocationTableSkeleton rows={filters.apiParams.pageSize} />
+        )}
+
+        {isError && (
+          <QueryErrorAlert
+            message={error ? error.message : "Не удалось загрузить данные"}
+            queryKey={["locations"]}
+          />
         )}
 
         {locations && (

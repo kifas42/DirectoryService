@@ -28,6 +28,7 @@ export default function RootLayout({
   return (
     <html
       lang="ru"
+      suppressHydrationWarning
       className={cn(
         "h-full",
         "antialiased",
@@ -35,7 +36,6 @@ export default function RootLayout({
         geistMono.variable,
         "font-sans",
         inter.variable,
-        "dark",
       )}
     >
       <body className="min-h-full flex flex-col">

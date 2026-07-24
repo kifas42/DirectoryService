@@ -6,20 +6,28 @@ import AppSidebar from "../sidebar/app.sidebar";
 import Header from "../header/header";
 import { getQueryClient } from "@/shared/api/query-client";
 import { Toaster } from "@/shared/components/ui/sonner";
+import { ThemeProvider } from "@/shared/components/theme-provider";
 
 export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
   const queryClient = getQueryClient();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <SidebarProvider>
-        <AppSidebar />
-        <div className="flex flex-col w-full">
-          <Header />
-          <main className="p-10 flex-1">{children}</main>
-          <Toaster position="top-center" duration={3000} richColors={true} />
-        </div>
-      </SidebarProvider>
-    </QueryClientProvider>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <QueryClientProvider client={queryClient}>
+        <SidebarProvider>
+          <AppSidebar />
+          <div className="flex flex-col w-full">
+            <Header />
+            <main className="p-10 flex-1">{children}</main>
+            <Toaster position="top-center" duration={3000} richColors={true} />
+          </div>
+        </SidebarProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

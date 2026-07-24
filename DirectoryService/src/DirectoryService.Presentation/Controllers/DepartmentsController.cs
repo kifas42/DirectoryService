@@ -45,6 +45,14 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpGet]
+    [Route("")]
+    public async Task<EndpointResult<DepartmentsResponse>> Get(
+        [FromQuery] GetDepartmentsRequest getDepartmentsRequest,
+        [FromServices] IQueryHandler<DepartmentsResponse, GetDepartmentsQuery> handler,
+        CancellationToken cancellationToken) =>
+        await handler.Handle(new GetDepartmentsQuery(getDepartmentsRequest), cancellationToken);
+
+    [HttpGet]
     [Route("top-positions")]
     public async Task<EndpointResult<TopDepartmentsResponse>> GetTopPositions(
         [FromQuery] int? count,
@@ -55,10 +63,10 @@ public class DepartmentsController : ControllerBase
     [HttpGet]
     [Route("roots")]
     public async Task<EndpointResult<DepartmentsResponse>> GetRoots(
-        [FromQuery] RootDepartmentsRequest departmentsRequest,
+        [FromQuery] RootDepartmentsRequest rootDepartmentsRequest,
         [FromServices] IQueryHandler<DepartmentsResponse, GetRootDepartmentsQuery> handler,
         CancellationToken cancellationToken) =>
-        await handler.Handle(new GetRootDepartmentsQuery(departmentsRequest), cancellationToken);
+        await handler.Handle(new GetRootDepartmentsQuery(rootDepartmentsRequest), cancellationToken);
 
     [HttpGet]
     [Route("{departmentId:guid}/children")]

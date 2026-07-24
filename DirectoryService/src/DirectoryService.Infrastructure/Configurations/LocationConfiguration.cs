@@ -68,6 +68,6 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
             .HasMaxLength(Constants.TEXT_100)
             .IsRequired();
 
-        builder.HasIndex(l => l.Name).IsUnique().HasDatabaseName(IndexConstants.NAME);
+        builder.HasIndex(l => l.Name).IsUnique().HasDatabaseName(IndexConstants.LOCATION_NAME);
     }
 }

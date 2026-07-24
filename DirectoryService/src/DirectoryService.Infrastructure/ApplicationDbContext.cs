@@ -29,6 +29,8 @@ public class ApplicationDbContext : DbContext, IReadDbContext
 
     public IQueryable<Position> PositionsRead => Set<Position>().AsNoTracking().AsQueryable();
 
+    public IQueryable<Department> DepartmentsRead => Set<Department>().AsNoTracking().AsQueryable();
+
     public IQueryable<DepartmentLocation> DepartmentLocationsRead =>
         Set<DepartmentLocation>().AsNoTracking().AsQueryable();
 
@@ -38,6 +40,7 @@ public class ApplicationDbContext : DbContext, IReadDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("ltree");
+        modelBuilder.HasPostgresExtension("pg_trgm");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 }
