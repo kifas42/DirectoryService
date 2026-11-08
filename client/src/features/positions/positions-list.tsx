@@ -27,11 +27,11 @@ export default function PositionsList({ positions }: PositionListProps) {
 
   return (
     // Вертикальный стек (flex-col) с отступами между карточками
-    <div className="flex flex-col gap-4 w-full max-w-2xl mx-auto">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       {positions.map((position) => (
         <Card
           key={position.id}
-          className="transition-all hover:shadow-md border-muted/60"
+          className="border-border/70 shadow-sm transition-shadow hover:shadow-md"
         >
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-4">

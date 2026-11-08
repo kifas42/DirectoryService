@@ -1,5 +1,6 @@
 ﻿using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments;
+using DirectoryService.Contracts;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Presentation.EndpointResults;
 using Microsoft.AspNetCore.Mvc;
@@ -46,9 +47,9 @@ public class DepartmentsController : ControllerBase
 
     [HttpGet]
     [Route("")]
-    public async Task<EndpointResult<DepartmentsResponse>> Get(
+    public async Task<EndpointResult<PaginationResponse<GetDepartmentDto>>> Get(
         [FromQuery] GetDepartmentsRequest getDepartmentsRequest,
-        [FromServices] IQueryHandler<DepartmentsResponse, GetDepartmentsQuery> handler,
+        [FromServices] IQueryHandler<PaginationResponse<GetDepartmentDto>, GetDepartmentsQuery> handler,
         CancellationToken cancellationToken) =>
         await handler.Handle(new GetDepartmentsQuery(getDepartmentsRequest), cancellationToken);
 
@@ -62,18 +63,18 @@ public class DepartmentsController : ControllerBase
 
     [HttpGet]
     [Route("roots")]
-    public async Task<EndpointResult<DepartmentsResponse>> GetRoots(
+    public async Task<EndpointResult<PaginationResponse<GetDepartmentDto>>> GetRoots(
         [FromQuery] RootDepartmentsRequest rootDepartmentsRequest,
-        [FromServices] IQueryHandler<DepartmentsResponse, GetRootDepartmentsQuery> handler,
+        [FromServices] IQueryHandler<PaginationResponse<GetDepartmentDto>, GetRootDepartmentsQuery> handler,
         CancellationToken cancellationToken) =>
         await handler.Handle(new GetRootDepartmentsQuery(rootDepartmentsRequest), cancellationToken);
 
     [HttpGet]
     [Route("{departmentId:guid}/children")]
-    public async Task<EndpointResult<DepartmentsResponse>> GetChildren(
+    public async Task<EndpointResult<PaginationResponse<GetDepartmentDto>>> GetChildren(
         [FromQuery] ChildDepartmentsRequest departmentsRequest,
         [FromRoute] Guid departmentId,
-        [FromServices] IQueryHandler<DepartmentsResponse, GetChildDepartmentsQuery> handler,
+        [FromServices] IQueryHandler<PaginationResponse<GetDepartmentDto>, GetChildDepartmentsQuery> handler,
         CancellationToken cancellationToken) =>
         await handler.Handle(new GetChildDepartmentsQuery(departmentId, departmentsRequest), cancellationToken);
 

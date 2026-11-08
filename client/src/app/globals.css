@@ -70,7 +70,7 @@
   --chart-3: oklch(0.681 0.162 75.834);
   --chart-4: oklch(0.554 0.135 66.442);
   --chart-5: oklch(0.476 0.114 61.907);
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
   --sidebar-primary: oklch(0.648 0.2 131.684);
@@ -79,7 +79,7 @@
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.705 0.015 286.067);
-  --background: oklch(1 0 0);
+  --background: oklch(0.975 0.004 250);
   --foreground: oklch(0.141 0.005 285.823);
 }
 
@@ -122,9 +122,15 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    background-image: radial-gradient(circle at 0% 0%, oklch(0.98 0.012 190 / 0.8), transparent 32rem);
   }
   html {
     @apply font-sans;
   }
+}
+
+@layer components {
+  .page-shell { @apply mx-auto w-full max-w-7xl; }
+  .surface { @apply rounded-xl border border-border/70 bg-card shadow-sm; }
 }

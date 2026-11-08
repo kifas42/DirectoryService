@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Database;
+using DirectoryService.Contracts;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
@@ -11,7 +12,7 @@ namespace DirectoryService.Application.Departments;
 
 public record GetDepartmentsQuery(GetDepartmentsRequest Request) : IQuery;
 
-public class GetDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetDepartmentsQuery>
+public class GetDepartmentsHandler : IQueryHandler<PaginationResponse<GetDepartmentDto>, GetDepartmentsQuery>
 {
     private readonly IReadDbContext _readDbContext;
 
@@ -20,7 +21,7 @@ public class GetDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetDepar
         _readDbContext = readDbContext;
     }
 
-    public async Task<Result<DepartmentsResponse, Error>> Handle(
+    public async Task<Result<PaginationResponse<GetDepartmentDto>, Error>> Handle(
         GetDepartmentsQuery departmentsQuery,
         CancellationToken cancellationToken)
     {
@@ -117,11 +118,11 @@ public class GetDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetDepar
             "path" => isAsc ? query.OrderBy(d => d.Path) : query.OrderByDescending(d => d.Path),
             "name" or _ => isAsc ? query.OrderBy(d => d.Name) : query.OrderByDescending(d => d.Name)
         };
-
-        var items = await query
+        int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+        List<GetDepartmentDto> departments = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(d => new DepartmentDto
+            .Select(d => new GetDepartmentDto
             {
                 Id = d.Id.Value,
                 Name = d.Name,
@@ -136,6 +137,6 @@ public class GetDepartmentsHandler : IQueryHandler<DepartmentsResponse, GetDepar
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
-        return new DepartmentsResponse(items, totalCount);
+        return new PaginationResponse<GetDepartmentDto>(departments, totalCount, page, pageSize, totalPages );
     }
 }

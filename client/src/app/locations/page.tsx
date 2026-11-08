@@ -69,7 +69,7 @@ export default function Locations() {
 
   return (
     <>
-      <div className="mb-6">
+      <div className="surface mb-6 p-3 sm:p-4">
         <FilterBar
           search={filters.search}
           onSearchChange={filters.handleSearchChange}
@@ -91,7 +91,7 @@ export default function Locations() {
         </FilterBar>
       </div>
       <div
-        className={`transition-all duration-300 ease-in-out ${
+          className={`surface overflow-hidden transition-all duration-300 ease-in-out ${
           isPlaceholderData
             ? "opacity-40 blur-[2px] translate-y-1 scale-[0.99] pointer-events-none"
             : "opacity-100 blur-0 translate-y-0 scale-100"
