@@ -29,7 +29,7 @@ export default function Positions() {
   }
 
   return (
-    <>
+    <div className="space-y-6">
       {isPending && <Spinner />}
       {positions && <PositionsList positions={positions} />}
       <div
@@ -61,6 +61,6 @@ export default function Positions() {
           </span>
         )}
       </div>
-    </>
+    </div>
   );
 }

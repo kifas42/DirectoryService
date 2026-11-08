@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Search, ArrowDownAZ, ArrowUpZA } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { ActivityFilter } from "@/shared/components/ui/activity-filter";
 
 interface FilterBarProps {
   search?: string;
@@ -79,20 +79,12 @@ export function FilterBar({
           )}
         </Button>
 
-        <Tabs
-          value={isActive === undefined ? "all" : String(isActive)}
-          onValueChange={(val) => {
-            if (val === "all") onIsActiveChange(undefined);
-            else onIsActiveChange(val === "true");
-          }}
-          className="w-full sm:w-auto shrink-0"
-        >
-          <TabsList className="grid w-full grid-cols-3 sm:w-75">
-            <TabsTrigger value="all">Все</TabsTrigger>
-            <TabsTrigger value="true">Активные</TabsTrigger>
-            <TabsTrigger value="false">Удаленные</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <ActivityFilter
+          value={isActive}
+          onChange={onIsActiveChange}
+          inactiveLabel="Удаленные"
+          className="w-full sm:w-75 shrink-0"
+        />
       </div>
     </div>
   );

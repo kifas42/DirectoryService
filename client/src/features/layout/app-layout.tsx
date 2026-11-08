@@ -21,9 +21,11 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
       <QueryClientProvider client={queryClient}>
         <SidebarProvider>
           <AppSidebar />
-          <div className="flex flex-col w-full">
+          <div className="flex min-h-screen w-full flex-col">
             <Header />
-            <main className="p-10 flex-1">{children}</main>
+            <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+              <div className="page-shell">{children}</div>
+            </main>
             <Toaster position="top-center" duration={3000} richColors={true} />
           </div>
         </SidebarProvider>
