@@ -46,7 +46,7 @@ export default function DepartmentSelect({
     search: appliedSearch,
     isActive,
     page,
-    pageSize: 2,
+    pageSize: 10,
     excludeIds,
   });
   const isSearchPending = search !== appliedSearch;
@@ -62,6 +62,7 @@ export default function DepartmentSelect({
             {selectedDepartments.map((department) => (
               <Badge
                 key={department.id}
+                render={<button type="button" />}
                 onClick={() =>
                   onChange(
                     selectedDepartments.filter(
@@ -69,6 +70,7 @@ export default function DepartmentSelect({
                     ),
                   )
                 }
+                aria-label={`Убрать ${department.name} из выбранных`}
                 variant="secondary"
               >
                 {department.name}
